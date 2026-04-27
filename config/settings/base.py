@@ -99,3 +99,10 @@ CELERY_RESULT_SERIALIZER = "json"
 ADMIN_SITE_HEADER = "System Zarządzania Odpadami Komunalnymi"
 ADMIN_SITE_TITLE = "Odpady – panel administracyjny"
 ADMIN_INDEX_TITLE = "Administracja systemu"
+
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+SESSION_COOKIE_AGE = 60 * 60 * 8
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
