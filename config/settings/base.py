@@ -15,8 +15,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
-
+    "django.contrib.staticfiles",    
+    "django_celery_results",
+    "django_celery_beat",
     "users",
     "locations",
     "requests",
@@ -87,3 +88,10 @@ EMAIL_PORT = config("SMTP_PORT", cast=int)
 EMAIL_USE_TLS = config("SMTP_TLS", cast=bool)
 EMAIL_HOST_USER = config("SMTP_USER")
 EMAIL_HOST_PASSWORD = config("SMTP_PASSWORD")
+
+CELERY_BROKER_URL = "django-db"
+CELERY_RESULT_BACKEND = "django-db"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
