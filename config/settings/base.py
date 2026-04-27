@@ -95,3 +95,7 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+ADMIN_SITE_HEADER = "System Zarządzania Odpadami Komunalnymi"
+ADMIN_SITE_TITLE = "Odpady – panel administracyjny"
+ADMIN_INDEX_TITLE = "Administracja systemu"
