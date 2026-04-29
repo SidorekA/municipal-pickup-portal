@@ -3,23 +3,46 @@ from __future__ import annotations
 from django.conf import settings
 from django.db import models
 
-from core.models import TimeStampedModel
-
-
-class UserProfile(TimeStampedModel):
+from core.models import CoreModel
+class UserProfile(CoreModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="profile",
     )
-    phone = models.CharField(max_length=32, blank=True)
-    department = models.CharField(max_length=128, blank=True)
+    phone = models.CharField(max_length=32, 
+                             blank=True, 
+                             verbose_name='Telefon'
+                             )
+    alias = models.CharField(max_length=64, 
+                             blank=False,
+                             verbose_name='Alias'
+                             )
+    department_short = models.CharField(max_length=10, 
+                                        blank=False, 
+                                        verbose_name='Skrót jednostki'
+                                        )
+    department_name = models.CharField(max_length=128, 
+                                       blank=False, 
+                                       verbose_name='Nazwa jednostki'
+                                       )
+    
+    class Meta:
+        verbose_name = 'Profil użytkownika'
+        verbose_name_plural = 'Profile użytkowników'
+        ordering = ['alias']
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=["alias"],
+                name="uniq_alias"
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.user.username}"
+        return f"{self.user.username} {self.email}"
 
-
-class Permission(TimeStampedModel):
+class Permission(CoreModel):
     class Role(models.TextChoices):
         REPORTER = "REPORTER", "ZGŁASZAJĄCY"
         VERIFIER = "VERIFIER", "WERYFIKATOR"
@@ -30,14 +53,21 @@ class Permission(TimeStampedModel):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="permissions",
+        verbose_name='Uprawnienia',
     )
-    location = models.ForeignKey(
-        "locations.Location",
+    mpk_number = models.ForeignKey(
+        "locations.MPKNumber",
         on_delete=models.CASCADE,
         related_name="permissions",
+        verbose_name='Lokalizacja',
     )
-    role = models.CharField(max_length=32, choices=Role.choices)
-    active = models.BooleanField(default=True)
+    role = models.CharField(max_length=32, 
+                            choices=Role.choices, 
+                            verbose_name='Rola'
+                            )
+    active = models.BooleanField(default=True, 
+                                 verbose_name='Aktywny'
+                                 )
     granted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -47,12 +77,20 @@ class Permission(TimeStampedModel):
     )
 
     class Meta:
+        verbose_name = 'Uprawnienie'
+        verbose_name_plural = 'Uprawnienia'
+        ordering = ['mpk_number__mpk_number']
+        
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "location", "role"],
-                name="uniq_user_location_role",
-            )
+                fields=["user", "mpk_number", "role"],
+                name="uniq_user_mpk_number_role",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(role__in=["REPORTER", "VERIFIER", "ADMINISTRATOR", "VIEWER"]),
+                name="chk_valid_role"
+            ),
         ]
 
     def __str__(self) -> str:
-        return f"{self.user.username} @ {self.location} [{self.role}]"
+        return f"{self.user.username} @ {self.mpk_number} [{self.role}]"

@@ -4,9 +4,10 @@ from __future__ import annotations
 from django.db import models
 
 
-class TimeStampedModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class CoreModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Data utworzenia')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Data modyfikacji')
+    note = models.TextField(blank=True, default='', verbose_name='Uwagi')
 
     class Meta:
         abstract = True
