@@ -61,14 +61,36 @@ class Location(CoreModel):
     def __str__(self) -> str:
         return f"{self.obj_name} / {self.localization}"
 
+class WasteFractionType(CoreModel):
+    """Kategoria frakcji – np. Zmieszane, Papier, Bio."""
+    name = models.CharField(
+        max_length=40,
+        unique=True,
+        verbose_name='Nazwa frakcji'
+    )
+    code = models.CharField(
+        max_length=15,
+        unique=True,
+        verbose_name='Kod frakcji'
+    )
+    active = models.BooleanField(default=True, verbose_name='Aktywny')
+
+    class Meta:
+        verbose_name = 'Kategoria frakcji'
+        verbose_name_plural = 'Kategorie frakcji'
+        ordering = ['code']
+
+    def __str__(self) -> str:
+        return f"{self.code} – {self.name}"
+    
 class WasteFraction(CoreModel):
     """Słownik frakcji odpadów."""
-    name = models.CharField(max_length=40, 
-                            verbose_name='Nazwa frakcji'
-                            )
-    code = models.CharField(max_length=15,  
-                            verbose_name='Kod frakcji'
-                            )
+    fraction_type = models.ForeignKey(
+        WasteFractionType,
+        on_delete=models.PROTECT,
+        related_name='fractions',
+        verbose_name='Rodzaj frakcji'
+    )
     capacity = models.IntegerField(
         max_digits=10, 
         null=False,
@@ -88,7 +110,7 @@ class WasteFraction(CoreModel):
         ordering = ['code', 'capacity']
     
     def __str__(self) -> str:
-        return f"{self.name} ({self.capacity} {self.unit})"
+        return f"{self.fraction_type.name} ({self.capacity} {self.unit})"
     
 
 class LocationWasteBin(CoreModel):
@@ -123,3 +145,4 @@ class LocationWasteBin(CoreModel):
 
     def __str__(self) -> str:
         return f"{self.location} – {self.quantity} × {self.waste_fraction}"
+

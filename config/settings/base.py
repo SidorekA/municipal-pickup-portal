@@ -18,13 +18,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",    
     "django_celery_results",
     "django_celery_beat",
-    "users",
-    "locations",
-    "requests",
-    "reports",
-    "notifications",
-    "scheduling",
-    "core",
+    "users.apps.UsersConfig",
+    "locations.apps.LocationsConfig",
+    "requests.apps.RequestsConfig",
+    "reports.apps.ReportsConfig",
+    "notifications.apps.NotificationsConfig",
+    "scheduling.apps.SchedulingConfig",
+    "core.apps.CoreConfig",
 ]
 
 MIDDLEWARE = [
@@ -113,3 +113,5 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
 ]
 
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
+ZGLOSZENIA_EMAIL = config("ZGLOSZENIA_EMAIL") 

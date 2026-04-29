@@ -41,7 +41,7 @@ class UserProfile(CoreModel):
         ]
 
     def __str__(self) -> str:
-        return f"{self.user.username} {self.email}"
+        return f"{self.user.username} {self.alias}"
 
 class Permission(CoreModel):
     """Uprawnienia użytkownika do zarządzania zgłoszeniami dla konkretnego MPK."""
@@ -54,13 +54,13 @@ class Permission(CoreModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="permissions",
+        related_name="user_permissions",
         verbose_name='Uprawnienia',
     )
     mpk_number = models.ForeignKey(
         "locations.MPKNumber",
         on_delete=models.CASCADE,
-        related_name="permissions",
+        related_name="mpk_permissions",
         verbose_name='Lokalizacja',
     )
     role = models.CharField(max_length=32, 
