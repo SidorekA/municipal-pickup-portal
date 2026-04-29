@@ -5,6 +5,7 @@ from django.db import models
 
 from core.models import CoreModel
 class UserProfile(CoreModel):
+    """Dodatkowe informacje o użytkowniku."""
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -43,6 +44,7 @@ class UserProfile(CoreModel):
         return f"{self.user.username} {self.email}"
 
 class Permission(CoreModel):
+    """Uprawnienia użytkownika do zarządzania zgłoszeniami dla konkretnego MPK."""
     class Role(models.TextChoices):
         REPORTER = "REPORTER", "ZGŁASZAJĄCY"
         VERIFIER = "VERIFIER", "WERYFIKATOR"
@@ -94,3 +96,34 @@ class Permission(CoreModel):
 
     def __str__(self) -> str:
         return f"{self.user.username} @ {self.mpk_number} [{self.role}]"
+    
+class Coordinator(CoreModel):
+    """Koordynator lokalizacji."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="coordinations",
+        verbose_name='Koordynator',
+    )
+    location = models.ForeignKey(
+        "locations.Location",
+        on_delete=models.CASCADE,
+        related_name="coordinators",
+        verbose_name='Lokalizacja',
+    )
+    active = models.BooleanField(default=True, verbose_name='Aktywny')
+
+    class Meta:
+        verbose_name = 'Koordynator'
+        verbose_name_plural = 'Koordynatorzy'
+        ordering = ['location__obj_name', 'user__username']
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "location"],
+                name="uniq_user_location",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user.username} @ {self.location}"

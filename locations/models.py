@@ -4,75 +4,122 @@ from __future__ import annotations
 from django.conf import settings
 from django.db import models
 
-from core.models import TimeStampedModel
+from core.models import CoreModel
 
 
-class MPKNumber(TimeStampedModel):
-    number = models.CharField(max_length=32, unique=True)  # np. "MPK-001"
-    short_name = models.CharField(max_length=128)
-    active = models.BooleanField(default=True)
+class MPKNumber(CoreModel):
+    """Słownik numerów MPK (miejsc powstawania kosztów)."""
+    mpk_number = models.CharField(max_length=32)
+    active = models.BooleanField(default=True, 
+                                 verbose_name='Aktywny'
+                                )
+    class Meta:
+        verbose_name = 'Numer MPK'
+        verbose_name_plural = 'Numery MPK'
+        ordering = ['mpk_number']
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=["mpk_number"],
+                name="uniq_mpk_number"
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.number} ({self.short_name})"
+        return f"{self.mpk_number}"
 
 
-class Location(TimeStampedModel):
+class Location(CoreModel):
+    """Lokalizacja powiązana z numerem MPK."""
     mpk_number = models.ForeignKey(
         MPKNumber,
         on_delete=models.PROTECT,
         related_name="locations",
+        verbose_name='Lokalizacja',
     )
-    obj_name = models.CharField(max_length=255)
-    org_unit_name = models.TextField()
-    localization = models.CharField(max_length=128)
-    coordinator = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="coordinated_locations",
-    )
-    active = models.BooleanField(default=True)
-    notes = models.TextField(blank=True)
+    obj_name = models.CharField(max_length=200, 
+                                blank=False, 
+                                verbose_name='Nazwa obiektu'
+                                )
+    org_unit_name = models.CharField(max_length=20, 
+                                     blank=False, 
+                                     verbose_name='Nazwa jednostki organizacyjnej'
+                                     )
+    localization = models.CharField(max_length=128, 
+                                    blank=False, 
+                                    verbose_name='Lokalizacja'
+                                    )
+    active = models.BooleanField(default=True, 
+                                 verbose_name='Aktywny'
+                                 )
+    
+    class Meta:
+        verbose_name = 'Lokalizacja'
+        verbose_name_plural = 'Lokalizacje'
+        ordering = ['mpk_number', 'obj_name']
 
     def __str__(self) -> str:
         return f"{self.obj_name} / {self.localization}"
 
-
-class WasteFraction(TimeStampedModel):
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=32, unique=True)
-    unit = models.CharField(max_length=16, default="szt.")
-    active = models.BooleanField(default=True)
-
+class WasteFraction(CoreModel):
+    """Słownik frakcji odpadów."""
+    name = models.CharField(max_length=40, 
+                            verbose_name='Nazwa frakcji'
+                            )
+    code = models.CharField(max_length=15,  
+                            verbose_name='Kod frakcji'
+                            )
+    capacity = models.IntegerField(
+        max_digits=10, 
+        null=False,
+        verbose_name='Pojemność'
+    )
+    unit = models.CharField(max_length=5, 
+                            default="l", 
+                            verbose_name='Jednostka'
+                            )
+    active = models.BooleanField(default=True, 
+                                 verbose_name='Aktywny'
+                                 )
+    
+    class Meta:
+        verbose_name = 'Frakcja odpadów'
+        verbose_name_plural = 'Frakcje odpadów'
+        ordering = ['code', 'capacity']
+    
     def __str__(self) -> str:
-        return f"{self.name} ({self.code})"
+        return f"{self.name} ({self.capacity} {self.unit})"
     
 
-class ContainerType(TimeStampedModel):
-    capacity_liters = models.PositiveIntegerField(unique=True)
-    name = models.CharField(max_length=64)
-    active = models.BooleanField(default=True)
-
-    def __str__(self) -> str:
-        return f"{self.name} ({self.capacity_liters} L)"
-
-
-class LocationContainer(TimeStampedModel):
+class LocationWasteBin(CoreModel):
+    """Pojemniki przypisane do lokalizacji (jakie frakcje i ile pojemników)."""
     location = models.ForeignKey(
-        "locations.Location",
+        Location, 
         on_delete=models.CASCADE,
-        related_name="containers",
+        related_name='waste_bins', 
+        verbose_name='Lokalizacja'
     )
-    container_type = models.ForeignKey(
-        ContainerType,
+    waste_fraction = models.ForeignKey(
+        WasteFraction, 
         on_delete=models.PROTECT,
-        related_name="location_containers",
+        related_name='location_bins', 
+        verbose_name='Frakcja'
     )
-    count = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(default=1, 
+                                           verbose_name='Ilość pojemników'
+                                           )
 
     class Meta:
-        unique_together = ("location", "container_type")
+        verbose_name = 'Pojemnik lokalizacji'
+        verbose_name_plural = 'Pojemniki lokalizacji'
+        ordering = ['location', 'waste_fraction']
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=["location", "waste_fraction"],
+                name="uniq_location_waste_fraction"
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.location} – {self.count} × {self.container_type}"
+        return f"{self.location} – {self.quantity} × {self.waste_fraction}"
