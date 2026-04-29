@@ -20,7 +20,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "users.apps.UsersConfig",
     "locations.apps.LocationsConfig",
-    "requests.apps.RequestsConfig",
+    "pickups.apps.PickupsConfig",
     "reports.apps.ReportsConfig",
     "notifications.apps.NotificationsConfig",
     "scheduling.apps.SchedulingConfig",
@@ -37,7 +37,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "waste_management.urls"
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
@@ -55,16 +55,26 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "waste_management.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": config("DB_NAME"),
+#         "USER": config("DB_USER"),
+#         "PASSWORD": config("DB_PASSWORD"),
+#         "HOST": config("DB_HOST"),
+#         "PORT": config("DB_PORT", cast=int),
+#         "OPTIONS": {
+#             "client_encoding": "UTF8",
+#         },
+#     }
+# }
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST"),
-        "PORT": config("DB_PORT", cast=int),
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 

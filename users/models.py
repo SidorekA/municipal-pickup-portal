@@ -54,7 +54,7 @@ class Permission(CoreModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="user_permissions",
+        related_name="mpk_permissions",
         verbose_name='Uprawnienia',
     )
     mpk_number = models.ForeignKey(

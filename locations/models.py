@@ -92,7 +92,6 @@ class WasteFraction(CoreModel):
         verbose_name='Rodzaj frakcji'
     )
     capacity = models.IntegerField(
-        max_digits=10, 
         null=False,
         verbose_name='Pojemność'
     )
@@ -107,7 +106,7 @@ class WasteFraction(CoreModel):
     class Meta:
         verbose_name = 'Frakcja odpadów'
         verbose_name_plural = 'Frakcje odpadów'
-        ordering = ['code', 'capacity']
+        ordering = ['fraction_type__code', 'capacity']
     
     def __str__(self) -> str:
         return f"{self.fraction_type.name} ({self.capacity} {self.unit})"
