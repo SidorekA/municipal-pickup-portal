@@ -9,7 +9,7 @@ from core.models import CoreModel
 
 class MPKNumber(CoreModel):
     """Słownik numerów MPK (miejsc powstawania kosztów)."""
-    mpk_number = models.CharField(max_length=32)
+    mpk_number = models.IntegerField()
     active = models.BooleanField(default=True, 
                                  verbose_name='Aktywny'
                                 )
@@ -68,8 +68,7 @@ class WasteFractionType(CoreModel):
         unique=True,
         verbose_name='Nazwa frakcji'
     )
-    code = models.CharField(
-        max_length=15,
+    code = models.IntegerField(
         unique=True,
         verbose_name='Kod frakcji'
     )
@@ -131,8 +130,8 @@ class LocationWasteBin(CoreModel):
                                            )
 
     class Meta:
-        verbose_name = 'Pojemnik lokalizacji'
-        verbose_name_plural = 'Pojemniki lokalizacji'
+        verbose_name = 'Pojemnik w lokalizacji'
+        verbose_name_plural = 'Pojemniki w lokalizacji'
         ordering = ['location', 'waste_fraction']
         
         constraints = [

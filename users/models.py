@@ -15,10 +15,6 @@ class UserProfile(CoreModel):
                              blank=True, 
                              verbose_name='Telefon'
                              )
-    alias = models.CharField(max_length=64, 
-                             blank=False,
-                             verbose_name='Alias'
-                             )
     department_short = models.CharField(max_length=10, 
                                         blank=False, 
                                         verbose_name='Skrót jednostki'
@@ -31,17 +27,9 @@ class UserProfile(CoreModel):
     class Meta:
         verbose_name = 'Profil użytkownika'
         verbose_name_plural = 'Profile użytkowników'
-        ordering = ['alias']
-        
-        constraints = [
-            models.UniqueConstraint(
-                fields=["alias"],
-                name="uniq_alias"
-            )
-        ]
 
     def __str__(self) -> str:
-        return f"{self.user.username} {self.alias}"
+        return f"{self.user.username}"
 
 class Permission(CoreModel):
     """Uprawnienia użytkownika do zarządzania zgłoszeniami dla konkretnego MPK."""

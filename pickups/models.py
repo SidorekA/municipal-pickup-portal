@@ -98,4 +98,4 @@ class PickupWasteBin(models.Model):
         unique_together = [('pickup', 'waste_fraction')]
 
     def __str__(self):
-        return f'{self.pickup.pickup_number} – {self.waste_fraction.code} x{self.quantity}'
+        return f'{self.pickup.pickup_number} – {self.waste_fraction.fraction_type.name} x{self.quantity}'
