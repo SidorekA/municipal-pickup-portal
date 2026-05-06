@@ -1,6 +1,6 @@
 # locations/admin.py
 from django.contrib import admin
-from .models import MPKNumber, Location,LocationWasteBin
+from .models import MPKNumber, Location,LocationWasteBin, LocationContact
 
 class LocationInline(admin.TabularInline):
     model = Location
@@ -12,6 +12,10 @@ class LocationWasteBinInline(admin.TabularInline):
     extra = 1
     fields = ['waste_fraction', 'quantity']
 
+class LocationContactInline(admin.TabularInline):
+    model = LocationContact
+    extra = 1
+    fields = ['contact_name', 'phone_number', 'active']
 
 @admin.register(MPKNumber)
 class MPKNumberAdmin(admin.ModelAdmin):
@@ -27,4 +31,4 @@ class LocationAdmin(admin.ModelAdmin):
     list_filter = ['active', 'mpk_number']
     search_fields = ['obj_name', 'localization', 'mpk_number__mpk_number']
     ordering = ['mpk_number', 'obj_name']
-    inlines = [LocationWasteBinInline]
+    inlines = [LocationContactInline, LocationWasteBinInline]

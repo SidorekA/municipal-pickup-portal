@@ -95,3 +95,29 @@ class LocationWasteBin(CoreModel):
     def __str__(self) -> str:
         return f"{self.location} – {self.quantity} × {self.waste_fraction}"
 
+class LocationContact(CoreModel):
+    """Zdefiniowane numery kontaktowe dla danej lokalizacji."""
+    location = models.ForeignKey(
+        'Location',
+        on_delete=models.CASCADE,
+        related_name='contacts',
+        verbose_name='Lokalizacja'
+    )
+    contact_name = models.CharField(
+        max_length=100, 
+        verbose_name='Nazwa kontaktu',
+        help_text='np. Portiernia, Kierownik Magazynu, Ochrona'
+    )
+    phone_number = models.CharField(
+        max_length=32, 
+        verbose_name='Numer telefonu'
+    )
+    active = models.BooleanField(default=True, verbose_name='Aktywny')
+
+    class Meta:
+        verbose_name = 'Kontakt w lokalizacji'
+        verbose_name_plural = 'Kontakty w lokalizacjach'
+        ordering = ['location', 'contact_name']
+
+    def __str__(self) -> str:
+        return f"{self.contact_name}: {self.phone_number}"
