@@ -7,7 +7,7 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = False
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = ['*']
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "users.apps.UsersConfig",
     "locations.apps.LocationsConfig",
+    "waste.apps.WasteConfig",
     "pickups.apps.PickupsConfig",
     "reports.apps.ReportsConfig",
     "notifications.apps.NotificationsConfig",

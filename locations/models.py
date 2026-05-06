@@ -71,7 +71,7 @@ class LocationWasteBin(CoreModel):
         verbose_name='Lokalizacja'
     )
     waste_fraction = models.ForeignKey(
-        "waste.WasteFraction", 
+        'waste.WasteFraction', 
         on_delete=models.PROTECT,
         related_name='location_bins', 
         verbose_name='Frakcja'

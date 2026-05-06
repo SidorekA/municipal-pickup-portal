@@ -11,7 +11,7 @@ class CollectionSchedule(CoreModel):
         (4, 'Czwartek'), (5, 'Piątek'),
     ]
     fraction_type = models.ForeignKey(
-        'locations.WasteFractionType',
+        'waste.WasteFractionType',
         on_delete=models.PROTECT,
         related_name='schedules',
         verbose_name='Rodzaj frakcji'

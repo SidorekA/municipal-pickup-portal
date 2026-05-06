@@ -73,7 +73,7 @@ class Pickup(CoreModel):
             self.pickup_number = f'ZGL-{self.mpk_number}-{seq:05d}'
         super().save(*args, **kwargs)
 
-class PickupWasteBin(models.Model):
+class PickupWasteBin(CoreModel):
     """Pojemniki w zgłoszeniu."""
     pickup = models.ForeignKey(
         Pickup, 
@@ -82,7 +82,7 @@ class PickupWasteBin(models.Model):
         verbose_name='Zgłoszenie'
     )
     waste_fraction = models.ForeignKey(
-        'locations.WasteFraction', 
+        'waste.WasteFraction', 
         on_delete=models.PROTECT,
         related_name='pickup_bins', 
         verbose_name='Frakcja'

@@ -18,14 +18,13 @@ class SummaryCollectionSchedule(CoreModel):
     year = models.PositiveSmallIntegerField(verbose_name='Rok')
     month = models.PositiveSmallIntegerField(verbose_name='Miesiąc')
     waste_fraction = models.ForeignKey(
-        'locations.WasteFraction', on_delete=models.PROTECT,
+        'waste.WasteFraction', on_delete=models.PROTECT,
         related_name='summaries', verbose_name='Frakcja'
     )
     quantity = models.DecimalField(
         max_digits=12, decimal_places=2, verbose_name='Ilość'
     )
     date_summary = models.DateField(verbose_name='Data zestawienia')
-    note = models.TextField(blank=True, default='', verbose_name='Uwagi')
     imported_at = models.DateTimeField(auto_now_add=True, verbose_name='Data importu')
     imported_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
@@ -76,8 +75,6 @@ class MonthlyConfirmation(CoreModel):
     )
     approved_at = models.DateTimeField(null=True, blank=True)
 
-    notes = models.TextField(blank=True, default='', verbose_name='Uwagi')
-
     class Meta:
         db_table = 'monthly_confirmations'
         verbose_name = 'Potwierdzenie miesięczne'
@@ -88,22 +85,3 @@ class MonthlyConfirmation(CoreModel):
     def __str__(self):
         return f'{self.location} – {self.month.strftime("%Y/%m")} ({self.get_status_display()})'
     
-class Cost(CoreModel):
-    """Koszt za frakcję odpadów w danym okresie."""
-    waste_fraction = models.ForeignKey(
-        'locations.WasteFraction', on_delete=models.PROTECT,
-        related_name='costs', verbose_name='Frakcja'
-    )
-    cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Koszt (PLN)')
-    date_from = models.DateField(verbose_name='Obowiązuje od')
-    date_to = models.DateField(null=True, blank=True, verbose_name='Obowiązuje do')
-    note = models.TextField(blank=True, default='', verbose_name='Uwagi')
-
-    class Meta:
-        db_table = 'costs'
-        verbose_name = 'Koszt frakcji'
-        verbose_name_plural = 'Koszty frakcji'
-        ordering = ['-date_from', 'waste_fraction']
-
-    def __str__(self):
-        return f'{self.waste_fraction.code} – {self.cost} PLN (od {self.date_from})'
