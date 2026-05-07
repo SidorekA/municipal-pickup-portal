@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel zgłoszeń | System Odpadów{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-card-list me-2"></i> Lista wysłanych zgłoszeń</h2>
+        <a href="/zgloszenia/dodaj/" class="btn btn-success fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Nowe zgłoszenie
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="ps-4">Data zgłoszenia</th>
+                            <th scope="col">Numer MPK</th>
+                            <th scope="col">Lokalizacja</th>
+                            <th scope="col">Zgłaszający</th>
+                            <th scope="col">Telefon</th>
+                            <th scope="col" class="text-end pe-4">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pickup in pickups %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ pickup.created_at|date:"d.m.Y" }}</div>
+                                    <div class="text-muted small">{{ pickup.created_at|time:"H:i" }}</div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ pickup.mpk_number.mpk_number }}</span></td>
+                                <td>{{ pickup.location.obj_name }}</td>
+                                <td>
+                                    {% if pickup.reporter %}
+                                        <i class="bi bi-person me-1"></i>{{ pickup.reporter.username }}
+                                    {% else %}
+                                        <span class="text-muted">Brak</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ pickup.contact_phone }}</td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Podgląd
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                    <h5>Brak zgłoszeń w systemie</h5>
+                                    <p>Wszystkie nowe zgłoszenia pojawią się tutaj.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

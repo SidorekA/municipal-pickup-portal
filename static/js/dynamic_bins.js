@@ -124,4 +124,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 binsContainer.innerHTML = '<div class="alert alert-danger w-100">Błąd połączenia z serwerem.</div>';
             });
     });
+    if (mpkSelect && mpkSelect.value) {
+        mpkSelect.dispatchEvent(new Event("change"));
+    }
 });

@@ -1,5 +1,7 @@
 # pickups/forms.py
 from django import forms
+
+from users.models import Permission
 from .models import Pickup, PickupWasteBin
 from locations.models import LocationContact, Location
 
@@ -18,7 +20,20 @@ class PickupForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         self.location_id = kwargs.pop('location_id', None)
         super().__init__(*args, **kwargs)
-
+        
+        if self.user and not self.user.is_superuser:
+            allowed_mpk_ids = Permission.objects.filter(
+                user=self.user, 
+                active=True
+            ).values_list('mpk_number_id', flat=True)
+            
+            self.fields['mpk_number'].queryset = self.fields['mpk_number'].queryset.filter(
+                id__in=allowed_mpk_ids
+            )
+            
+        if self.fields['mpk_number'].queryset.count() == 1:
+            self.fields['mpk_number'].initial = self.fields['mpk_number'].queryset.first()
+            
         self.fields['location'].queryset = self.fields['location'].queryset.none()
         if 'mpk_number' in self.data:
             try:

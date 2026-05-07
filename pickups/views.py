@@ -2,8 +2,10 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+
+from users.models import Permission
 from .tasks import wyslij_zgloszenie_email
-from pickups.models import PickupWasteBin
+from pickups.models import Pickup, PickupWasteBin
 from .forms import PickupForm
 from django.http import JsonResponse
 from locations.models import Location, LocationContact, LocationWasteBin
@@ -77,6 +79,17 @@ def api_get_location_bins(request, location_id):
 
 def api_get_mpk_locations(request, mpk_id):
     """Zwraca listę lokalizacji przypisanych do konkretnego MPK."""
+    
+    has_permission = request.user.is_superuser or Permission.objects.filter(
+        user=request.user, 
+        mpk_number_id=mpk_id, 
+        active=True
+    ).exists()
+    
+    if not has_permission:
+        # Jeśli nie ma dostępu, zwracamy pustą listę lub błąd 403
+        return JsonResponse({'locations': [], 'error': 'Brak uprawnień do tego MPK'}, status=403)
+    
     locations = Location.objects.filter(mpk_number_id=mpk_id)
     
     data = []
@@ -88,3 +101,19 @@ def api_get_mpk_locations(request, mpk_id):
         
     return JsonResponse({'locations': data})
 
+def pickup_list(request):
+    """Wyświetla panel ze zgłoszeniami przefiltrowanymi przez uprawnienia."""
+    
+    queryset = Pickup.objects.select_related('mpk_number', 'location', 'reporter')
+    
+    if not request.user.is_superuser:
+        allowed_mpk_ids = Permission.objects.filter(
+            user=request.user, 
+            active=True
+        ).values_list('mpk_number_id', flat=True)
+        
+        queryset = queryset.filter(mpk_number_id__in=allowed_mpk_ids)
+    
+    pickups = queryset.order_by('-created_at')
+    
+    return render(request, 'pickups/pickup_list.html', {'pickups': pickups})
