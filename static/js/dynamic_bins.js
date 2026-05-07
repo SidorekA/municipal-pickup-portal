@@ -3,8 +3,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const locationSelect = document.getElementById("id_location");
     const binsContainer = document.getElementById("visual-bins-container");
     const instruction = document.getElementById("bins-instruction");
+    const phoneSelect = document.getElementById("id_contact_phone");
 
     if (!locationSelect || !binsContainer || !mpkSelect) return;
+
+    let initialPhoneOptions = phoneSelect ? phoneSelect.innerHTML : '';
 
     const colorMap = {
         'zmieszane': 'secondary', // szary
@@ -28,6 +31,8 @@ document.addEventListener("DOMContentLoaded", function() {
         locationSelect.innerHTML = '<option value="">---------</option>';
         binsContainer.innerHTML = '';
         instruction.style.display = 'block';
+
+        if (phoneSelect) phoneSelect.innerHTML = initialPhoneOptions;
 
         if (mpkId) {
             locationSelect.disabled = true; 
@@ -61,12 +66,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
         instruction.style.display = 'none';
         binsContainer.innerHTML = '<div class="text-center w-100"><div class="spinner-border text-success"></div></div>';
+        
+        if (phoneSelect) phoneSelect.innerHTML = initialPhoneOptions;
+        if (!locationId) {
+            instruction.style.display = 'block';
+            return;
+        }
+
+        instruction.style.display = 'none';
+        binsContainer.innerHTML = '<div class="text-center w-100 mt-4"><div class="spinner-border text-success"></div><p class="text-muted mt-2">Ładowanie pojemników...</p></div>';
 
         fetch(`/zgloszenia/api/lokalizacja/${locationId}/pojemniki/`)
             .then(response => response.json())
             .then(data => {
                 binsContainer.innerHTML = '';
                 
+                if (phoneSelect && data.contacts) {
+                    data.contacts.forEach(contact => {
+                        const option = document.createElement('option');
+                        option.value = contact.phone;
+                        option.textContent = `${contact.name}: ${contact.phone}`;
+                        phoneSelect.appendChild(option);
+                    });
+                }
+
                 if (data.bins.length === 0) {
                     binsContainer.innerHTML = '<div class="alert alert-warning w-100">Brak przypisanych pojemników dla tej lokalizacji!</div>';
                     return;

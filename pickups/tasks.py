@@ -6,6 +6,7 @@ from pickups.excel_generator import generate_pickup_excel
 from pickups.models import Pickup
 from django.core.mail import EmailMessage
 from django.conf import settings
+from decouple import config
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,8 @@ def wyslij_zgloszenie_email(self, pickup_id: int) -> str:
                 f"Data: {pickup.reported_at.strftime('%Y-%m-%d %H:%M')}\n"
                 f"Zgłaszający: {pickup.reporter.get_full_name()}"
             ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[settings.ZGLOSZENIA_EMAIL],
+            from_email=config("DEFAULT_FROM_EMAIL"),
+            to=['adrian.sidorek@orlen.pl'], #config("ZGLOSZENIA_EMAIL")
         )
         email.attach(
             filename,

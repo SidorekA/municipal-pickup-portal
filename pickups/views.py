@@ -6,7 +6,7 @@ from .tasks import wyslij_zgloszenie_email
 from pickups.models import PickupWasteBin
 from .forms import PickupForm
 from django.http import JsonResponse
-from locations.models import Location, LocationWasteBin
+from locations.models import Location, LocationContact, LocationWasteBin
 
 @login_required
 def create_pickup(request):
@@ -64,8 +64,16 @@ def api_get_location_bins(request, location_id):
             'capacity': b.waste_fraction.capacity,
             'max_quantity': b.quantity,
         })
+    
+    contacts = LocationContact.objects.filter(location_id=location_id, active=True)
+    contacts_data = []
+    for c in contacts:
+        contacts_data.append({
+            'phone': c.phone_number,
+            'name': c.contact_name
+        })
         
-    return JsonResponse({'bins': data})
+    return JsonResponse({'bins': data, 'contacts': contacts_data})
 
 def api_get_mpk_locations(request, mpk_id):
     """Zwraca listę lokalizacji przypisanych do konkretnego MPK."""
@@ -79,3 +87,4 @@ def api_get_mpk_locations(request, mpk_id):
         })
         
     return JsonResponse({'locations': data})
+
