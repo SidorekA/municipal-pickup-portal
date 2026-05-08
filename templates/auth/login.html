@@ -1,17 +1,71 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Logowanie | System Zarządzania Odpadami{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-  <div class="col-md-4">
-    <h4 class="mb-3">Logowanie</h4>
+<div class="container login-wrapper">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        
+        <div class="login-card">
+            
+            <div class="login-card__header">
+                <div class="login-card__icon-wrapper">
+                    <i class="bi bi-person-fill-lock text-success fs-2"></i>
+                </div>
+                <h3 class="login-card__title">Witaj ponownie</h3>
+                <p class="login-card__subtitle">Zaloguj się do systemu, aby kontynuować</p>
+            </div>
 
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button class="btn btn-primary w-100">
-        Zaloguj
-      </button>
-    </form>
-  </div>
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="login-alert">
+                        {% for error in form.non_field_errors %}
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-floating mb-3">
+                    <input type="text" 
+                           name="{{ form.username.name }}" 
+                           class="form-control login-input {% if form.username.errors %}is-invalid{% endif %}" 
+                           id="{{ form.username.id_for_label }}" 
+                           placeholder="Nazwa użytkownika" 
+                           required 
+                           autofocus>
+                    <label for="{{ form.username.id_for_label }}" class="text-muted">Nazwa użytkownika</label>
+                    
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback px-2">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-floating mb-4">
+                    <input type="password" 
+                           name="{{ form.password.name }}" 
+                           class="form-control login-input {% if form.password.errors %}is-invalid{% endif %}" 
+                           id="{{ form.password.id_for_label }}" 
+                           placeholder="Hasło" 
+                           required>
+                    <label for="{{ form.password.id_for_label }}" class="text-muted">Hasło</label>
+                    
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback px-2">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold login-btn">
+                    Zaloguj się <i class="bi bi-arrow-right-short ms-1 fs-5 align-middle"></i>
+                </button>
+                
+                <input type="hidden" name="next" value="{{ next }}">
+            </form>
+
+        </div>
+        
+    </div>
 </div>
 {% endblock %}

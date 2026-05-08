@@ -101,6 +101,7 @@ def api_get_mpk_locations(request, mpk_id):
         
     return JsonResponse({'locations': data})
 
+@login_required
 def pickup_list(request):
     """Wyświetla panel ze zgłoszeniami przefiltrowanymi przez uprawnienia."""
     

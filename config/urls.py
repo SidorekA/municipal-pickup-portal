@@ -18,13 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 
+from core.views import home_view
+
 admin.site.site_header = "System Zarządzania Odpadami Komunalnymi"
 admin.site.site_title = "Odpady – panel administracyjny"
 admin.site.index_title = "Administracja systemu"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
+    path('', home_view, name='home'),
     path(
         "login/",
         auth_views.LoginView.as_view(

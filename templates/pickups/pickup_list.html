@@ -4,107 +4,120 @@
 {% block title %}Panel zgłoszeń | System Odpadów{% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5">
+<div class="container list-container">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-card-list me-2"></i> Lista wysłanych zgłoszeń</h2>
-        <a href="/zgloszenia/dodaj/" class="btn btn-success fw-bold shadow-sm">
-            <i class="bi bi-plus-lg me-1"></i> Nowe zgłoszenie
-        </a>
+    <div class="list-header">
+        <h2 class="list-header__title">
+            <i class="bi bi-card-list me-2"></i> Lista wysłanych zgłoszeń
+        </h2>
+        <div class="list-header__actions">
+            <a href="/zgloszenia/dodaj/" class="btn btn-success fw-bold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Nowe zgłoszenie
+            </a>
+        </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
+    <div class="data-card">
+        <div class="data-card__body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="data-table">
+                    <thead class="data-table__head">
                         <tr>
-                            <th scope="col" class="ps-4">Data zgłoszenia</th>
-                            <th scope="col">Numer MPK</th>
-                            <th scope="col">Lokalizacja</th>
-                            <th scope="col">Zgłaszający</th>
-                            <th scope="col">Telefon</th>
-                            <th scope="col" class="text-end pe-4">Akcje</th>
+                            <th class="data-table__th ps-4">Data zgłoszenia</th>
+                            <th class="data-table__th">Numer MPK</th>
+                            <th class="data-table__th">Lokalizacja</th>
+                            <th class="data-table__th">Zgłaszający</th>
+                            <th class="data-table__th">Telefon</th>
+                            <th class="data-table__th text-end pe-4">Akcje</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="data-table__body">
                         {% for pickup in pickups %}
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="fw-bold">{{ pickup.created_at|date:"d.m.Y" }}</div>
-                                    <div class="text-muted small">{{ pickup.created_at|time:"H:i" }}</div>
+                            <tr class="data-table__row">
+                                <td class="data-table__td ps-4">
+                                    <div class="data-table__date">{{ pickup.created_at|date:"d.m.Y" }}</div>
+                                    <div class="data-table__time text-muted small">{{ pickup.created_at|time:"H:i" }}</div>
                                 </td>
-                                <td><span class="badge bg-secondary">{{ pickup.mpk_number.mpk_number }}</span></td>
-                                <td>{{ pickup.location.obj_name }}</td>
-                                <td>
+                                <td class="data-table__td">
+                                    <span class="mpk-badge">{{ pickup.mpk_number.mpk_number }}</span>
+                                </td>
+                                <td class="data-table__td">{{ pickup.location.obj_name }}</td>
+                                <td class="data-table__td">
                                     {% if pickup.reporter %}
-                                        <i class="bi bi-person me-1"></i>{{ pickup.reporter.username }}
+                                        <div class="reporter-info">
+                                            <i class="bi bi-person me-1"></i>{{ pickup.reporter.username }}
+                                        </div>
                                     {% else %}
                                         <span class="text-muted">Brak</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ pickup.contact_phone }}</td>
-                                <td class="text-end pe-4">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pickupModal{{ pickup.id }}">
+                                <td class="data-table__td">{{ pickup.contact_phone }}</td>
+                                <td class="data-table__td text-end pe-4">
+                                    <button type="button" class="btn btn-sm btn-outline-primary data-table__action-btn" 
+                                            data-bs-toggle="modal" data-bs-target="#pickupModal{{ pickup.id }}">
                                         <i class="bi bi-eye"></i> Podgląd
                                     </button>
                                 </td>
                             </tr>
                             
-                            <div class="modal fade" id="pickupModal{{ pickup.id }}" tabindex="-1" aria-labelledby="modalLabel{{ pickup.id }}" aria-hidden="true">
+                            <div class="modal fade detail-modal" id="pickupModal{{ pickup.id }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog modal-lg modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-light">
-                                            <h5 class="modal-title fw-bold" id="modalLabel{{ pickup.id }}">
-                                                <i class="bi bi-info-circle me-2 text-primary"></i>Szczegóły zgłoszenia #{{ pickup.pickup_number }}
+                                    <div class="modal-content detail-modal__content">
+                                        
+                                        <div class="modal-header detail-modal__header">
+                                            <h5 class="modal-title detail-modal__title">
+                                                <i class="bi bi-info-circle me-2 text-primary"></i>Szczegóły zgłoszenia {{ pickup.pickup_number }}
                                             </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                                         </div>
-                                        <div class="modal-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <p class="mb-1 text-muted small">Lokalizacja</p>
-                                                    <p class="fw-bold">{{ pickup.location.localization }} - {{ pickup.location.obj_name }}</p>
+                                        
+                                        <div class="modal-body detail-modal__body">
+                                            <div class="detail-grid">
+                                                <div class="detail-grid__item">
+                                                    <span class="detail-grid__label">Lokalizacja</span>
+                                                    <span class="detail-grid__value">{{ pickup.location.localization }} - {{ pickup.location.obj_name }}</span>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <p class="mb-1 text-muted small">Telefon kontaktowy</p>
-                                                    <p class="fw-bold"><i class="bi bi-telephone-fill me-1 text-secondary"></i> {{ pickup.contact_phone }}</p>
+                                                <div class="detail-grid__item">
+                                                    <span class="detail-grid__label">Telefon kontaktowy</span>
+                                                    <span class="detail-grid__value">
+                                                        <i class="bi bi-telephone-fill me-1 text-secondary"></i> {{ pickup.contact_phone }}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            <h6 class="fw-bold mt-4 mb-3 border-bottom pb-2">Zgłoszone pojemniki do odbioru:</h6>
-                                            <ul class="list-group list-group-flush mb-3">
+                                            <h6 class="detail-modal__section-title">Zgłoszone pojemniki do odbioru:</h6>
+                                            <ul class="bin-list">
                                                 {% for bin in pickup.waste_bins.all %}
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                                        <div>
+                                                    <li class="bin-list__item">
+                                                        <div class="bin-list__info">
                                                             <i class="bi bi-trash3 me-2"></i>
                                                             {{ bin.waste_fraction.fraction_type.name }} 
-                                                            <span class="text-muted small">({{ bin.waste_fraction.capacity }}L)</span>
+                                                            <span class="bin-list__cap">({{ bin.waste_fraction.capacity }}L)</span>
                                                         </div>
-                                                        <span class="badge bg-success rounded-pill fs-6 px-3">
-                                                            {{ bin.quantity }} szt.
-                                                        </span>
+                                                        <span class="bin-list__badge">{{ bin.quantity }} szt.</span>
                                                     </li>
                                                 {% empty %}
-                                                    <li class="list-group-item px-0 text-muted">Brak informacji o pojemnikach.</li>
+                                                    <li class="bin-list__item bin-list__item--empty">Brak informacji o pojemnikach.</li>
                                                 {% endfor %}
-                                                </ul>
+                                            </ul>
 
                                             {% if pickup.note %}
-                                                <div class="alert alert-secondary mt-3">
-                                                    <h6 class="alert-heading fw-bold small mb-1">Dodatkowe uwagi:</h6>
-                                                    <p class="mb-0">{{ pickup.note }}</p>
+                                                <div class="detail-note">
+                                                    <h6 class="detail-note__title">Dodatkowe uwagi:</h6>
+                                                    <p class="detail-note__content">{{ pickup.note }}</p>
                                                 </div>
                                             {% endif %}
                                         </div>
-                                        <div class="modal-footer border-top-0">
+                                        
+                                        <div class="modal-footer detail-modal__footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij okno</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {% empty %}
-                            <tr>
+
+                        {% empty %}
+                            <tr class="data-table__row--empty">
                                 <td colspan="6" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                     <h5>Brak zgłoszeń w systemie</h5>
@@ -112,7 +125,7 @@
                                 </td>
                             </tr>
                         {% endfor %}
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>

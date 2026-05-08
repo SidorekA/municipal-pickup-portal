@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Strona Startowa | System Zarządzania Odpadami{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+    
+    <div class="hero-banner">
+        <div class="container-fluid py-2">
+            <h1 class="hero-banner__title">
+                <i class="bi bi-recycle text-success me-3"></i>System Zarządzania Odpadami
+            </h1>
+            <p class="hero-banner__description">
+                Witaj w elektronicznym systemie ewidencji odpadów komunalnych. 
+                Platforma umożliwia błyskawiczne zgłaszanie zapotrzebowania na wywóz pojemników oraz śledzenie historii dla przypisanych lokalizacji MPK.
+            </p>
+        </div>
+    </div>
+
+    <div class="row align-items-md-stretch action-cards-wrapper">
+        
+        <div class="col-md-6">
+            <div class="action-card action-card--primary">
+                <i class="bi bi-plus-circle action-card__bg-icon"></i>
+                <h2 class="action-card__title">Nowe zgłoszenie</h2>
+                <p class="action-card__description">
+                    Wybierz numer MPK, określ lokalizację i uzupełnij dynamiczne kafelki. 
+                    System powiadomi koordynatorów i wygeneruje niezbędne raporty.
+                </p>
+                <a href="/zgloszenia/dodaj/" class="btn btn-light btn-lg fw-bold action-card__btn">
+                    <i class="bi bi-plus-lg me-2"></i>Dodaj zgłoszenie
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="action-card action-card--secondary">
+                <i class="bi bi-card-list action-card__bg-icon action-card__bg-icon--dark"></i>
+                <h2 class="action-card__title">Panel zgłoszeń</h2>
+                <p class="action-card__description">
+                    Przeglądaj dotychczasową historię, sprawdzaj statusy realizacji wywozów 
+                    i weryfikuj ilości zgłoszone do odbioru na swoich obiektach.
+                </p>
+                <a href="/zgloszenia/lista/" class="btn btn-outline-success btn-lg fw-bold action-card__btn">
+                    <i class="bi bi-list-ul me-2"></i>Przejdź do listy
+                </a>
+            </div>
+        </div>
+        
+    </div>
+
+    <hr class="dashboard-divider">
+
+    <div class="row text-center steps-section">
+        <h3 class="steps-section__heading">Jak to działa?</h3>
+        
+        <div class="col-md-4">
+            <div class="step-item">
+                <div class="step-item__icon-wrapper">
+                    <i class="bi bi-1-circle-fill step-item__icon text-success"></i>
+                </div>
+                <h5 class="step-item__title">1. Wybierz MPK</h5>
+                <p class="step-item__description">System automatycznie odfiltruje widoki i pokaże tylko te lokalizacje, do których posiadasz autoryzowany dostęp.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="step-item">
+                <div class="step-item__icon-wrapper">
+                    <i class="bi bi-2-circle-fill step-item__icon text-success"></i>
+                </div>
+                <h5 class="step-item__title">2. Wpisz ilości</h5>
+                <p class="step-item__description">Baza danych narysuje na ekranie dostępne pojemniki. Po prostu wskaż ile sztuk danego typu czeka na wywóz.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="step-item">
+                <div class="step-item__icon-wrapper">
+                    <i class="bi bi-3-circle-fill step-item__icon text-success"></i>
+                </div>
+                <h5 class="step-item__title">3. Automatyzacja</h5>
+                <p class="step-item__description">Zgłoszenie trafia do bazy i jest natychmiast wysyłany e-mail z plikiem Excel.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
