@@ -39,7 +39,7 @@ class SummaryCollectionSchedule(CoreModel):
         ordering = ['-year', '-month', 'mpk_number']
 
     def __str__(self):
-        return f'{self.mpk_number} {self.year}/{self.month:02d} – {self.waste_fraction.code}'
+        return f'{self.mpk_number} {self.year}/{self.month:02d} – {self.waste_fraction.fraction_type.name}'
 
 class MonthlyConfirmation(CoreModel):
     """Potwierdzenie miesięczne dla lokalizacji."""

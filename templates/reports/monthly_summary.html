@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Podsumowanie Odbiorów | System Odpadów{% endblock %}
+
+{% block content %}
+<div class="container report-container">
+    
+    <div class="report-header">
+        <div class="report-header__title-group">
+            <div class="report-header__icon-wrapper">
+                <i class="bi bi-bar-chart-fill text-success fs-3"></i>
+            </div>
+            <div>
+                <h2 class="report-header__title">Podsumowanie odbiorów</h2>
+                <p class="report-header__subtitle">Zestawienie zrealizowanych wywozów z podziałem na lokalizacje MPK</p>
+            </div>
+        </div>
+
+        <div class="report-header__actions">
+            <div class="report-filter">
+                <form method="get" class="report-filter__form">
+                    <div class="report-filter__group">
+                        <label for="{{ form.mpk.id_for_label }}" class="report-filter__label">{{ form.mpk.label }}</label>
+                        {{ form.mpk }}
+                    </div>
+                    <div class="report-filter__group">
+                        <label for="{{ form.month.id_for_label }}" class="report-filter__label">{{ form.month.label }}</label>
+                        {{ form.month }}
+                    </div>
+                    <div class="report-filter__group">
+                        <label for="{{ form.year.id_for_label }}" class="report-filter__label">{{ form.year.label }}</label>
+                        {{ form.year }}
+                    </div>
+                </form>
+            </div>
+            
+            {% if request.user.is_superuser %}
+            <div class="report-admin-actions">
+                <a href="#" class="btn btn-outline-success fw-bold mt-3 mt-md-0 ms-md-4">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Importuj dane z Excela
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        {% for group in grouped_data %}
+            <div class="mpk-section mb-5">
+                <h4 class="mpk-section__title"><i class="bi bi-geo-alt-fill text-success me-2"></i>MPK: {{ group.mpk_name }}</h4>
+                <hr class="mt-2 mb-4 text-muted opacity-25">
+                
+                <div class="row g-4">
+                    {% for item in group.fractions %}
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="stat-card border-{{ item.color }}">
+                                <div class="stat-card__header">
+                                    <i class="bi {{ item.icon }} stat-card__icon text-{{ item.color }}"></i>
+                                    <span class="stat-card__badge bg-{{ item.color }} text-white">{{ item.capacity }}</span>
+                                </div>
+                                <div class="stat-card__body">
+                                    <h5 class="stat-card__title">{{ item.name }}</h5>
+                                    <p class="stat-card__value text-{{ item.color }}">{{ item.total_collected|floatformat:0 }} <span class="stat-card__unit">szt.</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info border-0 shadow-sm text-center py-5 rounded-4 mt-4">
+                <i class="bi bi-info-circle fs-1 d-block mb-3 text-secondary"></i>
+                <h5>Brak odebranych pojemników</h5>
+                <p class="text-muted mb-0">Nie zarejestrowano żadnych odbiorów dla wybranych parametrów i Twoich uprawnień.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

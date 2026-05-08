@@ -40,5 +40,6 @@ urlpatterns = [
         name="logout",
     ),
     path("zgloszenia/", include("pickups.urls")),
+    path('raporty/', include('reports.urls')),
 ]
 
