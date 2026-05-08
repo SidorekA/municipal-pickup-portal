@@ -29,7 +29,10 @@
             <i class="bi bi-person-check fs-3 me-3"></i>
             <div>
                 <h6 class="mb-0 fw-bold">To zestawienie zostało już przetworzone.</h6>
-                <small>Potwierdzone przez: {{ confirmation.approved_by|default:"System" }} dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}</small>
+                <div>Potwierdzone przez: {{ confirmation.created_by.get_full_name|default:confirmation.created_by.username }} dnia {{ confirmation.created_at|date:"d.m.Y H:i" }}</div>
+                {% if confirmation.status == 'ZATWIERDZONE' %}
+                <div>Zatwierdzone przez: {{ confirmation.approved_by.get_full_name|default:confirmation.approved_by.username }} dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}</div>
+                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -90,10 +93,18 @@
                         <i class="bi bi-arrow-left-circle me-2"></i>Wróć (Anuluj)
                     </a>
                     {% if confirmation.status != 'ZATWIERDZONE' %}
-                    <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm">
-                        <i class="bi bi-cloud-check me-2"></i>Zapisz weryfikację
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm me-2">
+                        <i class="bi bi-save me-2"></i>Zapisz zmiany
                     </button>
                     {% endif %}
+                    {% if request.user.is_superuser and confirmation.status != 'ZATWIERDZONE' %}
+                        <a href="{% url 'reports:approve_confirmation' confirmation.pk %}" 
+                           class="btn btn-success px-4 fw-bold shadow-sm"
+                           onclick="return confirm('Czy na pewno chcesz ostatecznie ZATWIERDZIĆ ten raport? Po tej akcji edycja zostanie zablokowana.')">
+                            <i class="bi bi-shield-check me-2"></i>Zatwierdź raport
+                        </a>
+                    {% endif %}
+
                 </div>
             </div>
         </div>

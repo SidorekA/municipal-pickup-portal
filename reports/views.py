@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.urls import reverse
 from django.utils import timezone
 from pickups.models import PickupWasteBin
 from users.models import Permission
@@ -10,6 +11,22 @@ from waste.models import WasteFraction
 from .models import MonthlyConfirmation, MonthlyConfirmationBin, SummaryCollectionSchedule
 from .forms import ReportFilterForm
 import datetime
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
+def approve_confirmation(request, pk):
+    confirmation = get_object_or_404(MonthlyConfirmation, pk=pk)
+    
+    if confirmation.status != 'ZATWIERDZONE':
+        confirmation.status = 'ZATWIERDZONE'
+        confirmation.approved_by = request.user
+        confirmation.approved_at = timezone.now()
+        confirmation.save()
+        messages.success(request, f"Raport dla MPK {confirmation.mpk_number} został ostatecznie zatwierdzony.")
+    else:
+        messages.warning(request, "Ten raport jest już zatwierdzony.")
+
+    return redirect(reverse('reports:monthly_summary') + f"?month={confirmation.month.month}&year={confirmation.month.year}")
 
 @login_required
 def monthly_summary_view(request):
