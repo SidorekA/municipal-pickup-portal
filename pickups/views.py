@@ -104,7 +104,9 @@ def api_get_mpk_locations(request, mpk_id):
 def pickup_list(request):
     """Wyświetla panel ze zgłoszeniami przefiltrowanymi przez uprawnienia."""
     
-    queryset = Pickup.objects.select_related('mpk_number', 'location', 'reporter')
+    queryset = Pickup.objects.select_related('mpk_number', 'location', 'reporter').prefetch_related(
+        'waste_bins__waste_fraction__fraction_type'
+        )
     
     if not request.user.is_superuser:
         allowed_mpk_ids = Permission.objects.filter(

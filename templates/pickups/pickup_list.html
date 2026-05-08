@@ -45,12 +45,65 @@
                                 </td>
                                 <td>{{ pickup.contact_phone }}</td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-sm btn-outline-primary">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pickupModal{{ pickup.id }}">
                                         <i class="bi bi-eye"></i> Podgląd
                                     </button>
                                 </td>
                             </tr>
-                        {% empty %}
+                            
+                            <div class="modal fade" id="pickupModal{{ pickup.id }}" tabindex="-1" aria-labelledby="modalLabel{{ pickup.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-light">
+                                            <h5 class="modal-title fw-bold" id="modalLabel{{ pickup.id }}">
+                                                <i class="bi bi-info-circle me-2 text-primary"></i>Szczegóły zgłoszenia #{{ pickup.pickup_number }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <p class="mb-1 text-muted small">Lokalizacja</p>
+                                                    <p class="fw-bold">{{ pickup.location.localization }} - {{ pickup.location.obj_name }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p class="mb-1 text-muted small">Telefon kontaktowy</p>
+                                                    <p class="fw-bold"><i class="bi bi-telephone-fill me-1 text-secondary"></i> {{ pickup.contact_phone }}</p>
+                                                </div>
+                                            </div>
+
+                                            <h6 class="fw-bold mt-4 mb-3 border-bottom pb-2">Zgłoszone pojemniki do odbioru:</h6>
+                                            <ul class="list-group list-group-flush mb-3">
+                                                {% for bin in pickup.waste_bins.all %}
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                        <div>
+                                                            <i class="bi bi-trash3 me-2"></i>
+                                                            {{ bin.waste_fraction.fraction_type.name }} 
+                                                            <span class="text-muted small">({{ bin.waste_fraction.capacity }}L)</span>
+                                                        </div>
+                                                        <span class="badge bg-success rounded-pill fs-6 px-3">
+                                                            {{ bin.quantity }} szt.
+                                                        </span>
+                                                    </li>
+                                                {% empty %}
+                                                    <li class="list-group-item px-0 text-muted">Brak informacji o pojemnikach.</li>
+                                                {% endfor %}
+                                                </ul>
+
+                                            {% if pickup.note %}
+                                                <div class="alert alert-secondary mt-3">
+                                                    <h6 class="alert-heading fw-bold small mb-1">Dodatkowe uwagi:</h6>
+                                                    <p class="mb-0">{{ pickup.note }}</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer border-top-0">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij okno</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-3"></i>
@@ -59,7 +112,7 @@
                                 </td>
                             </tr>
                         {% endfor %}
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
