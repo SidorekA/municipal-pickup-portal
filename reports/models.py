@@ -21,8 +21,8 @@ class SummaryCollectionSchedule(CoreModel):
         'waste.WasteFraction', on_delete=models.PROTECT,
         related_name='summaries', verbose_name='Frakcja'
     )
-    quantity = models.DecimalField(
-        max_digits=12, decimal_places=2, verbose_name='Ilość'
+    quantity = models.IntegerField(
+        verbose_name='Ilość'
     )
     date_summary = models.DateField(verbose_name='Data zestawienia')
     imported_at = models.DateTimeField(auto_now_add=True, verbose_name='Data importu')
@@ -47,6 +47,7 @@ class MonthlyConfirmation(CoreModel):
         ('OCZEKUJE', 'Oczekuje'),
         ('POTWIERDZONE', 'Potwierdzone'),
         ('ZATWIERDZONE', 'Zatwierdzone'),
+        ('KONFLIKT', 'Konflikt (Rozbieżności)'),
     ]
     
     mpk_number = models.ForeignKey('locations.MPKNumber', on_delete=models.PROTECT, related_name='confirmations')
@@ -69,7 +70,7 @@ class MonthlyConfirmationBin(CoreModel):
     """Tylko faktycznie potwierdzona ilość, jeśli różni się od zgłoszeń/importów."""
     confirmation = models.ForeignKey(MonthlyConfirmation, on_delete=models.CASCADE, related_name='bins')
     waste_fraction = models.ForeignKey('waste.WasteFraction', on_delete=models.PROTECT)
-    confirmed_quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    confirmed_quantity = models.IntegerField(verbose_name='Potwierdzona ilość')
     note = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:

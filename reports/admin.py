@@ -46,12 +46,16 @@ class MonthlyConfirmationAdmin(admin.ModelAdmin):
     
     readonly_fields = (
         'approved_at', 
-        'approved_by'
+        'approved_by',
+        'created_by',
+        'updated_by',
+        'created_at',
+        'updated_at',
     )
     
     fieldsets = (
         ('Podstawowe informacje', {
-            'fields': ('mpk_number', 'month', 'status') 
+            'fields': ('mpk_number', 'month', 'status', 'created_by', 'created_at', 'updated_by', 'updated_at'), 
         }),
         ('Zatwierdzenie (Admin)', {
             'fields': ('approved_by', 'approved_at'),
