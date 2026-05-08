@@ -1,83 +1,99 @@
 # reports/services.py
 
 import pandas as pd
-from datetime import date
+from datetime import date, timedelta
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
+
+from scheduling.services import get_next_pickup_date
 from .models import SummaryCollectionSchedule, MonthlyConfirmation, MonthlyConfirmationBin
 from waste.models import WasteFraction
 from locations.models import MPKNumber
 from pickups.models import PickupWasteBin
 
-def import_collection_data(file_path, user):
+
+def get_system_sum_for_month(mpk, fraction, month, year):
     """
-    Importuje dane z Excela/CSV i automatycznie weryfikuje zgodność z systemem.
+    Sumuje zgłoszenia, których PLANOWANY odbiór wypada w danym miesiącu.
     """
-    df = pd.read_csv(file_path) if str(file_path).endswith('.csv') else pd.read_excel(file_path)
+    first_day_current = date(year, month, 1)
+    if month == 12:
+        first_day_next = date(year + 1, 1, 1)
+    else:
+        first_day_next = date(year, month + 1, 1)
     
-    summary_results = {
-        'imported': 0,
-        'auto_confirmed': 0,
-        'errors': []
-    }
+    start_search = first_day_current - timedelta(days=10)
+    end_search = first_day_next + timedelta(days=5)
+
+    pickups = PickupWasteBin.objects.filter(
+        pickup__mpk_number=mpk,
+        waste_fraction=fraction,
+        pickup__reported_at__date__range=[start_search, end_search]
+    ).select_related('pickup')
+
+    total_qty = 0
+    
+    for p in pickups:
+        planned_date = get_next_pickup_date(
+            fraction.fraction_type, 
+            submitted_at=p.pickup.reported_at
+        )
+        
+        if planned_date and planned_date.month == month and planned_date.year == year:
+            total_qty += p.quantity
+            
+    return total_qty
+
+def import_collection_data(file_path, user):
+    df = pd.read_excel(file_path)
+    
+    results = {'imported': 0, 'auto_confirmed': 0, 'errors': []}
 
     with transaction.atomic():
         for index, row in df.iterrows():
             try:
                 mpk = MPKNumber.objects.get(mpk_number=str(row['Numer MPK']))
-                
                 fraction = WasteFraction.objects.get(
                     fraction_type__name=row['Frakcja'],
                     capacity=int(row['Pojemność'])
                 )
+                
+                excel_qty = int(row['Ilość'])
+                month = int(row['Miesiąc'])
+                year = int(row['Rok'])
 
-                schedule, _ = SummaryCollectionSchedule.objects.update_or_create(
+                SummaryCollectionSchedule.objects.update_or_create(
                     mpk_number=mpk,
-                    year=int(row['Rok']),
-                    month=int(row['Miesiąc']),
+                    year=year,
+                    month=month,
                     waste_fraction=fraction,
-                    defaults={
-                        'quantity': int(row['Ilość']),
-                        'date_summary': row['Data zestawienia'],
-                        'imported_by': user
-                    }
-                )
-                summary_results['imported'] += 1
-
-                first_day = date(int(row['Rok']), int(row['Miesiąc']), 1)
-                confirmation, _ = MonthlyConfirmation.objects.get_or_create(
-                    mpk_number=mpk,
-                    month=first_day
+                    defaults={'quantity': excel_qty, 'imported_by': user}
                 )
 
-                system_qty = PickupWasteBin.objects.filter(
-                    pickup__mpk_number=mpk,
-                    pickup__reported_at__month=row['Miesiąc'],
-                    pickup__reported_at__year=row['Rok'],
-                    waste_fraction=fraction
-                ).aggregate(total=Sum('quantity'))['total'] or 0
+                system_qty = get_system_sum_for_month(mpk, fraction, month, year)
 
-                if int(system_qty) == int(row['Ilość']):
+                if system_qty == excel_qty:
+                    first_day = date(year, month, 1)
+                    confirmation, _ = MonthlyConfirmation.objects.get_or_create(
+                        mpk_number=mpk, month=first_day
+                    )
+                    
                     MonthlyConfirmationBin.objects.update_or_create(
                         confirmation=confirmation,
                         waste_fraction=fraction,
                         defaults={
-                            'confirmed_quantity': int(row['Ilość']),
-                            'note': 'Automatyczna weryfikacja: zgodność z systemem.'
+                            'confirmed_quantity': excel_qty,
+                            'note': 'Zgodność automatyczna (uwzględniono przesunięcia dat).'
                         }
                     )
-                    
                     confirmation.status = 'POTWIERDZONE'
-                    confirmation.updated_by = user
                     confirmation.save()
-                    summary_results['auto_confirmed'] += 1
+                    results['auto_confirmed'] += 1
+                
+                results['imported'] += 1
 
-            except MPKNumber.DoesNotExist:
-                summary_results['errors'].append(f"Wiersz {index+2}: MPK {row['Numer MPK']} nie istnieje.")
-            except WasteFraction.DoesNotExist:
-                summary_results['errors'].append(f"Wiersz {index+2}: Frakcja {row['Frakcja']} {row['Pojemność']}L nie istnieje.")
             except Exception as e:
-                summary_results['errors'].append(f"Wiersz {index+2}: Błąd krytyczny: {str(e)}")
+                results['errors'].append(f"Błąd w wierszu {index}: {str(e)}")
 
-    return summary_results
+    return results
