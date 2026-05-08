@@ -12,7 +12,7 @@ class SummaryCollectionSchedule(CoreModel):
     Uzupełniane przez import pliku Excel od firmy odbierającej.
     """
     mpk_number = models.ForeignKey(
-        'locations.MpkNumber', on_delete=models.PROTECT,
+        'locations.MPKNumber', on_delete=models.PROTECT,
         related_name='summaries', verbose_name='Numer MPK'
     )
     year = models.PositiveSmallIntegerField(verbose_name='Rok')
@@ -42,46 +42,35 @@ class SummaryCollectionSchedule(CoreModel):
         return f'{self.mpk_number} {self.year}/{self.month:02d} – {self.waste_fraction.fraction_type.name}'
 
 class MonthlyConfirmation(CoreModel):
-    """Potwierdzenie miesięczne dla lokalizacji."""
+    """Nagłówek potwierdzenia miesiąca dla MPK."""
     STATUS_CHOICES = [
         ('OCZEKUJE', 'Oczekuje'),
         ('POTWIERDZONE', 'Potwierdzone'),
         ('ZATWIERDZONE', 'Zatwierdzone'),
     ]
-    location = models.ForeignKey(
-        "locations.Location",
-        on_delete=models.PROTECT,
-        related_name="monthly_confirmations",
-        verbose_name='Lokalizacja'
-    )
+    
+    mpk_number = models.ForeignKey('locations.MPKNumber', on_delete=models.PROTECT, related_name='confirmations')
     month = models.DateField()
-    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='OCZEKUJE', verbose_name='Status')
-
-    confirmed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='confirmed_monthly', 
-        verbose_name='Potwierdzający'
-    )
-    confirmed_at = models.DateTimeField(null=True, blank=True)
-
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='OCZEKUJE')
+    
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='approved_monthly', 
-        verbose_name='Zatwierdzający',
+        on_delete=models.SET_NULL, 
+        null=True, blank=True, 
+        related_name='approved_monthly',
+        verbose_name='Zatwierdzający'
     )
-    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name='Data zatwierdzenia')
+    
+    class Meta:
+        unique_together = [('mpk_number', 'month')]
+    
+class MonthlyConfirmationBin(CoreModel):
+    """Tylko faktycznie potwierdzona ilość, jeśli różni się od zgłoszeń/importów."""
+    confirmation = models.ForeignKey(MonthlyConfirmation, on_delete=models.CASCADE, related_name='bins')
+    waste_fraction = models.ForeignKey('waste.WasteFraction', on_delete=models.PROTECT)
+    confirmed_quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    note = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        db_table = 'monthly_confirmations'
-        verbose_name = 'Potwierdzenie miesięczne'
-        verbose_name_plural = 'Potwierdzenia miesięczne'
-        unique_together = [('location', 'month')]
-        ordering = ['-month', 'location']
-
-    def __str__(self):
-        return f'{self.location} – {self.month.strftime("%Y/%m")} ({self.get_status_display()})'
-    
+        unique_together = [('confirmation', 'waste_fraction')]

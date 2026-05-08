@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container report-container">
+    <div class="report-header">
+        <h2 class="report-header__title"><i class="bi bi-check2-all text-success me-2"></i>Weryfikacja ilości: {{ confirmation.mpk_number }}</h2>
+        <span class="badge {% if confirmation.status == 'OCZEKUJE' %}bg-warning{% else %}bg-success{% endif %}">
+            Status: {{ confirmation.get_status_display }}
+        </span>
+    </div>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="data-card shadow-sm">
+            <table class="data-table">
+                <thead class="data-table__head">
+                    <tr>
+                        <th class="data-table__th ps-4">Frakcja i Pojemność</th>
+                        <th class="data-table__th text-center">Zgłoszone (System)</th>
+                        <th class="data-table__th text-center">Odebrane (Dostawca)</th>
+                        <th class="data-table__th" style="width: 150px;">Faktycznie odebrano</th>
+                        <th class="data-table__th">Uwagi do rozbieżności</th>
+                    </tr>
+                </thead>
+                <tbody class="data-table__body">
+                    {% for item in comparison_data %}
+                    <tr class="data-table__row {% if item.is_conflict %}bg-light-warning{% endif %}">
+                        <td class="data-table__td ps-4">
+                            <strong>{{ item.fraction.fraction_type.name }}</strong><br>
+                            <small class="text-muted">{{ item.fraction.capacity }}L</small>
+                        </td>
+                        <td class="data-table__td text-center">{{ item.reported_qty|floatformat:0 }}</td>
+                        <td class="data-table__td text-center">{{ item.collected_qty|floatformat:0 }}</td>
+                        <td class="data-table__td">
+                            <input type="number" step="0.01" name="qty_{{ item.fraction.id }}" 
+                                   value="{{ item.confirmed_qty|stringformat:".2f" }}" 
+                                   class="form-control form-control-sm {% if item.is_conflict %}border-warning{% endif %}">
+                        </td>
+                        <td class="data-table__td">
+                            <input type="text" name="note_{{ item.fraction.id }}" value="{{ item.note }}" 
+                                   class="form-control form-control-sm" placeholder="Opcjonalna uwaga...">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+            <a href="{% url 'reports:monthly_summary' %}" class="btn btn-outline-secondary">Anuluj</a>
+            <button type="submit" class="btn btn-success px-5 fw-bold">Potwierdzam zgodność danych</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

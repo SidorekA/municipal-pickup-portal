@@ -1,9 +1,10 @@
+#reports/admin.py
+
 from django.contrib import admin
-from .models import SummaryCollectionSchedule, MonthlyConfirmation
+from .models import SummaryCollectionSchedule, MonthlyConfirmation, MonthlyConfirmationBin
 
 @admin.register(SummaryCollectionSchedule)
 class SummaryCollectionScheduleAdmin(admin.ModelAdmin):
-    # Kolumny widoczne na liście
     list_display = (
         'mpk_number', 
         'year', 
@@ -13,58 +14,56 @@ class SummaryCollectionScheduleAdmin(admin.ModelAdmin):
         'date_summary', 
         'imported_at'
     )
-    
-    # Filtry po prawej stronie
     list_filter = ('year', 'month', 'mpk_number', 'waste_fraction')
-    
-    # Pola wyszukiwania (używamy __ aby przeszukać pola w relacjach)
     search_fields = ('mpk_number__mpk_number', 'waste_fraction__fraction_type__name')
-    
-    # Pola tylko do odczytu
     readonly_fields = ('imported_at', 'imported_by')
 
     def save_model(self, request, obj, form, change):
-        # Automatyczne przypisanie użytkownika podczas ręcznego dodawania w adminie
         if not obj.pk:
             obj.imported_by = request.user
         super().save_model(request, obj, form, change)
 
 
+class MonthlyConfirmationBinInline(admin.TabularInline):
+    model = MonthlyConfirmationBin
+    extra = 0  
+    
+
 @admin.register(MonthlyConfirmation)
 class MonthlyConfirmationAdmin(admin.ModelAdmin):
     list_display = (
-        'location', 
+        'mpk_number', 
         'month', 
         'status', 
-        'confirmed_by', 
         'approved_by'
     )
     
-    list_filter = ('status', 'month', 'location')
+    list_filter = ('status', 'month', 'mpk_number') 
     
     search_fields = (
-        'location__obj_name', 
-        'location__localization'
+        'mpk_number__mpk_number', 
     )
     
     readonly_fields = (
-        'confirmed_at', 
         'approved_at', 
-        'confirmed_by', 
         'approved_by'
     )
     
-    # Grupowanie pól w formularzu edycji dla lepszej przejrzystości
     fieldsets = (
         ('Podstawowe informacje', {
-            'fields': ('location', 'month', 'status')
-        }),
-        ('Potwierdzenie (Użytkownik)', {
-            'fields': ('confirmed_by', 'confirmed_at'),
-            'classes': ('collapse',)
+            'fields': ('mpk_number', 'month', 'status') 
         }),
         ('Zatwierdzenie (Admin)', {
             'fields': ('approved_by', 'approved_at'),
             'classes': ('collapse',)
         }),
     )
+    
+    inlines = [MonthlyConfirmationBinInline]
+
+
+@admin.register(MonthlyConfirmationBin)
+class MonthlyConfirmationBinAdmin(admin.ModelAdmin):
+    list_display = ('confirmation', 'waste_fraction', 'confirmed_quantity', 'note')
+    list_filter = ('waste_fraction',)
+    search_fields = ('confirmation__mpk_number__mpk_number', 'waste_fraction__fraction_type__name')
