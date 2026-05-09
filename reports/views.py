@@ -17,6 +17,12 @@ from .forms import ReportFilterForm
 from .services import import_collection_data
 import datetime
 from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse, HttpResponse
+from django.db.models import Prefetch
+import openpyxl
+from openpyxl.styles import PatternFill, Font, Alignment
+import json
+
 
 
 def _odmien_rekord(n):
@@ -376,7 +382,8 @@ def verification_view(request):
         # 1. Walidacja danych wejściowych
         diff_found = False
         for f in fractions:
-            reported_in_system = next((p['total'] for p in pickups if p['waste_fraction_id'] == f.id), 0)
+
+            _reported_in_system = next((p['total'] for p in pickups if p['waste_fraction_id'] == f.id), 0)
             collected_from_excel = next((i['total'] for i in imports if i['waste_fraction_id'] == f.id), 0)
             
             qty_input = request.POST.get(f'qty_{f.id}')
@@ -450,3 +457,193 @@ def verification_view(request):
         'month': month,
         'year': year
     })
+
+
+@staff_member_required
+def edit_summaries_view(request):
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    mpk = request.GET.get('mpk')
+    status_filter = request.GET.get('status')
+
+    # Defaults
+    if not year:
+        year = str(timezone.now().year)
+    if not month:
+        month = str(timezone.now().month)
+
+    queryset = SummaryCollectionSchedule.objects.select_related(
+        'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
+    )
+
+    if year:
+        try:
+            queryset = queryset.filter(year=int(year))
+        except ValueError:
+            pass
+
+    if month:
+        try:
+            queryset = queryset.filter(month=int(month))
+        except ValueError:
+            pass
+    if mpk:
+        queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
+
+    # Prefetch corresponding monthly confirmation and bins
+    confirmations_prefetch = Prefetch(
+        'mpk_number__confirmations',
+        queryset=MonthlyConfirmation.objects.filter(
+            month__year=int(year) if year else timezone.now().year,
+            month__month=int(month) if month else timezone.now().month
+        ).prefetch_related('bins'),
+        to_attr='current_confirmation'
+    )
+    queryset = queryset.prefetch_related(confirmations_prefetch)
+
+    records = list(queryset)
+
+    # Attach confirmation data
+    for record in records:
+        record.confirmation_status = None
+        record.confirmation_note = None
+        if hasattr(record.mpk_number, 'current_confirmation') and record.mpk_number.current_confirmation:
+            conf = record.mpk_number.current_confirmation[0]
+            record.confirmation_status = conf.status
+            # Find the bin for this fraction
+            for bin in conf.bins.all():
+                if bin.waste_fraction_id == record.waste_fraction_id:
+                    record.confirmation_note = bin.note
+                    break
+
+    if status_filter:
+        records = [r for r in records if r.confirmation_status == status_filter or (status_filter == 'BRAK' and r.confirmation_status is None)]
+
+    # Gather unique years and months for filter dropdowns
+    available_years = SummaryCollectionSchedule.objects.values_list('year', flat=True).distinct().order_by('-year')
+    available_months = range(1, 13)
+    available_statuses = MonthlyConfirmation.STATUS_CHOICES
+
+    context = {
+        'records': records,
+        'selected_year': int(year) if year else None,
+        'selected_month': int(month) if month else None,
+        'selected_mpk': mpk,
+        'selected_status': status_filter,
+        'available_years': available_years,
+        'available_months': available_months,
+        'available_statuses': available_statuses,
+    }
+    return render(request, 'reports/edit_summaries.html', context)
+
+@staff_member_required
+def update_summary_quantity(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            record_id = data.get('id')
+            new_quantity = data.get('quantity')
+
+            record = get_object_or_404(SummaryCollectionSchedule, id=record_id)
+            record.quantity = int(new_quantity)
+            record.save()
+            return JsonResponse({'status': 'success', 'new_quantity': record.quantity})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@staff_member_required
+def export_summaries_xlsx(request):
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    mpk = request.GET.get('mpk')
+    status_filter = request.GET.get('status')
+
+    # Reuse logic from view to fetch filtered records
+    queryset = SummaryCollectionSchedule.objects.select_related(
+        'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
+    )
+
+    if year:
+        try:
+            queryset = queryset.filter(year=int(year))
+        except ValueError:
+            pass
+
+    if month:
+        try:
+            queryset = queryset.filter(month=int(month))
+        except ValueError:
+            pass
+    if mpk:
+        queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
+
+    # Prefetch
+    y = int(year) if year else timezone.now().year
+    m = int(month) if month else timezone.now().month
+    confirmations_prefetch = Prefetch(
+        'mpk_number__confirmations',
+        queryset=MonthlyConfirmation.objects.filter(
+            month__year=y,
+            month__month=m
+        ).prefetch_related('bins'),
+        to_attr='current_confirmation'
+    )
+    queryset = queryset.prefetch_related(confirmations_prefetch)
+
+    records = list(queryset)
+
+    for record in records:
+        record.confirmation_status = None
+        record.confirmation_note = None
+        if hasattr(record.mpk_number, 'current_confirmation') and record.mpk_number.current_confirmation:
+            conf = record.mpk_number.current_confirmation[0]
+            record.confirmation_status = conf.status
+            for bin in conf.bins.all():
+                if bin.waste_fraction_id == record.waste_fraction_id:
+                    record.confirmation_note = bin.note
+                    break
+
+    if status_filter:
+        records = [r for r in records if r.confirmation_status == status_filter or (status_filter == 'BRAK' and r.confirmation_status is None)]
+
+    # Create Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Zestawienia"
+
+    headers = ['Numer MPK', 'Rok', 'Miesiąc', 'Frakcja', 'Ilość', 'Status Akceptacji', 'Uwagi MPK']
+    ws.append(headers)
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
+
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+
+    attention_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    for row_num, record in enumerate(records, 2):
+        row_data = [
+            record.mpk_number.mpk_number,
+            record.year,
+            record.month,
+            record.waste_fraction.fraction_type.name,
+            record.quantity,
+            record.confirmation_status or 'Brak',
+            record.confirmation_note or ''
+        ]
+        ws.append(row_data)
+
+        # Colorize if needs attention
+        if record.confirmation_status == 'KONFLIKT' or record.confirmation_note:
+            for col_num in range(1, len(row_data) + 1):
+                ws.cell(row=row_num, column=col_num).fill = attention_fill
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="zestawienia_{y}_{m}.xlsx"'
+    wb.save(response)
+    return response
