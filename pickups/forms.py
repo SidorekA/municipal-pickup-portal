@@ -2,7 +2,7 @@
 from django import forms
 
 from users.models import Permission
-from .models import Pickup, PickupWasteBin
+from .models import Pickup
 from locations.models import LocationContact, Location
 
 class PickupForm(forms.ModelForm):

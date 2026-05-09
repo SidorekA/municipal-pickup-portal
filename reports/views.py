@@ -337,20 +337,116 @@ def verification_view(request):
         mpk_number_id=mpk_id, month=first_day
     )
 
-    comparison_data = _prepare_verification_data(mpk_id, month, year, confirmation)
+    pickups = PickupWasteBin.objects.filter(
+        pickup__mpk_number_id=mpk_id,
+        pickup__reported_at__month=month,
+        pickup__reported_at__year=year
+    ).values('waste_fraction_id').annotate(total=Sum('quantity'))
+    
+    imports = SummaryCollectionSchedule.objects.filter(
+        mpk_number_id=mpk_id,
+        month=month,
+        year=year
+    ).values('waste_fraction_id').annotate(total=Sum('quantity'))
 
-    if request.method == "POST":
-        response = _handle_verification_post(request, confirmation, comparison_data)
-        if response:
-            return response
+    saved_bins = {b.waste_fraction_id: b for b in confirmation.bins.all()}
+    all_fraction_ids = set([p['waste_fraction_id'] for p in pickups] + [i['waste_fraction_id'] for i in imports])
+    fractions = WasteFraction.objects.filter(id__in=all_fraction_ids).select_related('fraction_type')
 
-    return render(
-        request,
-        "reports/verification_form.html",
-        {
-            "confirmation": confirmation,
-            "comparison_data": comparison_data,
-            "month": month,
-            "year": year,
-        },
-    )
+    comparison_data = []
+    for f in fractions:
+        reported = next((p['total'] for p in pickups if p['waste_fraction_id'] == f.id), 0)
+        collected = next((i['total'] for i in imports if i['waste_fraction_id'] == f.id), 0)
+        saved = saved_bins.get(f.id)
+        
+        comparison_data.append({
+            'fraction': f,
+            'reported_qty': int(reported),
+            'collected_qty': int(collected),
+            'confirmed_qty': int(saved.confirmed_quantity) if saved else int(collected),
+            'note': saved.note if saved else "",
+            'is_conflict': reported != collected
+        })
+
+    if request.method == 'POST':
+        decision = request.POST.get('decision_status')
+        has_error = False
+        temp_data = []
+
+        # 1. Walidacja danych wejściowych
+        diff_found = False
+        for f in fractions:
+            reported_in_system = next((p['total'] for p in pickups if p['waste_fraction_id'] == f.id), 0)
+            collected_from_excel = next((i['total'] for i in imports if i['waste_fraction_id'] == f.id), 0)
+            
+            qty_input = request.POST.get(f'qty_{f.id}')
+            note_input = request.POST.get(f'note_{f.id}', "").strip()
+
+            if qty_input is not None:
+                qty_confirmed = int(qty_input)
+                
+                # Sprawdzamy czy użytkownik zmienił wartość względem tego co podał dostawca w Excelu
+                if qty_confirmed != int(collected_from_excel):
+                    diff_found = True
+                    if not note_input:
+                        messages.error(request, f"Dla frakcji {f} wymagana jest uwaga przy rozbieżności!")
+                        has_error = True
+                
+                temp_data.append({
+                    'fraction': f,
+                    'qty': qty_confirmed,
+                    'note': note_input
+                })
+
+        if decision == 'KONFLIKT' and not diff_found:
+            messages.error(request, "Wybrano status 'Występują rozbieżności', ale nie zmieniono żadnej ilości względem danych dostawcy!")
+            has_error = True
+
+        if not has_error:
+            existing_bins = {
+                b.waste_fraction_id: b
+                for b in MonthlyConfirmationBin.objects.filter(confirmation=confirmation)
+            }
+            to_create = []
+            to_update = []
+
+            for item in temp_data:
+                fraction_id = item['fraction'].id
+                if fraction_id in existing_bins:
+                    bin_obj = existing_bins[fraction_id]
+                    if bin_obj.confirmed_quantity != item['qty'] or bin_obj.note != item['note']:
+                        bin_obj.confirmed_quantity = item['qty']
+                        bin_obj.note = item['note']
+                        to_update.append(bin_obj)
+                else:
+                    to_create.append(
+                        MonthlyConfirmationBin(
+                            confirmation=confirmation,
+                            waste_fraction=item['fraction'],
+                            confirmed_quantity=item['qty'],
+                            note=item['note']
+                        )
+                    )
+
+            if to_create:
+                MonthlyConfirmationBin.objects.bulk_create(to_create)
+            if to_update:
+                MonthlyConfirmationBin.objects.bulk_update(to_update, ['confirmed_quantity', 'note'])
+
+            if not confirmation.created_by:
+                confirmation.created_by = request.user
+            confirmation.updated_by = request.user
+            confirmation.status = decision
+            confirmation.approved_by = request.user
+            confirmation.approved_at = timezone.now()
+            confirmation.save()
+            
+            messages.success(request, "Weryfikacja została zapisana pomyślnie.")
+            return redirect('reports:monthly_summary')
+
+    return render(request, 'reports/verification_form.html', {
+        'confirmation': confirmation,
+        'comparison_data': comparison_data,
+        'month': month,
+        'year': year
+    })

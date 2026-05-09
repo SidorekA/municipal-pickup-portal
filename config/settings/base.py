@@ -7,7 +7,7 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = False
 
-ALLOWED_HOSTS: list[str] = ['*']
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", cast=lambda v: [s.strip() for s in v.split(",") if s.strip()])
 
 INSTALLED_APPS = [
     "django.contrib.admin",

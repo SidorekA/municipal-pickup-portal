@@ -1,4 +1,7 @@
-{% extends 'base.html' %}
+with open('templates/core/admin_tasks.html', 'r') as f:
+    content = f.read()
+
+new_content = """{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Narzędzia Administracyjne | System Zarządzania Odpadami{% endblock %}
@@ -196,3 +199,7 @@
     });
 </script>
 {% endblock %}
+"""
+
+with open('templates/core/admin_tasks.html', 'w') as f:
+    f.write(new_content)
