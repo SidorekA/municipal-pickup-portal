@@ -2,10 +2,14 @@
 
 
 from django.apps import apps
+from auditlog.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
+
 from django.http import HttpResponse
 import pandas as pd
 from .models import DataTransferLog
 from django.db import transaction
+from .services import generate_auditlog_export
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -46,6 +50,12 @@ def admin_tasks_view(request):
 
     transfer_logs = DataTransferLog.objects.all().order_by('-created_at')[:20]
 
+    # Pobieranie ContentTypes używanych w logach
+    log_content_type_ids = LogEntry.objects.values_list('content_type_id', flat=True).distinct()
+    log_content_types = ContentType.objects.filter(id__in=log_content_type_ids).order_by('model')
+
+    # Pobieranie Użytkowników
+    users = User.objects.filter(is_active=True).order_by('username')
     mpk_numbers = MPKNumber.objects.filter(active=True).order_by('mpk_number')
 
     # Pobierz dostępne lata z istniejących zestawień, jeśli nie ma to daj np. obecny rok
@@ -62,6 +72,8 @@ def admin_tasks_view(request):
     context = {
         'models_list': models_list,
         'transfer_logs': transfer_logs,
+        'log_content_types': log_content_types,
+        'users': users,
         'mpk_numbers': mpk_numbers,
         'years': years,
         'months': months,
@@ -376,3 +388,69 @@ def home_view(request):
     context['unread_notifications'] = unread_notifications
 
     return render(request, 'core/home.html', context)
+
+@staff_member_required
+def export_auditlog_view(request):
+    date_from = request.GET.get('date_from', '').strip() or None
+    date_to = request.GET.get('date_to', '').strip() or None
+    user_id = request.GET.get('user_id', '').strip() or None
+    content_type_id = request.GET.get('content_type_id', '').strip() or None
+
+    df = generate_auditlog_export(
+        date_from=date_from,
+        date_to=date_to,
+        user_id=user_id,
+        content_type_id=content_type_id
+    )
+
+    if df.empty:
+        messages.warning(request, "Brak danych dla wybranych filtrów.")
+        return redirect('core:admin_tasks')
+
+    file_name = f"historia_zmian_{timezone.now().strftime('%Y%m%d_%H%M%S')}"
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename={file_name}.xlsx'
+
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Historia Zmian')
+        # workbook = writer.book
+        worksheet = writer.sheets['Historia Zmian']
+
+        # Formatting headers
+        from openpyxl.styles import Font, Alignment
+        header_font = Font(bold=True)
+        for cell in worksheet[1]:
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Formatting data
+        for row in worksheet.iter_rows(min_row=2, max_col=6, max_row=worksheet.max_row):
+            for i, cell in enumerate(row):
+                if i == 5: # Zmiany (JSON)
+                    cell.alignment = Alignment(wrapText=True, vertical='top')
+                else:
+                    cell.alignment = Alignment(vertical='top')
+
+        # Adjust column widths
+        worksheet.column_dimensions['A'].width = 20 # Data zmiany
+        worksheet.column_dimensions['B'].width = 30 # Użytkownik
+        worksheet.column_dimensions['C'].width = 15 # Rodzaj akcji
+        worksheet.column_dimensions['D'].width = 20 # Tabela
+        worksheet.column_dimensions['E'].width = 30 # Obiekt
+        worksheet.column_dimensions['F'].width = 50 # Zmiany (JSON)
+
+    # Rejestracja w DataTransferLog
+    try:
+        DataTransferLog.objects.create(
+            action='EXPORT',
+            table_name="Historia Zmian (Auditlog)",
+            file_name=f"{file_name}.xlsx",
+            records_count=len(df),
+            status='SUCCESS',
+            created_by=request.user
+        )
+    except Exception:
+        pass # Ignorujemy błędy przy zapisywaniu logu transferu
+
+    return response

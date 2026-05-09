@@ -102,6 +102,32 @@
             </div>
         </div>
 
+
+        <!-- Eksport Historii Zmian (Auditlog) -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Eksport Historii Zmian (Auditlog)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">Wygeneruj plik zawierający logi audytowe dla wybranych parametrów (wszystkie opcjonalne).</p>
+                    <form method="GET" action="{% url 'core:admin_task_auditlog_export' %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="auditlog_date_from" class="form-label">Data od</label>
+                                <input type="date" class="form-control" id="auditlog_date_from" name="date_from">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="auditlog_date_to" class="form-label">Data do</label>
+                                <input type="date" class="form-control" id="auditlog_date_to" name="date_to">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="auditlog_user" class="form-label">Użytkownik</label>
+                            <select class="form-select" id="auditlog_user" name="user_id">
+                                <option value="" selected>--- Wszyscy użytkownicy ---</option>
+                                {% for u in users %}
+                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
         <!-- Generowanie Raportu Kosztowego -->
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
@@ -130,6 +156,16 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label for="auditlog_content_type" class="form-label">Model/Tabela</label>
+                            <select class="form-select" id="auditlog_content_type" name="content_type_id">
+                                <option value="" selected>--- Wszystkie tabele ---</option>
+                                {% for ct in log_content_types %}
+                                    <option value="{{ ct.id }}">{{ ct.name|title }} ({{ ct.app_label }}.{{ ct.model }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="bi bi-cloud-download me-2"></i>Pobierz historię
                             <label for="report_mpk" class="form-label">Numer MPK (opcjonalnie)</label>
                             <select class="form-select" id="report_mpk" name="mpk_number_id">
                                 <option value="" selected>--- Wszystkie MPK ---</option>
