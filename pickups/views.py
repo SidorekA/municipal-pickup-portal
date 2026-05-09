@@ -23,18 +23,24 @@ def create_pickup(request):
             pickup.reporter = request.user
             pickup.save()
             
-            kosze_dodane = False
+            waste_bins = []
             for key, value in request.POST.items():
                 if key.startswith('bin_') and value.isdigit() and int(value) > 0:
                     fraction_id = int(key.split('_')[1])
                     ilosc = int(value)
                     
-                    PickupWasteBin.objects.create(
+                    waste_bins.append(PickupWasteBin(
                         pickup=pickup,
                         waste_fraction_id=fraction_id,
                         quantity=ilosc
-                    )
-                    kosze_dodane = True
+                    ))
+
+            if waste_bins:
+                PickupWasteBin.objects.bulk_create(waste_bins)
+                kosze_dodane = True
+            else:
+                kosze_dodane = False
+
             if not kosze_dodane:
                 pickup.delete()
                 
