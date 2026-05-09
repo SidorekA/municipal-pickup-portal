@@ -1,6 +1,73 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    body {
+        overflow-x: hidden;
+    }
+
+    .truck-container-vertical {
+        position: fixed;
+        top: 100vh;
+        left: 50%;
+        margin-left: -150px;
+        z-index: 9999;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: drive-vertical 4s linear forwards;
+    }
+
+    .truck-image-vertical {
+        width: 300px;
+        height: auto;
+        position: relative;
+        z-index: 2;
+        transform: rotate(90deg);
+    }
+
+    .smoke-particles-vertical {
+        position: absolute;
+        bottom: -50px;
+        left: 50%;
+        margin-left: -15px;
+        z-index: 1;
+    }
+
+    .smoke {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: #a9a9a9;
+        border-radius: 50%;
+        opacity: 0;
+        animation: puff-vertical 1s infinite;
+        filter: blur(4px);
+    }
+
+    .smoke:nth-child(1) { animation-delay: 0s; left: 0px; bottom: 0; }
+    .smoke:nth-child(2) { animation-delay: 0.2s; left: -20px; bottom: -30px; width: 40px; height: 40px; }
+    .smoke:nth-child(3) { animation-delay: 0.4s; left: 20px; bottom: -20px; width: 35px; height: 35px; }
+    .smoke:nth-child(4) { animation-delay: 0.6s; left: -10px; bottom: -60px; width: 50px; height: 50px; }
+
+    @keyframes drive-vertical {
+        0% { transform: translateY(200px); }
+        100% { transform: translateY(-150vh); }
+    }
+
+    @keyframes puff-vertical {
+        0% {
+            opacity: 0.8;
+            transform: scale(0.5) translate(0, 0);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(2.5) translate(0, 40px);
+        }
+    }
+</style>
+
 <div class="container mt-5 text-center">
     <h2>Sukces!</h2>
     <p class="lead">Twoje zgłoszenie zostało pomyślnie dodane i przekazane do wysyłki.</p>
@@ -17,6 +84,16 @@
     <div class="mt-5">
         <a href="{% url 'pickups:pickup_create' %}" class="btn btn-primary">Dodaj kolejne zgłoszenie</a>
         <a href="/" class="btn btn-outline-secondary">Wróć na stronę główną</a>
+    </div>
+</div>
+
+<div class="truck-container-vertical">
+    <img src="/static/img/garbage-truck.png" alt="Śmieciarka" class="truck-image-vertical">
+    <div class="smoke-particles-vertical">
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+        <div class="smoke"></div>
     </div>
 </div>
 {% endblock %}
