@@ -63,6 +63,22 @@ def pickup_success(request):
 
 def api_get_location_bins(request, location_id):
     """Zwraca listę przypisanych pojemników dla danej lokalizacji w formacie JSON."""
+    try:
+        location = Location.objects.get(id=location_id)
+    except Location.DoesNotExist:
+        return JsonResponse({'error': 'Lokalizacja nie istnieje'}, status=404)
+
+    has_permission = False
+    if request.user.is_authenticated:
+        has_permission = request.user.is_superuser or Permission.objects.filter(
+            user=request.user,
+            mpk_number=location.mpk_number,
+            active=True
+        ).exists()
+
+    if not has_permission:
+        return JsonResponse({'error': 'Brak uprawnień do tej lokalizacji'}, status=403)
+
     bins = LocationWasteBin.objects.filter(location_id=location_id).select_related('waste_fraction__fraction_type')
     
     data = []
