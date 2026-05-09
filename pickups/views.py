@@ -87,11 +87,13 @@ def api_get_location_bins(request, location_id):
 def api_get_mpk_locations(request, mpk_id):
     """Zwraca listę lokalizacji przypisanych do konkretnego MPK."""
     
-    has_permission = request.user.is_superuser or Permission.objects.filter(
-        user=request.user, 
-        mpk_number_id=mpk_id, 
-        active=True
-    ).exists()
+    has_permission = False
+    if request.user.is_authenticated:
+        has_permission = request.user.is_superuser or Permission.objects.filter(
+            user=request.user,
+            mpk_number_id=mpk_id,
+            active=True
+        ).exists()
     
     if not has_permission:
         # Jeśli nie ma dostępu, zwracamy pustą listę lub błąd 403
