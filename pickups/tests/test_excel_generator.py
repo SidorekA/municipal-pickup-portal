@@ -7,7 +7,7 @@ from openpyxl import load_workbook
 from pickups.models import Pickup, PickupWasteBin
 from locations.models import Location, MPKNumber
 from waste.models import WasteFraction, WasteFractionType
-from pickups.excel_generator import generate_pickup_excel, HEADERS, FRACTION_COLUMNS
+from pickups.excel_generator import generate_pickup_excel, HEADERS
 
 User = get_user_model()
 
