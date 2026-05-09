@@ -14,6 +14,14 @@ from .services import import_collection_data
 import datetime
 from django.contrib.admin.views.decorators import staff_member_required
 
+def _odmien_rekord(n):
+    if n == 1:
+        return "1 rekord"
+    elif 2 <= n <= 4:
+        return f"{n} rekordy"
+    else:
+        return f"{n} rekordów"
+    
 @staff_member_required
 def import_excel_view(request):
     if request.method == 'POST' and request.FILES.get('excel_file'):
@@ -26,11 +34,16 @@ def import_excel_view(request):
         try:
             results = import_collection_data(excel_file, request.user)
 
+            parts = []
             if results['imported'] > 0:
-                msg = f"Zaimportowano {results['imported']} rekordów."
-                if results['auto_confirmed'] > 0:
-                    msg += f" Automatycznie potwierdzono {results['auto_confirmed']} rekordów."
-                messages.success(request, msg)
+                parts.append(f"Zaimportowano {_odmien_rekord(results['imported'])}.")
+            if results['skipped'] > 0:
+                parts.append(f"{_odmien_rekord(results['skipped'])} pominięto – istnieją już w bazie.")
+            if results['auto_confirmed'] > 0:
+                parts.append(f"Automatycznie potwierdzono {_odmien_rekord(results['auto_confirmed'])}.")
+
+            if parts:
+                messages.success(request, ' '.join(parts))
 
             if results['errors']:
                 for error in results['errors'][:5]:  # Pokaż maksymalnie 5 pierwszych błędów

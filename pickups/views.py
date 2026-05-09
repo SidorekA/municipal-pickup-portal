@@ -42,7 +42,7 @@ def create_pickup(request):
 
             wyslij_zgloszenie_email.delay(pickup.id)
             messages.success(request, f"Zgłoszenie {pickup.pickup_number} zostało utworzone!")
-            return redirect('pickups:success')
+            return redirect('pickups:pickup_success')
         else:
             messages.error(request, "Popraw błędy w formularzu głównym.")
     else:
@@ -52,7 +52,7 @@ def create_pickup(request):
 
 def pickup_success(request):
     """Wyświetla stronę z podziękowaniem po dodaniu zgłoszenia."""
-    return render(request, 'pickups/success.html')
+    return render(request, 'pickups/pickup_success.html')
 
 def api_get_location_bins(request, location_id):
     """Zwraca listę przypisanych pojemników dla danej lokalizacji w formacie JSON."""

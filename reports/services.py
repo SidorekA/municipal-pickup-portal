@@ -51,7 +51,7 @@ def import_collection_data(file_path, user):
     else:
         df = pd.read_excel(file_path, parse_dates=['Data Odbioru'])
 
-    results = {'imported': 0, 'auto_confirmed': 0, 'errors': []}
+    results = {'imported': 0, 'skipped': 0, 'auto_confirmed': 0, 'errors': []}
 
     with transaction.atomic():
         for index, row in df.iterrows():
@@ -72,7 +72,7 @@ def import_collection_data(file_path, user):
                 else:
                     date_summary = pd.to_datetime(raw_date).date()
 
-                SummaryCollectionSchedule.objects.update_or_create(
+                obj, created = SummaryCollectionSchedule.objects.update_or_create(
                     mpk_number=mpk,
                     year=year,
                     month=month,
@@ -83,27 +83,27 @@ def import_collection_data(file_path, user):
                         'date_summary': date_summary,
                     }
                 )
-
-                system_qty = get_system_sum_for_month(mpk, fraction, month, year)
-
-                if system_qty == excel_qty:
-                    first_day = date(year, month, 1)
-                    confirmation, _ = MonthlyConfirmation.objects.get_or_create(
-                        mpk_number=mpk, month=first_day
-                    )
-                    MonthlyConfirmationBin.objects.update_or_create(
+                if created:
+                    results['imported'] += 1
+                    system_qty = get_system_sum_for_month(mpk, fraction, month, year)
+                    if system_qty == excel_qty:
+                        first_day = date(year, month, 1)
+                        confirmation, _ = MonthlyConfirmation.objects.get_or_create(
+                            mpk_number=mpk, month=first_day
+                        )
+                        MonthlyConfirmationBin.objects.update_or_create(
                         confirmation=confirmation,
                         waste_fraction=fraction,
                         defaults={
                             'confirmed_quantity': excel_qty,
                             'note': 'Zgodność automatyczna (uwzględniono przesunięcia dat).'
-                        }
-                    )
-                    confirmation.status = 'POTWIERDZONE'
-                    confirmation.save()
-                    results['auto_confirmed'] += 1
-
-                results['imported'] += 1
+                            }
+                        )
+                        confirmation.status = 'POTWIERDZONE'
+                        confirmation.save()
+                        results['auto_confirmed'] += 1
+                else:
+                    results['skipped'] += 1
 
             except Exception as e:
                 results['errors'].append(f"Błąd w wierszu {index}: {str(e)}")

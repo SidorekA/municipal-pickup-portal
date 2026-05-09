@@ -29,10 +29,24 @@
             <i class="bi bi-person-check fs-3 me-3"></i>
             <div>
                 <h6 class="mb-0 fw-bold">To zestawienie zostało już przetworzone.</h6>
-                <div>Potwierdzone przez: {{ confirmation.created_by.get_full_name|default:confirmation.created_by.username }} dnia {{ confirmation.created_at|date:"d.m.Y H:i" }}</div>
+                <div>Potwierdzone przez:
+                    {% if confirmation.created_by %}
+                        {{ confirmation.created_by.get_full_name|default:confirmation.created_by.username }}
+                    {% else %}
+                        System (import automatyczny)
+                    {% endif %}
+                        dnia {{ confirmation.created_at|date:"d.m.Y H:i" }}
+                </div>
                 {% if confirmation.status == 'ZATWIERDZONE' %}
-                <div>Zatwierdzone przez: {{ confirmation.approved_by.get_full_name|default:confirmation.approved_by.username }} dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}</div>
-                {% endif %}
+                <div>Zatwierdzone przez:
+                    {% if confirmation.approved_by %}
+                        {{ confirmation.approved_by.get_full_name|default:confirmation.approved_by.username }}
+                    {% else %}
+                        Nieznany
+                    {% endif %}
+                    dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}
+                </div>
+                    {% endif %}
             </div>
         </div>
         {% endif %}
