@@ -1,24 +1,8 @@
 # core/models.py
 from __future__ import annotations
-from django.apps import AppConfig
 from django.conf import settings
 from crum import get_current_user
 from django.db import models
-from auditlog.registry import auditlog
-from django.apps import apps
-# from core.models import CoreModel, DataTransferLog
-
-class CoreConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'core'
-
-    def ready(self):
-        for model in apps.get_models():
-            if issubclass(model, CoreModel) and model not in [CoreModel, DataTransferLog]:
-                try:
-                    auditlog.register(model, exclude_fields=['updated_at', 'updated_by'])
-                except Exception:
-                    pass
 
 class CoreModel(models.Model):
     """Domyślna baza dla wszystkich modeli, zawierająca pola wspólne."""

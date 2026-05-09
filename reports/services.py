@@ -1,4 +1,5 @@
 # reports/services.py
+import io
 
 import pandas as pd
 from datetime import date, timedelta
@@ -6,7 +7,8 @@ from collections import defaultdict
 from django.db import transaction
 from scheduling.services import get_next_pickup_date
 from .models import SummaryCollectionSchedule, MonthlyConfirmation, MonthlyConfirmationBin
-from waste.models import WasteFraction
+from waste.models import WasteFraction, WasteCost
+from locations.models import Location
 from locations.models import MPKNumber
 from pickups.models import PickupWasteBin
 
@@ -235,3 +237,141 @@ def import_collection_data(file_path, user):
                 results['errors'].append(f"Błąd w wierszu {index}: {str(e)}")
 
     return results
+
+
+def generate_mpk_cost_report(year=None, month=None, mpk_number_id=None, report_format='xlsx'):
+    # Query data
+    qs = SummaryCollectionSchedule.objects.select_related(
+        'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
+    )
+
+    if year:
+        qs = qs.filter(year=year)
+    if month:
+        qs = qs.filter(month=month)
+    if mpk_number_id:
+        qs = qs.filter(mpk_number_id=mpk_number_id)
+
+    summaries = list(qs)
+
+    # Pre-fetch all costs to memory
+    all_costs = list(WasteCost.objects.all())
+
+    # Pre-fetch locations to memory
+    # We want obj_name from Location for the given MPK.
+    # An MPK can have multiple locations, we can just join them or take the first one.
+    locations = list(Location.objects.filter(active=True))
+    mpk_locations = defaultdict(list)
+    for loc in locations:
+        mpk_locations[loc.mpk_number_id].append(loc.obj_name)
+
+    def get_location_name(mpk_id):
+        locs = mpk_locations.get(mpk_id)
+        if locs:
+            return ", ".join(set(locs))
+        return "Brak lokalizacji"
+
+    def get_cost_for_fraction_and_date(fraction_id, target_date):
+        for cost in all_costs:
+            if cost.waste_fraction_id == fraction_id:
+                if cost.date_from <= target_date and (cost.date_to is None or cost.date_to >= target_date):
+                    return cost.cost
+        return None
+
+    data = []
+    missing_costs = []
+    missing_costs_keys = set()
+
+    for row in summaries:
+        target_date = row.date_summary
+        unit_cost = get_cost_for_fraction_and_date(row.waste_fraction_id, target_date)
+
+        mpk_num = row.mpk_number.mpk_number
+        loc_name = get_location_name(row.mpk_number_id)
+        fraction_name = str(row.waste_fraction)
+
+        if unit_cost is None:
+            cost_val = 0
+            key = (mpk_num, row.year, row.month, fraction_name)
+            if key not in missing_costs_keys:
+                missing_costs_keys.add(key)
+                missing_costs.append({
+                    'Numer MPK': mpk_num,
+                    'Rok': row.year,
+                    'Miesiąc': row.month,
+                    'Frakcja': fraction_name
+                })
+        else:
+            cost_val = unit_cost
+
+        total_cost = cost_val * row.quantity
+
+        data.append({
+            'Numer MPK': mpk_num,
+            'Nazwa Lokalizacji': loc_name,
+            'Rok': row.year,
+            'Miesiąc': row.month,
+            'Frakcja': fraction_name,
+            'Ilość Pojemników': row.quantity,
+            'Koszt Jednostkowy': cost_val,
+            'Suma Kosztów': total_cost
+        })
+
+    df_main = pd.DataFrame(data)
+    df_missing = pd.DataFrame(missing_costs)
+
+    if report_format == 'csv':
+        output = io.StringIO()
+        if not df_main.empty:
+            df_main.to_csv(output, index=False)
+        else:
+            pd.DataFrame(columns=['Numer MPK', 'Nazwa Lokalizacji', 'Rok', 'Miesiąc', 'Frakcja', 'Ilość Pojemników', 'Koszt Jednostkowy', 'Suma Kosztów']).to_csv(output, index=False)
+        return output.getvalue().encode('utf-8')
+    else:
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            if not df_main.empty:
+                df_main.to_excel(writer, sheet_name='Raport Kosztowy', index=False)
+
+                # Group by MPK, Rok, Miesiac
+                df_final = df_main.groupby(['Numer MPK', 'Rok', 'Miesiąc'])['Suma Kosztów'].sum().reset_index()
+                df_final.to_excel(writer, sheet_name='Raport Końcowy', index=False)
+            else:
+                pd.DataFrame(columns=['Numer MPK', 'Nazwa Lokalizacji', 'Rok', 'Miesiąc', 'Frakcja', 'Ilość Pojemników', 'Koszt Jednostkowy', 'Suma Kosztów']).to_excel(writer, sheet_name='Raport Kosztowy', index=False)
+                pd.DataFrame(columns=['Numer MPK', 'Rok', 'Miesiąc', 'Suma Kosztów']).to_excel(writer, sheet_name='Raport Końcowy', index=False)
+
+            if not df_missing.empty:
+                df_missing.to_excel(writer, sheet_name='Braki w kosztorysach', index=False)
+            else:
+                pd.DataFrame(columns=['Numer MPK', 'Rok', 'Miesiąc', 'Frakcja']).to_excel(writer, sheet_name='Braki w kosztorysach', index=False)
+
+            # Apply openpyxl styling
+            workbook = writer.book
+            from openpyxl.styles import Font
+
+            ws_main = workbook['Raport Kosztowy']
+            for cell in ws_main[1]:
+                cell.font = Font(bold=True)
+
+            # Currency format for Cost columns (G and H)
+            for col in ['G', 'H']:
+                for cell in ws_main[col]:
+                    if cell.row > 1:
+                        cell.number_format = '#,##0.00 "zł"'
+
+            ws_missing = workbook['Braki w kosztorysach']
+            for cell in ws_missing[1]:
+                cell.font = Font(bold=True)
+
+            ws_final = workbook['Raport Końcowy']
+            for cell in ws_final[1]:
+                cell.font = Font(bold=True)
+
+            # Currency format for Suma Kosztów column (D)
+            for cell in ws_final['D']:
+                if cell.row > 1:
+                    cell.number_format = '#,##0.00 "zł"'
+
+
+        # Applying styling via openpyxl if needed can be done using writer.sheets
+        return output.getvalue()

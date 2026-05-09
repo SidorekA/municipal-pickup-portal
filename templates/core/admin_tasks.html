@@ -128,6 +128,30 @@
                                 <option value="" selected>--- Wszyscy użytkownicy ---</option>
                                 {% for u in users %}
                                     <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
+        <!-- Generowanie Raportu Kosztowego -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header text-white" style="background-color: #6f42c1;">
+                    <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Generowanie Raportu Kosztowego</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">Wygeneruj raport kosztowy z zestawień z podziałem na MPK.</p>
+                    <form method="GET" action="{% url 'core:admin_task_cost_report' %}">
+                        <div class="mb-3">
+                            <label for="report_year" class="form-label">Rok (opcjonalnie)</label>
+                            <select class="form-select" id="report_year" name="year">
+                                <option value="" selected>--- Wszystkie lata ---</option>
+                                {% for year in years %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="report_month" class="form-label">Miesiąc (opcjonalnie)</label>
+                            <select class="form-select" id="report_month" name="month">
+                                <option value="" selected>--- Wszystkie miesiące ---</option>
+                                {% for month_num, month_name in months %}
+                                    <option value="{{ month_num }}">{{ month_name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -142,6 +166,23 @@
                         </div>
                         <button type="submit" class="btn btn-secondary w-100">
                             <i class="bi bi-cloud-download me-2"></i>Pobierz historię
+                            <label for="report_mpk" class="form-label">Numer MPK (opcjonalnie)</label>
+                            <select class="form-select" id="report_mpk" name="mpk_number_id">
+                                <option value="" selected>--- Wszystkie MPK ---</option>
+                                {% for mpk in mpk_numbers %}
+                                    <option value="{{ mpk.id }}">{{ mpk.mpk_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="report_format" class="form-label">Format pliku</label>
+                            <select class="form-select" id="report_format" name="format">
+                                <option value="xlsx" selected>Excel (.xlsx)</option>
+                                <option value="csv">CSV (.csv)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn text-white w-100" style="background-color: #6f42c1;">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generuj Raport
                         </button>
                     </form>
                 </div>
