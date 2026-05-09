@@ -3,9 +3,6 @@
 import pandas as pd
 from datetime import date, timedelta
 from django.db import transaction
-from django.db.models import Sum
-from django.utils import timezone
-
 from scheduling.services import get_next_pickup_date
 from .models import SummaryCollectionSchedule, MonthlyConfirmation, MonthlyConfirmationBin
 from waste.models import WasteFraction
