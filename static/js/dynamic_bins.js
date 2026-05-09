@@ -104,6 +104,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 data.bins.forEach(bin => {
                     const color = getBinColor(bin.name);
+                    let initialValue = 0;
+                    if (window.PREVIOUS_POST_DATA && window.PREVIOUS_POST_DATA["bin_" + bin.fraction_id]) {
+                        initialValue = window.PREVIOUS_POST_DATA["bin_" + bin.fraction_id];
+                    }
+
                     const cardHtml = `
                         <div class="col-6 col-md-3">
                             <div class="card bin-card h-100 border border-${color} shadow-sm text-center">
@@ -116,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                         <label class="small fw-bold mb-1">Do odbioru:</label>
                                         <input type="number" name="bin_${bin.fraction_id}" 
                                                class="form-control text-center fw-bold text-${color}" 
-                                               min="0" max="${bin.max_quantity}" value="0">
+                                               min="0" max="${bin.max_quantity}" value="${initialValue}">
                                         <div class="small text-muted mt-1">Dostępna ilość pojemników: ${bin.max_quantity}</div>
                                     </div>
                                 </div>
@@ -125,6 +130,20 @@ document.addEventListener("DOMContentLoaded", function() {
                     `;
                     binsContainer.innerHTML += cardHtml;
                 });
+
+                if (window.PREVIOUS_POST_DATA && window.PREVIOUS_POST_DATA["contact_phone"]) {
+                    const prevPhone = window.PREVIOUS_POST_DATA["contact_phone"];
+                    let hasOption = false;
+                    for (let i = 0; i < phoneSelect.options.length; i++) {
+                        if (phoneSelect.options[i].value === prevPhone) {
+                            hasOption = true;
+                            break;
+                        }
+                    }
+                    if (hasOption) {
+                        phoneSelect.value = prevPhone;
+                    }
+                }
             })
             .catch(error => {
                 console.error("Błąd pobierania pojemników:", error);
