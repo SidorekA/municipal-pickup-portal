@@ -332,8 +332,13 @@ def generate_mpk_cost_report(year=None, month=None, mpk_number_id=None, report_f
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             if not df_main.empty:
                 df_main.to_excel(writer, sheet_name='Raport Kosztowy', index=False)
+
+                # Group by MPK, Rok, Miesiac
+                df_final = df_main.groupby(['Numer MPK', 'Rok', 'Miesiąc'])['Suma Kosztów'].sum().reset_index()
+                df_final.to_excel(writer, sheet_name='Raport Końcowy', index=False)
             else:
                 pd.DataFrame(columns=['Numer MPK', 'Nazwa Lokalizacji', 'Rok', 'Miesiąc', 'Frakcja', 'Ilość Pojemników', 'Koszt Jednostkowy', 'Suma Kosztów']).to_excel(writer, sheet_name='Raport Kosztowy', index=False)
+                pd.DataFrame(columns=['Numer MPK', 'Rok', 'Miesiąc', 'Suma Kosztów']).to_excel(writer, sheet_name='Raport Końcowy', index=False)
 
             if not df_missing.empty:
                 df_missing.to_excel(writer, sheet_name='Braki w kosztorysach', index=False)
@@ -357,6 +362,15 @@ def generate_mpk_cost_report(year=None, month=None, mpk_number_id=None, report_f
             ws_missing = workbook['Braki w kosztorysach']
             for cell in ws_missing[1]:
                 cell.font = Font(bold=True)
+
+            ws_final = workbook['Raport Końcowy']
+            for cell in ws_final[1]:
+                cell.font = Font(bold=True)
+
+            # Currency format for Suma Kosztów column (D)
+            for cell in ws_final['D']:
+                if cell.row > 1:
+                    cell.number_format = '#,##0.00 "zł"'
 
 
         # Applying styling via openpyxl if needed can be done using writer.sheets
