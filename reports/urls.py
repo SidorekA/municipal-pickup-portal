@@ -7,4 +7,5 @@ urlpatterns = [
     path('podsumowanie/', views.monthly_summary_view, name='monthly_summary'),
     path('weryfikacja/', views.verification_view, name='verification'),
     path('approve/<int:pk>/', views.approve_confirmation, name='approve_confirmation'),
+    path('import/', views.import_excel_view, name='import_excel'),
 ]

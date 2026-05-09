@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                         <input type="number" name="bin_${bin.fraction_id}" 
                                                class="form-control text-center fw-bold text-${color}" 
                                                min="0" max="${bin.max_quantity}" value="0">
-                                        <div class="small text-muted mt-1">Zgłoszono w systemie: ${bin.max_quantity}</div>
+                                        <div class="small text-muted mt-1">Dostępna ilość pojemników: ${bin.max_quantity}</div>
                                     </div>
                                 </div>
                             </div>

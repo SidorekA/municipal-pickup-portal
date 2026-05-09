@@ -9,6 +9,7 @@ from pickups.models import Pickup, PickupWasteBin
 from .forms import PickupForm
 from django.http import JsonResponse
 from locations.models import Location, LocationContact, LocationWasteBin
+from scheduling.services import get_next_pickup_date
 
 @login_required
 def create_pickup(request):
@@ -42,7 +43,7 @@ def create_pickup(request):
 
             wyslij_zgloszenie_email.delay(pickup.id)
             messages.success(request, f"Zgłoszenie {pickup.pickup_number} zostało utworzone!")
-            return redirect('pickups:success')
+            return redirect('pickups:pickup_success')
         else:
             messages.error(request, "Popraw błędy w formularzu głównym.")
     else:
@@ -52,7 +53,7 @@ def create_pickup(request):
 
 def pickup_success(request):
     """Wyświetla stronę z podziękowaniem po dodaniu zgłoszenia."""
-    return render(request, 'pickups/success.html')
+    return render(request, 'pickups/pickup_success.html')
 
 def api_get_location_bins(request, location_id):
     """Zwraca listę przypisanych pojemników dla danej lokalizacji w formacie JSON."""
@@ -106,7 +107,7 @@ def pickup_list(request):
     """Wyświetla panel ze zgłoszeniami przefiltrowanymi przez uprawnienia."""
     
     queryset = Pickup.objects.select_related('mpk_number', 'location', 'reporter').prefetch_related(
-        'waste_bins__waste_fraction__fraction_type'
+        'waste_bins__waste_fraction__fraction_type__schedules'
         )
     
     if not request.user.is_superuser:
@@ -117,6 +118,13 @@ def pickup_list(request):
         
         queryset = queryset.filter(mpk_number_id__in=allowed_mpk_ids)
     
-    pickups = queryset.order_by('-created_at')
+    pickups = list(queryset.order_by('-created_at'))
+
+    for pickup in pickups:
+        for bin in pickup.waste_bins.all():
+            bin.planned_date = get_next_pickup_date(
+                fraction_type=bin.waste_fraction.fraction_type,
+                submitted_at=pickup.reported_at
+            )
     
     return render(request, 'pickups/pickup_list.html', {'pickups': pickups})

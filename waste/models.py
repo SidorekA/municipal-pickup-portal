@@ -66,7 +66,6 @@ class WasteCost(CoreModel):
     date_to = models.DateField(null=True, blank=True, verbose_name='Obowiązuje do')
 
     class Meta:
-        db_table = 'costs'
         verbose_name = 'Koszt frakcji'
         verbose_name_plural = 'Koszty frakcji'
         ordering = ['-date_from', 'waste_fraction']
