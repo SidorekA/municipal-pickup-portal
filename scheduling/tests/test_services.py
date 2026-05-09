@@ -3,7 +3,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from django.test import TestCase
-from locations.models import WasteFractionType
+from waste.models import WasteFractionType
 from scheduling.models import CollectionSchedule
 from scheduling.services import get_next_pickup_date
 
