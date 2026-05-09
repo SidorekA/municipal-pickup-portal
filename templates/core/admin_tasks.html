@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Narzędzia Administracyjne | System Zarządzania Odpadami{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-tools me-2"></i>Narzędzia Administracyjne</h2>
+    </div>
+
+    <div class="row">
+        <!-- Import Data -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-excel me-2"></i>Import Danych</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">Zaimportuj dane z raportu dostawcy (.xlsx lub .csv).</p>
+                    <form method="post" action="{% url 'core:import_collection_data' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <input class="form-control" type="file" id="excel_file" name="excel_file" accept=".xlsx,.csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-upload me-2"></i>Zaimportuj plik
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Tasks -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Komunikacja e-mail</h5>
+                </div>
+                <div class="card-body d-flex flex-column gap-3">
+                    <a href="{% url 'core:draft_email_unconfirmed' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-envelope-exclamation me-2"></i>Wygeneruj draft: brak potwierdzeń
+                    </a>
+                    <a href="{% url 'core:draft_email_all_users' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-envelope-paper me-2"></i>Wygeneruj draft: wszyscy użytkownicy
+                    </a>
+                    <a href="{% url 'core:draft_email_coordinators' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-envelope-at me-2"></i>Wygeneruj draft: Koordynatorzy MPK
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
