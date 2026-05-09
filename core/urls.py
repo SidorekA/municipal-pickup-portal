@@ -11,4 +11,5 @@ urlpatterns = [
     path('admin-tasks/draft-email-coordinators/', views.draft_email_coordinators_view, name='draft_email_coordinators'),
     path('admin-tasks/export-table-data/', views.export_table_data_view, name='export_table_data'),
     path('admin-tasks/import-table-data/', views.import_table_data_view, name='import_table_data'),
+    path('admin-tasks/export-auditlog/', views.export_auditlog_view, name='admin_task_auditlog_export'),
 ]

@@ -6,7 +6,7 @@ from crum import get_current_user
 from django.db import models
 from auditlog.registry import auditlog
 from django.apps import apps
-from core.models import CoreModel, DataTransferLog
+# from core.models import CoreModel, DataTransferLog
 
 class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
