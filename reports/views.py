@@ -620,7 +620,7 @@ def export_summaries_xlsx(request):
 
     fraction_cols = sorted(list(fraction_cols))
 
-    headers = ['Numer MPK', 'Rok', 'Miesiąc'] + fraction_cols
+    headers = ['Numer MPK', 'Rok', 'Miesiąc'] + fraction_cols + ['Status Akceptacji', 'Uwagi MPK']
     ws.append(headers)
 
     header_font = Font(bold=True, color="FFFFFF")
@@ -638,6 +638,7 @@ def export_summaries_xlsx(request):
     # Group data by MPK, Year, Month
     from collections import defaultdict
     pivot_data = defaultdict(dict)
+    mpk_metadata = defaultdict(lambda: {'status': None, 'notes': []})
 
     for record in records:
         key = (record.mpk_number.mpk_number, record.year, record.month)
@@ -649,6 +650,12 @@ def export_summaries_xlsx(request):
             'note': record.confirmation_note
         }
 
+        # Track status and notes per MPK row
+        if record.confirmation_status:
+            mpk_metadata[key]['status'] = record.confirmation_status
+        if record.confirmation_note:
+            mpk_metadata[key]['notes'].append(f"[{fraction_str}] {record.confirmation_note}")
+
     for row_num, (key, row_dict) in enumerate(pivot_data.items(), 2):
         row_data = [key[0], key[1], key[2]]
 
@@ -657,6 +664,11 @@ def export_summaries_xlsx(request):
                 row_data.append(row_dict[frac_col]['quantity'])
             else:
                 row_data.append(0)
+
+        # Append overarching status and combined notes
+        meta = mpk_metadata[key]
+        row_data.append(meta['status'] or 'Brak')
+        row_data.append(' | '.join(meta['notes']) if meta['notes'] else '')
 
         ws.append(row_data)
 
@@ -671,6 +683,14 @@ def export_summaries_xlsx(request):
                     cell.fill = approved_fill
                 elif cell_data['status'] == 'KONFLIKT' or cell_data['note']:
                     cell.fill = attention_fill
+
+        # Apply conditional formatting to status and notes column if needed
+        status_col_num = 4 + len(fraction_cols)
+        notes_col_num = 5 + len(fraction_cols)
+
+        if meta['status'] == 'KONFLIKT' or meta['notes']:
+            ws.cell(row=row_num, column=status_col_num).fill = attention_fill
+            ws.cell(row=row_num, column=notes_col_num).fill = attention_fill
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="zestawienia_{y}_{m}.xlsx"'
