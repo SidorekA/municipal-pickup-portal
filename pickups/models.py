@@ -4,7 +4,6 @@ from pickle import TRUE
 from django.conf import settings
 from django.db import models
 from core.models import CoreModel
-from django.utils import timezone
 
 class Pickup(CoreModel):
     """Zgłoszenie odbioru odpadów."""
