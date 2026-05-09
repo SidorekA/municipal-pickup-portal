@@ -49,6 +49,12 @@ def precalculate_system_sums(df):
     Precalculate system sums for all unique combinations in the dataframe.
     """
     valid_rows = []
+
+    # Check if all required columns are present
+    required_cols = ['Numer MPK', 'Frakcja', 'Pojemność', 'Miesiąc', 'Rok']
+    if not all(col in df.columns for col in required_cols):
+        return {}, {}, defaultdict(int)
+
     for _, row in df.iterrows():
         try:
             valid_rows.append({

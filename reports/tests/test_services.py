@@ -135,7 +135,10 @@ class ImportCollectionDataTestCase(TestCase):
 
         with patch('reports.services.get_system_sum_for_month') as mock_get_sum:
             mock_get_sum.return_value = 1
-            results = import_collection_data(file_mock, self.user)
+            with patch('reports.services.precalculate_system_sums') as mock_precalc:
+                from collections import defaultdict
+                mock_precalc.return_value = ({6013: self.mpk}, {('Zmieszane', 120): self.fraction}, defaultdict(int))
+                results = import_collection_data(file_mock, self.user)
 
         self.assertEqual(results['imported'], 1)
         self.assertEqual(results['skipped'], 0)

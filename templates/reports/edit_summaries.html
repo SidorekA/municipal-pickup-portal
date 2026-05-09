@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edycja Zestawień | System Odpadów{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-table text-primary me-2"></i>Edycja Zestawień Dostawcy
+                </h2>
+                <p class="text-muted mb-0">Podgląd i edycja na żywo wprowadzonych zestawień od dostawcy z uwagami.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'reports:export_summaries_xlsx' %}?year={{ selected_year }}&month={{ selected_month }}&mpk={{ selected_mpk|default:'' }}&status={{ selected_status|default:'' }}" class="btn btn-outline-success fw-bold">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Eksportuj do Excela
+                </a>
+            </div>
+        </div>
+
+        <hr class="my-4 opacity-25" />
+
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-2">
+                <label for="year" class="form-label">Rok</label>
+                <select name="year" id="year" class="form-select">
+                    <option value="">Wszystkie</option>
+                    {% for y in available_years %}
+                        <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="month" class="form-label">Miesiąc</label>
+                <select name="month" id="month" class="form-select">
+                    <option value="">Wszystkie</option>
+                    {% for m in available_months %}
+                        <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="mpk" class="form-label">MPK (Numer)</label>
+                <input type="text" name="mpk" id="mpk" class="form-control" value="{{ selected_mpk|default:'' }}" placeholder="Szukaj MPK...">
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status Akceptacji</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Wszystkie</option>
+                    {% for val, label in available_statuses %}
+                        <option value="{{ val }}" {% if val == selected_status %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                    <option value="BRAK" {% if selected_status == 'BRAK' %}selected{% endif %}>Brak statusu</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i>Filtruj
+                </button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>MPK</th>
+                        <th>Okres</th>
+                        <th>Frakcja - Pojemność</th>
+                        <th>Ilość z Excela</th>
+                        <th>Status</th>
+                        <th>Uwagi / Informacje</th>
+                        <th>Zapis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr class="{% if record.confirmation_status == 'KONFLIKT' or 'Zgodność automatyczna' not in record.confirmation_note %}table-warning{% endif %}">
+                        <td><strong>{{ record.mpk_number.mpk_number }}</strong></td>
+                        <td>{{ record.year }} / {{ record.month|stringformat:"02d" }}</td>
+                        <td>{{ record.waste_fraction.fraction_type.name }} - {{ record.waste_fraction.capacity }}{{ record.waste_fraction.unit|default:'L' }}</td>
+                        <td>
+                            <input type="number" class="form-control quantity-input" data-record-id="{{ record.id }}" value="{{ record.quantity }}" style="width: 100px;">
+                        </td>
+                        <td>
+                            {% if record.confirmation_status %}
+                                <span class="badge {% if record.confirmation_status == 'ZATWIERDZONE' %}bg-success{% elif record.confirmation_status == 'KONFLIKT' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ record.confirmation_status }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">Brak</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if record.confirmation_note %}
+                                <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> {{ record.confirmation_note }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary save-btn d-none" data-record-id="{{ record.id }}">Zapisz</button>
+                            <span class="text-success save-status d-none" data-record-id="{{ record.id }}"><i class="bi bi-check-circle-fill"></i></span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Brak danych do wyświetlenia.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.quantity-input');
+
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const recordId = this.dataset.recordId;
+            const saveBtn = document.querySelector(`.save-btn[data-record-id="${recordId}"]`);
+            const saveStatus = document.querySelector(`.save-status[data-record-id="${recordId}"]`);
+
+            saveBtn.classList.remove('d-none');
+            saveStatus.classList.add('d-none');
+        });
+    });
+
+    const saveBtns = document.querySelectorAll('.save-btn');
+
+    saveBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const recordId = this.dataset.recordId;
+            const input = document.querySelector(`.quantity-input[data-record-id="${recordId}"]`);
+            const newQuantity = input.value;
+            const saveStatus = document.querySelector(`.save-status[data-record-id="${recordId}"]`);
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+            fetch("{% url 'reports:update_summary_quantity' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    id: recordId,
+                    quantity: newQuantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.disabled = false;
+                this.innerHTML = 'Zapisz';
+                if(data.status === 'success') {
+                    this.classList.add('d-none');
+                    saveStatus.classList.remove('d-none');
+                    setTimeout(() => {
+                        saveStatus.classList.add('d-none');
+                    }, 2000);
+                } else {
+                    alert('Błąd podczas zapisywania: ' + data.message);
+                }
+            })
+            .catch(error => {
+                this.disabled = false;
+                this.innerHTML = 'Zapisz';
+                console.error('Error:', error);
+                alert('Wystąpił błąd podczas komunikacji z serwerem.');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
