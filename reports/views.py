@@ -607,12 +607,20 @@ def export_summaries_xlsx(request):
     if status_filter:
         records = [r for r in records if r.confirmation_status == status_filter or (status_filter == 'BRAK' and r.confirmation_status is None)]
 
-    # Create Excel
+    # Create Excel Pivot
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Zestawienia"
 
-    headers = ['Numer MPK', 'Rok', 'Miesiąc', 'Frakcja', 'Ilość', 'Status Akceptacji', 'Uwagi MPK']
+    # Gather unique fractions for columns
+    fraction_cols = set()
+    for record in records:
+        fraction_str = f"{record.waste_fraction.fraction_type.name} - {record.waste_fraction.capacity}{record.waste_fraction.unit or 'L'}"
+        fraction_cols.add(fraction_str)
+
+    fraction_cols = sorted(list(fraction_cols))
+
+    headers = ['Numer MPK', 'Rok', 'Miesiąc'] + fraction_cols
     ws.append(headers)
 
     header_font = Font(bold=True, color="FFFFFF")
@@ -625,23 +633,44 @@ def export_summaries_xlsx(request):
         cell.alignment = Alignment(horizontal='center')
 
     attention_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    approved_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
 
-    for row_num, record in enumerate(records, 2):
-        row_data = [
-            record.mpk_number.mpk_number,
-            record.year,
-            record.month,
-            record.waste_fraction.fraction_type.name,
-            record.quantity,
-            record.confirmation_status or 'Brak',
-            record.confirmation_note or ''
-        ]
+    # Group data by MPK, Year, Month
+    from collections import defaultdict
+    pivot_data = defaultdict(dict)
+
+    for record in records:
+        key = (record.mpk_number.mpk_number, record.year, record.month)
+        fraction_str = f"{record.waste_fraction.fraction_type.name} - {record.waste_fraction.capacity}{record.waste_fraction.unit or 'L'}"
+
+        pivot_data[key][fraction_str] = {
+            'quantity': record.quantity,
+            'status': record.confirmation_status,
+            'note': record.confirmation_note
+        }
+
+    for row_num, (key, row_dict) in enumerate(pivot_data.items(), 2):
+        row_data = [key[0], key[1], key[2]]
+
+        for frac_col in fraction_cols:
+            if frac_col in row_dict:
+                row_data.append(row_dict[frac_col]['quantity'])
+            else:
+                row_data.append(0)
+
         ws.append(row_data)
 
-        # Colorize if needs attention
-        if record.confirmation_status == 'KONFLIKT' or record.confirmation_note:
-            for col_num in range(1, len(row_data) + 1):
-                ws.cell(row=row_num, column=col_num).fill = attention_fill
+        # Apply conditional formatting
+        for frac_idx, frac_col in enumerate(fraction_cols):
+            col_num = 4 + frac_idx # Offset by 3 base columns
+            if frac_col in row_dict:
+                cell_data = row_dict[frac_col]
+                cell = ws.cell(row=row_num, column=col_num)
+
+                if cell_data['status'] == 'ZATWIERDZONE':
+                    cell.fill = approved_fill
+                elif cell_data['status'] == 'KONFLIKT' or cell_data['note']:
+                    cell.fill = attention_fill
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="zestawienia_{y}_{m}.xlsx"'

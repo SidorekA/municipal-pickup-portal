@@ -68,7 +68,7 @@
                     <tr>
                         <th>MPK</th>
                         <th>Okres</th>
-                        <th>Frakcja</th>
+                        <th>Frakcja - Pojemność</th>
                         <th>Ilość z Excela</th>
                         <th>Status</th>
                         <th>Uwagi / Informacje</th>
@@ -80,7 +80,7 @@
                     <tr class="{% if record.confirmation_status == 'KONFLIKT' or record.confirmation_note %}table-warning{% endif %}">
                         <td><strong>{{ record.mpk_number.mpk_number }}</strong></td>
                         <td>{{ record.year }} / {{ record.month|stringformat:"02d" }}</td>
-                        <td>{{ record.waste_fraction.fraction_type.name }}</td>
+                        <td>{{ record.waste_fraction.fraction_type.name }} - {{ record.waste_fraction.capacity }}{{ record.waste_fraction.unit|default:'L' }}</td>
                         <td>
                             <input type="number" class="form-control quantity-input" data-record-id="{{ record.id }}" value="{{ record.quantity }}" style="width: 100px;">
                         </td>
