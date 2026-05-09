@@ -405,10 +405,11 @@ def home_view(request):
         conflict_qs = conflict_qs.filter(mpk_number__in=user_mpks)
     context['conflict_count'] = conflict_qs.count()
 
-    # active_pickups_count: liczba aktywnych zleceń użytkownika (status w NOWE, WYSŁANE, POTWIERDZONE)
+    # active_pickups_count: liczba aktywnych zleceń użytkownika w bieżącym miesiącu
+    current_month_start = context['now'].replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     context['active_pickups_count'] = Pickup.objects.filter(
         reporter=request.user,
-        status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
+        created_at__gte=current_month_start
     ).count()
 
     # last_import_date
