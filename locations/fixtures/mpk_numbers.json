@@ -1,0 +1,5 @@
+[
+  {"model": "locations.mpknumber", "pk": 1, "fields": {"number": "MPK-001", "short_name": "Test MPK 1", "active": true}},
+  {"model": "locations.mpknumber", "pk": 2, "fields": {"number": "MPK-002", "short_name": "Test MPK 2", "active": true}},
+  {"model": "locations.mpknumber", "pk": 3, "fields": {"number": "MPK-003", "short_name": "Test MPK 3", "active": true}}
+]

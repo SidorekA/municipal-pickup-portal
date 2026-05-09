@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2>Sukces!</h2>
+    <p class="lead">Twoje zgłoszenie zostało pomyślnie dodane i przekazane do wysyłki.</p>
+    {% if messages %}
+        <div class="mt-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} fs-5">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="mt-5">
+        <a href="{% url 'pickups:create' %}" class="btn btn-primary">Dodaj kolejne zgłoszenie</a>
+        <a href="/" class="btn btn-outline-secondary">Wróć na stronę główną</a>
+    </div>
+</div>
+{% endblock %}

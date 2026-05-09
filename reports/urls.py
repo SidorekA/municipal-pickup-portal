@@ -1,0 +1,10 @@
+from django.urls import path
+from . import views
+
+app_name = 'reports'
+
+urlpatterns = [
+    path('podsumowanie/', views.monthly_summary_view, name='monthly_summary'),
+    path('weryfikacja/', views.verification_view, name='verification'),
+    path('approve/<int:pk>/', views.approve_confirmation, name='approve_confirmation'),
+]

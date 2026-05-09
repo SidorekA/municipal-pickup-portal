@@ -1,0 +1,37 @@
+/* static/css/forms.css */
+/* Kafelki pojemników - ogólny wygląd i płynne przejścia */
+
+.bin-card { 
+    transition: all 0.2s ease-in-out; 
+    border-width: 2px !important; 
+    background-color: #fafafa;
+}
+.bin-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important; 
+    background-color: #ffffff; 
+}
+.bin-icon { 
+    font-size: 3rem; 
+    transition: transform 0.2s ease-in-out;
+}
+
+.bin-card:hover .bin-icon {
+    transform: scale(1.1); 
+}
+.bin-card input[type="number"] {
+    font-size: 1.25rem;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+}
+.bin-card input[type="number"]:focus {
+    box-shadow: none;
+    background-color: #fff;
+    border-width: 2px;
+}
+#pickup-form .form-label {
+    font-weight: 600;
+    color: #495057;
+}
