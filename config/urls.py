@@ -42,6 +42,7 @@ urlpatterns = [
     path("zgloszenia/", include("pickups.urls")),
     path('raporty/', include('reports.urls')),
     path('konto/',       include('users.urls')),
+    path('powiadomienia/', include('notifications.urls')),
     path('harmonogram/', include('scheduling.urls')),
 ]
 
