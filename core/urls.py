@@ -9,4 +9,6 @@ urlpatterns = [
     path('admin-tasks/draft-email-unconfirmed/', views.draft_email_unconfirmed_view, name='draft_email_unconfirmed'),
     path('admin-tasks/draft-email-all-users/', views.draft_email_all_users_view, name='draft_email_all_users'),
     path('admin-tasks/draft-email-coordinators/', views.draft_email_coordinators_view, name='draft_email_coordinators'),
+    path('admin-tasks/export-table-data/', views.export_table_data_view, name='export_table_data'),
+    path('admin-tasks/import-table-data/', views.import_table_data_view, name='import_table_data'),
 ]
