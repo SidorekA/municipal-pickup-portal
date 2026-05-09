@@ -27,7 +27,7 @@
                 <p class="action-card__description">
                     Wybierz numer MPK, określ lokalizację i uzupełnij ilości.
                 </p>
-                <a href="{% url 'pickups:pickup_create' %}" class="btn btn-light btn-lg action-card__button">
+                <a href="{% url 'pickups:pickup_create' %}" class="btn btn-light btn-lg action-card__btn">
                     Dodaj zgłoszenie
                 </a>
             </div>
@@ -40,7 +40,7 @@
                 <p class="action-card__description">
                     Przeglądaj archiwalne zgłoszenia i sprawdzaj statusy realizacji.
                 </p>
-                <a href="{% url 'pickups:pickup_list' %}" class="btn btn-outline-light btn-lg action-card__button">
+                <a href="{% url 'pickups:pickup_list' %}" class="btn btn-outline-success btn-lg action-card__btn">
                     Zobacz historię
                 </a>
             </div>
@@ -53,7 +53,7 @@
                 <p class="action-card__description">
                     Potwierdź zgodność zgłoszeń z fakturami dostawcy za dany miesiąc.
                 </p>
-                <a href="{% url 'reports:monthly_summary' %}" class="btn btn-light btn-lg action-card__button">
+                <a href="{% url 'reports:monthly_summary' %}" class="btn btn-light btn-lg action-card__btn">
                     Raporty miesięczne
                 </a>
             </div>
