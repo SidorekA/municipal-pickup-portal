@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",    
     "django_celery_results",
     "django_celery_beat",
+    "axes",
     "users.apps.UsersConfig",
     "locations.apps.LocationsConfig",
     "waste.apps.WasteConfig",
@@ -36,7 +37,15 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+AXES_FAILURE_LIMIT = 5
 
 ROOT_URLCONF = "config.urls"
 
