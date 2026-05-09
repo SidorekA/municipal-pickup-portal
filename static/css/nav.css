@@ -1,4 +1,4 @@
-/* Glassmorphism effect for the navbar toggler */
+/* ─── Hamburger toggler ─────────────────────────────────────────── */
 .navbar-toggler {
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -11,40 +11,57 @@
     height: 38px;
     padding: 8px 6px;
     cursor: pointer;
-    border-radius: 0.375rem; /* Match bootstrap border radius */
+    border-radius: 0.375rem;
     box-shadow: none !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* Remove default focus outline */
 .navbar-toggler:focus {
     box-shadow: none;
     outline: none;
 }
 
-/* Styles for the hamburger lines */
+.navbar-toggler:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Hamburger lines */
 .navbar-toggler .line {
     width: 30px;
     height: 3px;
-    background-color: rgba(255, 255, 255, 0.9); /* Light color for navbar-dark */
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: 3px;
-    transition: all 0.65s ease;
+    /*
+     * Czas identyczny z animacją menu (0.3s).
+     * Poprzednie 0.65s powodowało widoczny rozjazd.
+     */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.2s cubic-bezier(0.4, 0, 0.2, 1);
     margin: 0 auto;
 }
 
-/* Animation when the menu is opened (not collapsed) */
+/* Stan: otwarte */
 .navbar-toggler[aria-expanded="true"] .line:nth-child(1) {
     transform: translateY(9.5px) rotate(45deg);
 }
 
 .navbar-toggler[aria-expanded="true"] .line:nth-child(2) {
     opacity: 0;
+    transform: scaleX(0);
 }
 
 .navbar-toggler[aria-expanded="true"] .line:nth-child(3) {
     transform: translateY(-9.5px) rotate(-45deg);
 }
 
-/* Menu panel styling (Glassmorphism + absolute positioning) */
+/* ─── Panel menu ────────────────────────────────────────────────── */
+/*
+ * Kluczowa zmiana: zamiast Bootstrap collapse (height: 0 → auto),
+ * używamy opacity + transform + visibility.
+ * display: block !important sprawia, że Bootstrap nie ukrywa elementu,
+ * a wizualna widoczność sterowana jest przez klasę .nav-open.
+ */
 #navbarNav {
     position: absolute;
     top: calc(100% + 10px);
@@ -57,25 +74,47 @@
     padding: 1rem;
     min-width: 250px;
     z-index: 1000;
+
+    /* Nadpisanie Bootstrap collapse */
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+
+    /* Stan domyślny: ukryty */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.97);
+    pointer-events: none;
+
+    /*
+     * visibility przełącza się natychmiast przy otwieraniu (0s delay),
+     * ale z opóźnieniem 0.3s przy zamykaniu — czeka aż opacity zdąży
+     * spaść do 0, zanim element zniknie dla screen readerów.
+     */
+    transition:
+        opacity    0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        transform  0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        visibility 0s   linear 0.3s;
 }
 
-/* Bootstrap sets height to 0 for collapsing, we want to animate opacity and transform too */
-.collapsing {
-    transition: height 0.3s ease;
+/* Stan: otwarte */
+#navbarNav.nav-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+
+    transition:
+        opacity    0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        transform  0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        visibility 0s   linear 0s;
 }
 
-/* Add custom animation class when fully shown */
-.collapse.show {
-    animation: fadeAndSlideDown 0.4s ease forwards;
+/* Linki w menu */
+#navbarNav .nav-link {
+    transition: color 0.15s ease, opacity 0.15s ease;
 }
 
-@keyframes fadeAndSlideDown {
-    0% {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
+#navbarNav .nav-link:hover {
+    opacity: 0.8;
 }
