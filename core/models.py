@@ -1,7 +1,7 @@
 # core/models.py
 from __future__ import annotations
 from django.conf import settings
-# from crum import get_current_user
+from crum import get_current_user
 from django.db import models
 
 
@@ -27,13 +27,13 @@ class CoreModel(models.Model):
     )
     note = models.TextField(blank=True, default='', verbose_name='Uwagi')
     
-    # def save(self, *args, **kwargs):
-    #     user = get_current_user()
-    #     if user and not user.is_anonymous:
-    #         if not self.pk:
-    #             self.created_by = user
-    #         self.updated_by = user
-    #     super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        user = get_current_user()
+        if user and not user.is_anonymous:
+            if not self.pk:
+                self.created_by = user
+            self.updated_by = user
+        super().save(*args, **kwargs)
 
     class Meta:
         abstract = True

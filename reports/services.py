@@ -49,29 +49,39 @@ def import_collection_data(file_path, user):
     if str(file_path).endswith('.csv') or hasattr(file_path, 'name') and file_path.name.endswith('.csv'):
         df = pd.read_csv(file_path)
     else:
-        df = pd.read_excel(file_path)
-    
+        df = pd.read_excel(file_path, parse_dates=['Data Odbioru'])
+
     results = {'imported': 0, 'auto_confirmed': 0, 'errors': []}
 
     with transaction.atomic():
         for index, row in df.iterrows():
             try:
-                mpk = MPKNumber.objects.get(mpk_number=str(row['Numer MPK']))
+                mpk = MPKNumber.objects.get(mpk_number=int(row['Numer MPK']))
                 fraction = WasteFraction.objects.get(
                     fraction_type__name=row['Frakcja'],
                     capacity=int(row['Pojemność'])
                 )
-                
+
                 excel_qty = int(row['Ilość'])
                 month = int(row['Miesiąc'])
                 year = int(row['Rok'])
+
+                raw_date = row['Data Odbioru']
+                if pd.isna(raw_date):
+                    date_summary = date(year, month, 1)
+                else:
+                    date_summary = pd.to_datetime(raw_date).date()
 
                 SummaryCollectionSchedule.objects.update_or_create(
                     mpk_number=mpk,
                     year=year,
                     month=month,
                     waste_fraction=fraction,
-                    defaults={'quantity': excel_qty, 'imported_by': user}
+                    defaults={
+                        'quantity': excel_qty,
+                        'imported_by': user,
+                        'date_summary': date_summary,
+                    }
                 )
 
                 system_qty = get_system_sum_for_month(mpk, fraction, month, year)
@@ -81,7 +91,6 @@ def import_collection_data(file_path, user):
                     confirmation, _ = MonthlyConfirmation.objects.get_or_create(
                         mpk_number=mpk, month=first_day
                     )
-                    
                     MonthlyConfirmationBin.objects.update_or_create(
                         confirmation=confirmation,
                         waste_fraction=fraction,
@@ -93,7 +102,7 @@ def import_collection_data(file_path, user):
                     confirmation.status = 'POTWIERDZONE'
                     confirmation.save()
                     results['auto_confirmed'] += 1
-                
+
                 results['imported'] += 1
 
             except Exception as e:

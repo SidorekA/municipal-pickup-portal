@@ -33,7 +33,6 @@ class SummaryCollectionSchedule(CoreModel):
     )
 
     class Meta:
-        db_table = 'summary_collection_schedule'
         verbose_name = 'Zestawienie odbioru'
         verbose_name_plural = 'Zestawienia odbiorów'
         ordering = ['-year', '-month', 'mpk_number']
