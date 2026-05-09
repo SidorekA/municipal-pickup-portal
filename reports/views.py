@@ -21,7 +21,7 @@ def _odmien_rekord(n):
         return f"{n} rekordy"
     else:
         return f"{n} rekordów"
-    
+
 @staff_member_required
 def import_excel_view(request):
     if request.method == 'POST' and request.FILES.get('excel_file'):
