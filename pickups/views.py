@@ -9,6 +9,7 @@ from pickups.models import Pickup, PickupWasteBin
 from .forms import PickupForm
 from django.http import JsonResponse
 from locations.models import Location, LocationContact, LocationWasteBin
+from scheduling.services import get_next_pickup_date
 
 @login_required
 def create_pickup(request):
@@ -106,7 +107,8 @@ def pickup_list(request):
     """Wyświetla panel ze zgłoszeniami przefiltrowanymi przez uprawnienia."""
     
     queryset = Pickup.objects.select_related('mpk_number', 'location', 'reporter').prefetch_related(
-        'waste_bins__waste_fraction__fraction_type'
+        'waste_bins__waste_fraction__fraction_type',
+        'waste_bins__waste_fraction__fraction_type__schedules'
         )
     
     if not request.user.is_superuser:
@@ -117,6 +119,16 @@ def pickup_list(request):
         
         queryset = queryset.filter(mpk_number_id__in=allowed_mpk_ids)
     
-    pickups = queryset.order_by('-created_at')
+    pickups = list(queryset)
+    
+    for pickup in pickups:
+        first_bin = pickup.waste_bins.first()
+        if first_bin:
+            pickup.planned_date = get_next_pickup_date(
+                first_bin.waste_fraction.fraction_type,
+                submitted_at=pickup.reported_at
+            )
+        else:
+            pickup.planned_date = None
     
     return render(request, 'pickups/pickup_list.html', {'pickups': pickups})
