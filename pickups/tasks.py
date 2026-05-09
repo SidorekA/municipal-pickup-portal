@@ -5,7 +5,6 @@ import logging
 from pickups.excel_generator import generate_pickup_excel
 from pickups.models import Pickup
 from django.core.mail import EmailMessage
-from django.conf import settings
 from decouple import config
 
 logger = logging.getLogger(__name__)
