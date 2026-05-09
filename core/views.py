@@ -20,7 +20,8 @@ import datetime
 from django.contrib.auth import get_user_model
 import urllib.parse
 
-from reports.models import MonthlyConfirmation
+from locations.models import MPKNumber
+from reports.models import MonthlyConfirmation, SummaryCollectionSchedule
 from reports.services import import_collection_data
 from users.models import Coordinator, Permission
 
@@ -45,9 +46,25 @@ def admin_tasks_view(request):
 
     transfer_logs = DataTransferLog.objects.all().order_by('-created_at')[:20]
 
+    mpk_numbers = MPKNumber.objects.filter(active=True).order_by('mpk_number')
+
+    # Pobierz dostępne lata z istniejących zestawień, jeśli nie ma to daj np. obecny rok
+    years = SummaryCollectionSchedule.objects.values_list('year', flat=True).distinct().order_by('-year')
+    if not years:
+        years = [timezone.now().year]
+
+    months = [
+        (1, 'Styczeń'), (2, 'Luty'), (3, 'Marzec'), (4, 'Kwiecień'),
+        (5, 'Maj'), (6, 'Czerwiec'), (7, 'Lipiec'), (8, 'Sierpień'),
+        (9, 'Wrzesień'), (10, 'Październik'), (11, 'Listopad'), (12, 'Grudzień')
+    ]
+
     context = {
         'models_list': models_list,
         'transfer_logs': transfer_logs,
+        'mpk_numbers': mpk_numbers,
+        'years': years,
+        'months': months,
     }
     return render(request, 'core/admin_tasks.html', context)
 

@@ -1,5 +1,4 @@
 from django import template
-import calendar
 
 register = template.Library()
 

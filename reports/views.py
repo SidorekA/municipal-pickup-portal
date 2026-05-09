@@ -14,9 +14,11 @@ from .models import (
     SummaryCollectionSchedule,
 )
 from .forms import ReportFilterForm
-from .services import import_collection_data
-import datetime
+from .services import import_collection_data, generate_mpk_cost_report
+from django.views import View
+from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
+import datetime
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Prefetch
 import openpyxl
@@ -693,3 +695,31 @@ def export_summaries_xlsx(request):
     response['Content-Disposition'] = f'attachment; filename="zestawienia_{y}_{m}.xlsx"'
     wb.save(response)
     return response
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class ExportCostReportView(View):
+    def get(self, request, *args, **kwargs):
+        year_str = request.GET.get('year', '')
+        month_str = request.GET.get('month', '')
+        mpk_str = request.GET.get('mpk_number_id', '')
+        fmt = request.GET.get('format', 'xlsx')
+
+        year = int(year_str) if year_str.isdigit() else None
+        month = int(month_str) if month_str.isdigit() else None
+        mpk_number_id = int(mpk_str) if mpk_str.isdigit() else None
+
+        if fmt not in ['xlsx', 'csv']:
+            fmt = 'xlsx'
+
+        file_content = generate_mpk_cost_report(year=year, month=month, mpk_number_id=mpk_number_id, report_format=fmt)
+
+        if fmt == 'csv':
+            response = HttpResponse(file_content, content_type='text/csv')
+            filename = 'raport_kosztowy.csv'
+        else:
+            response = HttpResponse(file_content, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            filename = 'raport_kosztowy.xlsx'
+
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response

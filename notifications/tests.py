@@ -1,8 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-import datetime
-from .models import Notification, NotificationSetting
+from .models import Notification
 from reports.models import MonthlyConfirmation
 from locations.models import MPKNumber
 from users.models import Permission
@@ -26,7 +25,7 @@ class NotificationSignalTest(TestCase):
     def test_monthly_confirmation_creation_triggers_notification(self):
         # Admin creates MonthlyConfirmation
         first_day = timezone.now().replace(day=1).date()
-        mc = MonthlyConfirmation.objects.create(
+        MonthlyConfirmation.objects.create(
             mpk_number=self.mpk,
             month=first_day,
             created_by=self.staff_user,
