@@ -43,7 +43,6 @@ def admin_tasks_view(request):
 
     models_list.sort(key=lambda x: x[1])
 
-    # Pobranie rejestru transferów
     transfer_logs = DataTransferLog.objects.all().order_by('-created_at')[:20]
 
     context = {
@@ -76,7 +75,6 @@ def export_table_data_view(request):
         data = list(queryset.values())
         df = pd.DataFrame(data)
 
-        # Remove timezone info for excel
         for col in df.select_dtypes(['datetimetz']).columns:
             df[col] = df[col].dt.tz_localize(None)
 
@@ -95,8 +93,6 @@ def export_table_data_view(request):
                 with pd.ExcelWriter(response, engine='openpyxl') as writer:
                     df.to_excel(writer, index=False)
 
-            # Zapis do logu
-            # Zapis do logu
             DataTransferLog.objects.create(
                 action='EXPORT',
                 table_name=f"{model._meta.verbose_name} ({model_name})",
@@ -152,14 +148,12 @@ def import_table_data_view(request):
             else:
                 df = pd.read_excel(data_file)
 
-            # Remove NaNs
             df = df.where(pd.notnull(df), None)
 
             records_created = 0
             records_updated = 0
             errors = []
 
-            # Pobieranie wszystkich relacji FK, aby poprawić mapowanie
             fk_fields = {f.name: f for f in model._meta.fields if f.is_relation and f.many_to_one}
 
             with transaction.atomic():
@@ -175,7 +169,6 @@ def import_table_data_view(request):
                                 else:
                                     clean_dict[key] = value
 
-                                # Konwersja _id fields if present
                                 if key in fk_fields and key + '_id' not in clean_dict:
                                     pass
 
@@ -248,7 +241,6 @@ def import_collection_data_view(request):
         try:
             results = import_collection_data(excel_file, request.user)
 
-            # Helper do odmiany słowa "rekord" (zapożyczony z reports)
             def _odmien_rekord(count):
                 if count == 1:
                     return f"{count} rekord"

@@ -77,7 +77,7 @@
                 </thead>
                 <tbody>
                     {% for record in records %}
-                    <tr class="{% if record.confirmation_status == 'KONFLIKT' or record.confirmation_note %}table-warning{% endif %}">
+                    <tr class="{% if record.confirmation_status == 'KONFLIKT' or 'Zgodność automatyczna' not in record.confirmation_note %}table-warning{% endif %}">
                         <td><strong>{{ record.mpk_number.mpk_number }}</strong></td>
                         <td>{{ record.year }} / {{ record.month|stringformat:"02d" }}</td>
                         <td>{{ record.waste_fraction.fraction_type.name }} - {{ record.waste_fraction.capacity }}{{ record.waste_fraction.unit|default:'L' }}</td>

@@ -559,7 +559,6 @@ def export_summaries_xlsx(request):
     mpk = request.GET.get('mpk')
     status_filter = request.GET.get('status')
 
-    # Reuse logic from view to fetch filtered records
     queryset = SummaryCollectionSchedule.objects.select_related(
         'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
     )
@@ -578,7 +577,6 @@ def export_summaries_xlsx(request):
     if mpk:
         queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
 
-    # Prefetch
     y = int(year) if year else timezone.now().year
     m = int(month) if month else timezone.now().month
     confirmations_prefetch = Prefetch(
@@ -607,12 +605,10 @@ def export_summaries_xlsx(request):
     if status_filter:
         records = [r for r in records if r.confirmation_status == status_filter or (status_filter == 'BRAK' and r.confirmation_status is None)]
 
-    # Create Excel Pivot
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Zestawienia"
 
-    # Gather unique fractions for columns
     fraction_cols = set()
     for record in records:
         fraction_str = f"{record.waste_fraction.fraction_type.name} - {record.waste_fraction.capacity}{record.waste_fraction.unit or 'L'}"
@@ -635,7 +631,6 @@ def export_summaries_xlsx(request):
     attention_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
     approved_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
 
-    # Group data by MPK, Year, Month
     from collections import defaultdict
     pivot_data = defaultdict(dict)
     mpk_metadata = defaultdict(lambda: {'status': None, 'notes': []})
@@ -665,14 +660,12 @@ def export_summaries_xlsx(request):
             else:
                 row_data.append(0)
 
-        # Append overarching status and combined notes
         meta = mpk_metadata[key]
         row_data.append(meta['status'] or 'Brak')
         row_data.append(' | '.join(meta['notes']) if meta['notes'] else '')
 
         ws.append(row_data)
 
-        # Apply conditional formatting
         for frac_idx, frac_col in enumerate(fraction_cols):
             col_num = 4 + frac_idx # Offset by 3 base columns
             if frac_col in row_dict:
@@ -684,13 +677,17 @@ def export_summaries_xlsx(request):
                 elif cell_data['status'] == 'KONFLIKT' or cell_data['note']:
                     cell.fill = attention_fill
 
-        # Apply conditional formatting to status and notes column if needed
         status_col_num = 4 + len(fraction_cols)
         notes_col_num = 5 + len(fraction_cols)
 
-        if meta['status'] == 'KONFLIKT' or meta['notes']:
+
+        if meta["status"] == "ZATWIERDZONE" or "Zgodność automatyczna" in meta["notes"]:
+            ws.cell(row=row_num, column=status_col_num).fill = approved_fill
+            ws.cell(row=row_num, column=notes_col_num).fill = approved_fill
+        elif meta['status'] == 'KONFLIKT' or meta['notes']:
             ws.cell(row=row_num, column=status_col_num).fill = attention_fill
             ws.cell(row=row_num, column=notes_col_num).fill = attention_fill
+
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="zestawienia_{y}_{m}.xlsx"'
