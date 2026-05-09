@@ -1,0 +1,3 @@
+## 2026-05-09 - Adding 'for' attributes to labels in Django templates
+**Learning:** In Django template rendering, specifically when using manual layout of form fields with `{{ form.field_name }}`, the `<label>` tags often get disconnected from their inputs if developers write them manually without the `for` attribute. This breaks keyboard accessibility and screen reader support.
+**Action:** Always check manually rendered Django forms for disconnected labels. The pattern `<label for="{{ form.field_name.id_for_label }}">` should be used consistently across all form templates to ensure the label is programmatically linked to the generated input ID.

@@ -30,15 +30,15 @@
 
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.mpk.label }}</label>
+                <label for="{{ form.mpk.id_for_label }}" class="small fw-bold text-uppercase text-muted mb-1">{{ form.mpk.label }}</label>
                 {{ form.mpk }}
             </div>
             <div class="col-md-3">
-                <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.month.label }}</label>
+                <label for="{{ form.month.id_for_label }}" class="small fw-bold text-uppercase text-muted mb-1">{{ form.month.label }}</label>
                 {{ form.month }}
             </div>
             <div class="col-md-3">
-                <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.year.label }}</label>
+                <label for="{{ form.year.id_for_label }}" class="small fw-bold text-uppercase text-muted mb-1">{{ form.year.label }}</label>
                 {{ form.year }}
             </div>
             <div class="col-md-2">
