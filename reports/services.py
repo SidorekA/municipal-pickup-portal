@@ -46,7 +46,10 @@ def get_system_sum_for_month(mpk, fraction, month, year):
     return total_qty
 
 def import_collection_data(file_path, user):
-    df = pd.read_excel(file_path)
+    if str(file_path).endswith('.csv') or hasattr(file_path, 'name') and file_path.name.endswith('.csv'):
+        df = pd.read_csv(file_path)
+    else:
+        df = pd.read_excel(file_path)
     
     results = {'imported': 0, 'auto_confirmed': 0, 'errors': []}
 

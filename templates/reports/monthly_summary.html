@@ -15,9 +15,13 @@
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
                 {% if request.user.is_superuser %}
-                <a href="#" class="btn btn-outline-success fw-bold">
-                    <i class="bi bi-file-earmark-excel me-2"></i>Importuj dane z Excela
-                </a>
+                <form action="{% url 'reports:import_excel' %}" method="post" enctype="multipart/form-data" class="d-inline" id="importExcelForm">
+                    {% csrf_token %}
+                    <input type="file" name="excel_file" id="excelFileInput" style="display: none;" accept=".xlsx,.csv" onchange="document.getElementById('importExcelForm').submit();">
+                    <button type="button" class="btn btn-outline-success fw-bold" onclick="document.getElementById('excelFileInput').click();">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Importuj dane z Excela
+                    </button>
+                </form>
                 {% endif %}
             </div>
         </div>

@@ -3,7 +3,7 @@
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING
-from locations.models import WasteFractionType
+from waste.models import WasteFractionType
 
 WARSAW_TZ = ZoneInfo("Europe/Warsaw")
 CUTOFF_HOUR = 12
