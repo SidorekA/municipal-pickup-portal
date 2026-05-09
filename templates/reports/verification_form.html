@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container report-container">
+    <div class="report-header d-flex justify-content-between align-items-center bg-white p-3 rounded shadow-sm">
+        <div>
+            <h2 class="report-header__title mb-1"><i class="bi bi-check2-all text-success me-2"></i>Weryfikacja ilości: {{ confirmation.mpk_number }}</h2>
+            <p class="text-muted small mb-0">Okres: {{ month|stringformat:"02d" }}/{{ year }}</p>
+        </div>
+        <div>
+            <span class="badge p-2 {% if confirmation.status == 'OCZEKUJE' %}bg-warning text-dark{% elif confirmation.status == 'KONFLIKT' %}bg-danger{% else %}bg-success{% endif %}">
+                <i class="bi bi-info-circle me-1"></i> Status: {{ confirmation.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <form method="post" id="verificationForm" class="mt-4">
+        {% csrf_token %}
+        
+        {% if confirmation.status == 'POTWIERDZONE' or confirmation.status == 'ZATWIERDZONE' or confirmation.status == 'KONFLIKT' %}
+        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+            <i class="bi bi-person-check fs-3 me-3"></i>
+            <div>
+                <h6 class="mb-0 fw-bold">To zestawienie zostało już przetworzone.</h6>
+                <div>Potwierdzone przez: {{ confirmation.created_by.get_full_name|default:confirmation.created_by.username }} dnia {{ confirmation.created_at|date:"d.m.Y H:i" }}</div>
+                {% if confirmation.status == 'ZATWIERDZONE' %}
+                <div>Zatwierdzone przez: {{ confirmation.approved_by.get_full_name|default:confirmation.approved_by.username }} dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="data-card shadow-sm bg-white rounded overflow-hidden">
+            <table class="data-table w-100">
+                <thead class="data-table__head bg-light">
+                    <tr>
+                        <th class="data-table__th ps-4 py-3">Frakcja i Pojemność</th>
+                        <th class="data-table__th text-center">Zgłoszone (System)</th>
+                        <th class="data-table__th text-center">Odebrane (Dostawca)</th>
+                        <th class="data-table__th" style="width: 180px;">Faktycznie odebrano</th>
+                        <th class="data-table__th">Uwagi do rozbieżności</th>
+                    </tr>
+                </thead>
+                <tbody class="data-table__body">
+                    {% for item in comparison_data %}
+                    <tr class="data-table__row fraction-row {% if item.is_conflict %}bg-light-warning{% endif %}" 
+                        data-name="{{ item.fraction.fraction_type.name }} {{ item.fraction.capacity }}L"
+                        data-reported="{{ item.collected_qty }}">
+                        <td class="data-table__td ps-4 py-3">
+                            <strong>{{ item.fraction.fraction_type.name }}</strong><br>
+                            <small class="text-muted">{{ item.fraction.capacity }}L</small>
+                        </td>
+                        <td class="data-table__td text-center">{{ item.reported_qty|floatformat:0 }}</td>
+                        <td class="data-table__td text-center">{{ item.collected_qty|floatformat:0 }}</td>
+                        <td class="data-table__td">
+                            <input type="number" step="1" name="qty_{{ item.fraction.id }}" 
+                                   value="{{ item.confirmed_qty }}" 
+                                   class="form-control form-control-sm confirmed-qty-input {% if item.is_conflict %}border-warning{% endif %}"
+                                   {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
+                        </td>
+                        <td class="data-table__td pe-4">
+                            <input type="text" name="note_{{ item.fraction.id }}" 
+                                   value="{{ item.note }}" 
+                                   class="form-control form-control-sm note-input" 
+                                   placeholder="Wymagane przy rozbieżności..."
+                                   {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 p-4 bg-white rounded shadow-sm border">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <label class="fw-bold small text-uppercase text-muted mb-2 d-block">Twoja decyzja:</label>
+                    <select name="decision_status" id="decisionStatus" class="form-select border-2" {% if confirmation.status == 'ZATWIERDZONE' %}disabled{% endif %}>
+                        <option value="POTWIERDZONE" {% if confirmation.status == 'POTWIERDZONE' %}selected{% endif %}>Potwierdzam zgodność danych</option>
+                        <option value="KONFLIKT" {% if confirmation.status == 'KONFLIKT' %}selected{% endif %}>Występują rozbieżności (Nie potwierdzam)</option>
+                    </select>
+                </div>
+                <div class="col-md-7 text-end pt-3 pt-md-0">
+                    <a href="{% url 'reports:monthly_summary' %}?month={{ month }}&year={{ year }}&mpk={{ confirmation.mpk_number.id }}" 
+                        class="btn btn-secondary shadow-sm px-4 me-2">
+                        <i class="bi bi-arrow-left-circle me-2"></i>Wróć (Anuluj)
+                    </a>
+                    {% if confirmation.status != 'ZATWIERDZONE' %}
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm me-2">
+                        <i class="bi bi-save me-2"></i>Zapisz zmiany
+                    </button>
+                    {% endif %}
+                    {% if request.user.is_superuser and confirmation.status != 'ZATWIERDZONE' %}
+                        <a href="{% url 'reports:approve_confirmation' confirmation.pk %}" 
+                           class="btn btn-success px-4 fw-bold shadow-sm"
+                           onclick="return confirm('Czy na pewno chcesz ostatecznie ZATWIERDZIĆ ten raport? Po tej akcji edycja zostanie zablokowana.')">
+                            <i class="bi bi-shield-check me-2"></i>Zatwierdź raport
+                        </a>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/reports_verification.js' %}?v=1.1"></script>
+{% endblock %}

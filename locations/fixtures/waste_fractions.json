@@ -1,0 +1,10 @@
+[
+  {"model": "locations.wastefraction", "pk": 1, "fields": {"name": "Papier i tektura", "code": "PAPER", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 2, "fields": {"name": "Tworzywa sztuczne i metal", "code": "PLASTIC_METAL", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 3, "fields": {"name": "Szkło", "code": "GLASS", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 4, "fields": {"name": "Bio", "code": "BIO", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 5, "fields": {"name": "Odpady zmieszane", "code": "MIXED", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 6, "fields": {"name": "Odpady wielkogabarytowe", "code": "BULKY", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 7, "fields": {"name": "Odpady niebezpieczne", "code": "HAZARDOUS", "unit": "kg", "active": true}},
+  {"model": "locations.wastefraction", "pk": 8, "fields": {"name": "Elektronika (ZSEE)", "code": "WEEE", "unit": "kg", "active": true}}
+]

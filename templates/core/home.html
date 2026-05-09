@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Strona Startowa | System Zarządzania Odpadami{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+    
+    <div class="hero-banner">
+        <div class="container-fluid py-2">
+            <h1 class="hero-banner__title">
+                <i class="bi bi-recycle text-success me-3"></i>System Zarządzania Odpadami
+            </h1>
+            <p class="hero-banner__description">
+                Witaj w elektronicznym systemie ewidencji odpadów komunalnych. 
+                Platforma umożliwia błyskawiczne zgłaszanie zapotrzebowania na wywóz pojemników oraz śledzenie historii dla przypisanych lokalizacji MPK.
+            </p>
+        </div>
+    </div>
+
+    <div class="row align-items-md-stretch action-cards-wrapper">
+        
+        <div class="col-lg-4 mb-4">
+            <div class="action-card action-card--primary">
+                <i class="bi bi-plus-circle action-card__bg-icon"></i>
+                <h2 class="action-card__title">Nowe zgłoszenie</h2>
+                <p class="action-card__description">
+                    Wybierz numer MPK, określ lokalizację i uzupełnij ilości.
+                </p>
+                <a href="{% url 'pickups:pickup_create' %}" class="btn btn-light btn-lg action-card__btn">
+                    Dodaj zgłoszenie
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="action-card action-card--secondary">
+                <i class="bi bi-clock-history action-card__bg-icon"></i>
+                <h2 class="action-card__title">Moja historia</h2>
+                <p class="action-card__description">
+                    Przeglądaj archiwalne zgłoszenia i sprawdzaj statusy realizacji.
+                </p>
+                <a href="{% url 'pickups:pickup_list' %}" class="btn btn-outline-success btn-lg action-card__btn">
+                    Zobacz historię
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="action-card" style="background: linear-gradient(135deg, #198754 0%, #0d6efd 100%); color: white; overflow: hidden; position: relative;">
+                <i class="bi bi-file-earmark-check action-card__bg-icon" style="position: absolute; right: -20px; top: -20px; font-size: 8rem; opacity: 0.1;"></i>
+                <h2 class="action-card__title">Weryfikacja</h2>
+                <p class="action-card__description">
+                    Potwierdź zgodność zgłoszeń z fakturami dostawcy za dany miesiąc.
+                </p>
+                <a href="{% url 'reports:monthly_summary' %}" class="btn btn-light btn-lg action-card__btn">
+                    Raporty miesięczne
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <hr class="my-5">
+
+    <div class="row text-center mt-5">
+        <div class="col-md-4">
+            <div class="step-item">
+                <div class="step-item__icon-wrapper">
+                    <i class="bi bi-1-circle-fill step-item__icon text-success"></i>
+                </div>
+                <h5 class="step-item__title">1. Wybierz MPK</h5>
+                <p class="step-item__description">System automatycznie odfiltruje widoki i pokaże tylko te lokalizacje, do których posiadasz dostęp.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="step-item">
+                <div class="step-item__icon-wrapper">
+                    <i class="bi bi-2-circle-fill step-item__icon text-success"></i>
+                </div>
+                <h5 class="step-item__title">2. Wpisz ilości</h5>
+                <p class="step-item__description">Wskaż ile sztuk danego typu czeka na wywóz – system zajmie się resztą.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="step-item">
+                <div class="step-item__icon-wrapper">
+                    <i class="bi bi-3-circle-fill step-item__icon text-success"></i>
+                </div>
+                <h5 class="step-item__title">3. Potwierdź miesiąc</h5>
+                <p class="step-item__description">Na koniec miesiąca zweryfikuj dane z raportem dostawcy w nowym module weryfikacji.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
