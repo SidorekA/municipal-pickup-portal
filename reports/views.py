@@ -251,12 +251,36 @@ def verification_view(request):
             has_error = True
 
         if not has_error:
+            existing_bins = {
+                b.waste_fraction_id: b
+                for b in MonthlyConfirmationBin.objects.filter(confirmation=confirmation)
+            }
+            to_create = []
+            to_update = []
+
             for item in temp_data:
-                MonthlyConfirmationBin.objects.update_or_create(
-                    confirmation=confirmation,
-                    waste_fraction=item['fraction'],
-                    defaults={'confirmed_quantity': item['qty'], 'note': item['note']}
-                )
+                fraction_id = item['fraction'].id
+                if fraction_id in existing_bins:
+                    bin_obj = existing_bins[fraction_id]
+                    if bin_obj.confirmed_quantity != item['qty'] or bin_obj.note != item['note']:
+                        bin_obj.confirmed_quantity = item['qty']
+                        bin_obj.note = item['note']
+                        to_update.append(bin_obj)
+                else:
+                    to_create.append(
+                        MonthlyConfirmationBin(
+                            confirmation=confirmation,
+                            waste_fraction=item['fraction'],
+                            confirmed_quantity=item['qty'],
+                            note=item['note']
+                        )
+                    )
+
+            if to_create:
+                MonthlyConfirmationBin.objects.bulk_create(to_create)
+            if to_update:
+                MonthlyConfirmationBin.objects.bulk_update(to_update, ['confirmed_quantity', 'note'])
+
             if not confirmation.created_by:
                 confirmation.created_by = request.user
             confirmation.updated_by = request.user
