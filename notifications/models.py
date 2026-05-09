@@ -1,16 +1,28 @@
 from django.db import models
 from django.conf import settings
 from core.models import CoreModel
+from auditlog.registry import auditlog
 
 class Notification(CoreModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='notifications',
-        verbose_name='Użytkownik'
+        verbose_name='Użytkownik',
+        null=True,
+        blank=True
     )
     message = models.TextField(verbose_name='Wiadomość')
     is_read = models.BooleanField(default=False, verbose_name='Przeczytane')
+
+    is_global = models.BooleanField(default=False, verbose_name='Ogólne (dla wszystkich)')
+    is_active = models.BooleanField(default=True, verbose_name='Aktywne')
+    read_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='read_global_notifications',
+        verbose_name='Przeczytane przez'
+    )
 
     class Meta:
         verbose_name = 'Powiadomienie'
@@ -18,7 +30,10 @@ class Notification(CoreModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"[{'Przeczytane' if self.is_read else 'Nieprzeczytane'}] {self.user} - {self.message[:50]}"
+        prefix = "[Globalne] " if self.is_global else f"[{'Przeczytane' if self.is_read else 'Nieprzeczytane'}] {self.user} - "
+        return f"{prefix}{self.message[:50]}"
+
+auditlog.register(Notification)
 
 class NotificationSetting(CoreModel):
     """Singleton model for notification settings."""
@@ -43,3 +58,5 @@ class NotificationSetting(CoreModel):
 
     def __str__(self):
         return f"Ustawienia powiadomień (próg: {self.reminder_threshold_days} dni)"
+
+auditlog.register(NotificationSetting)

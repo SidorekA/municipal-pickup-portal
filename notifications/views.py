@@ -6,7 +6,10 @@ from .models import Notification
 @login_required
 @require_POST
 def mark_as_read(request, pk):
-    notification = get_object_or_404(Notification, pk=pk, user=request.user)
-    notification.is_read = True
-    notification.save()
+    notification = get_object_or_404(Notification, pk=pk)
+    if notification.is_global:
+        notification.read_by.add(request.user)
+    elif notification.user == request.user:
+        notification.is_read = True
+        notification.save()
     return redirect('home')
