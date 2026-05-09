@@ -63,3 +63,64 @@ class PickupForm(forms.ModelForm):
         if not phone:
             raise forms.ValidationError("Musisz podać numer telefonu dla kierowcy.")
         return phone
+class PickupFilterForm(forms.Form):
+    date_from = forms.DateField(
+        required=False,
+        label="Data od",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control report-filter__select', 'onchange': 'this.form.submit()'})
+    )
+    date_to = forms.DateField(
+        required=False,
+        label="Data do",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control report-filter__select', 'onchange': 'this.form.submit()'})
+    )
+    mpk = forms.ChoiceField(
+        required=False,
+        label="Numer MPK",
+        widget=forms.Select(attrs={'class': 'form-select report-filter__select', 'onchange': 'this.form.submit()'})
+    )
+    location = forms.ChoiceField(
+        required=False,
+        label="Lokalizacja",
+        widget=forms.Select(attrs={'class': 'form-select report-filter__select', 'onchange': 'this.form.submit()'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        mpk_choices = [('', 'Wszystkie przypisane')]
+        location_choices = [('', 'Wszystkie')]
+
+        from locations.models import MPKNumber, Location
+
+        if self.user:
+            if self.user.is_superuser:
+                mpks = MPKNumber.objects.all().order_by('mpk_number')
+            else:
+                allowed_mpk_ids = Permission.objects.filter(
+                    user=self.user, active=True
+                ).values_list('mpk_number_id', flat=True)
+                mpks = MPKNumber.objects.filter(id__in=allowed_mpk_ids).order_by('mpk_number')
+
+            for mpk in mpks:
+                mpk_choices.append((str(mpk.id), str(mpk.mpk_number)))
+
+            selected_mpk = self.data.get('mpk') or self.initial.get('mpk')
+
+            if selected_mpk:
+                locations = Location.objects.filter(mpk_number_id=selected_mpk).order_by('obj_name')
+                for loc in locations:
+                    location_choices.append((str(loc.id), f"{loc.localization} - {loc.obj_name}"))
+            else:
+                 # If no MPK selected, we can either show no locations or all locations the user has access to.
+                 # Let's show all locations they have access to.
+                 if self.user.is_superuser:
+                     locations = Location.objects.all().order_by('obj_name')
+                 else:
+                     locations = Location.objects.filter(mpk_number_id__in=mpks.values_list('id', flat=True)).order_by('obj_name')
+                 for loc in locations:
+                     location_choices.append((str(loc.id), f"{loc.localization} - {loc.obj_name}"))
+
+        self.fields['mpk'].choices = mpk_choices
+        self.fields['location'].choices = location_choices

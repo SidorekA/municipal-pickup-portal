@@ -1,6 +1,72 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    body {
+        overflow-x: hidden;
+    }
+
+    .truck-container {
+        position: fixed;
+        bottom: 20px;
+        left: 100vw;
+        z-index: 9999;
+        pointer-events: none;
+        display: flex;
+        align-items: flex-end;
+        animation: drive-horizontal 5s linear forwards;
+    }
+
+    .truck-image {
+        width: 300px;
+        height: auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .smoke-particles {
+        position: absolute;
+        /* Front is on the left, so back is on the right. Smoke comes from the right side. */
+        right: 0px;
+        bottom: 20px;
+        z-index: 1;
+    }
+
+    .smoke {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: #a9a9a9;
+        border-radius: 50%;
+        opacity: 0;
+        animation: puff-horizontal 1s infinite;
+        filter: blur(4px);
+    }
+
+    /* Adjusting smoke position to come out from the back right */
+    .smoke:nth-child(1) { animation-delay: 0s; right: -10px; bottom: 0; }
+    .smoke:nth-child(2) { animation-delay: 0.2s; right: -30px; bottom: 10px; width: 40px; height: 40px; }
+    .smoke:nth-child(3) { animation-delay: 0.4s; right: -50px; bottom: 5px; width: 35px; height: 35px; }
+    .smoke:nth-child(4) { animation-delay: 0.6s; right: -20px; bottom: 20px; width: 50px; height: 50px; }
+
+    @keyframes drive-horizontal {
+        0% { transform: translateX(100px); }
+        100% { transform: translateX(-150vw); }
+    }
+
+    @keyframes puff-horizontal {
+        0% {
+            opacity: 0.8;
+            transform: scale(0.5) translate(0, 0);
+        }
+        100% {
+            opacity: 0;
+            /* Smoke moves to the right as the truck moves to the left */
+            transform: scale(2.5) translate(40px, -20px);
+        }
+    }
+</style>
+
 <div class="container mt-5 text-center">
     <h2>Sukces!</h2>
     <p class="lead">Twoje zgłoszenie zostało pomyślnie dodane i przekazane do wysyłki.</p>
@@ -18,5 +84,15 @@
         <a href="{% url 'pickups:pickup_create' %}" class="btn btn-primary">Dodaj kolejne zgłoszenie</a>
         <a href="/" class="btn btn-outline-secondary">Wróć na stronę główną</a>
     </div>
+</div>
+
+<div class="truck-container">
+    <div class="smoke-particles">
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+    </div>
+    <img src="/static/img/garbage-truck.png" alt="Śmieciarka" class="truck-image">
 </div>
 {% endblock %}

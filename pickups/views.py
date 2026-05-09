@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from users.models import Permission
 from .tasks import wyslij_zgloszenie_email
 from pickups.models import Pickup, PickupWasteBin
-from .forms import PickupForm
+from .forms import PickupForm, PickupFilterForm
 from django.http import JsonResponse
 from locations.models import Location, LocationContact, LocationWasteBin
 from scheduling.services import get_next_pickup_date
@@ -117,6 +117,22 @@ def pickup_list(request):
         ).values_list('mpk_number_id', flat=True)
         
         queryset = queryset.filter(mpk_number_id__in=allowed_mpk_ids)
+
+    form = PickupFilterForm(request.GET or None, user=request.user)
+    if form.is_valid():
+        date_from = form.cleaned_data.get('date_from')
+        date_to = form.cleaned_data.get('date_to')
+        mpk = form.cleaned_data.get('mpk')
+        location = form.cleaned_data.get('location')
+
+        if date_from:
+            queryset = queryset.filter(reported_at__date__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(reported_at__date__lte=date_to)
+        if mpk:
+            queryset = queryset.filter(mpk_number_id=mpk)
+        if location:
+            queryset = queryset.filter(location_id=location)
     
     pickups = list(queryset.order_by('-created_at'))
 
@@ -127,4 +143,4 @@ def pickup_list(request):
                 submitted_at=pickup.reported_at
             )
     
-    return render(request, 'pickups/pickup_list.html', {'pickups': pickups})
+    return render(request, 'pickups/pickup_list.html', {'pickups': pickups, 'form': form})

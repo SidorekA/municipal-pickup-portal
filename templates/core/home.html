@@ -18,6 +18,32 @@
         </div>
     </div>
 
+    {% if unread_notifications %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-warning shadow-sm">
+                <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-bell-fill me-2"></i>Powiadomienia ({{ unread_notifications.count }})</span>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for notification in unread_notifications %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <span class="text-muted small me-2">{{ notification.created_at|date:"d.m.Y H:i" }}</span>
+                            <span>{{ notification.message }}</span>
+                        </div>
+                        <form method="post" action="{% url 'notifications:mark_as_read' notification.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Zrozumiałem</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row align-items-md-stretch action-cards-wrapper">
         
         <div class="col-lg-4 mb-4">
