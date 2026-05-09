@@ -1,8 +1,7 @@
 # scheduling/services.py
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
-from typing import TYPE_CHECKING
 from waste.models import WasteFractionType
 
 WARSAW_TZ = ZoneInfo("Europe/Warsaw")
@@ -48,22 +47,24 @@ def get_next_pickup_date(
 
     today = submitted_at.date()
 
-    for delta in range(1, 15):
-        candidate: date = today + timedelta(days=delta)
+    one_day = timedelta(days=1)
+    day_before = today
+    candidate = today + one_day
 
-        if candidate.isoweekday() not in pickup_days:
-            continue
+    for _ in range(1, 15):
+        if candidate.isoweekday() in pickup_days:
+            deadline = datetime(
+                day_before.year,
+                day_before.month,
+                day_before.day,
+                CUTOFF_HOUR, 0, 0,
+                tzinfo=WARSAW_TZ,
+            )
 
-        day_before = candidate - timedelta(days=1)
-        deadline = datetime(
-            day_before.year,
-            day_before.month,
-            day_before.day,
-            CUTOFF_HOUR, 0, 0,
-            tzinfo=WARSAW_TZ,
-        )
+            if submitted_at < deadline:
+                return candidate
 
-        if submitted_at < deadline:
-            return candidate
+        day_before = candidate
+        candidate += one_day
 
     return None
