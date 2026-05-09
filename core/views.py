@@ -387,6 +387,39 @@ def home_view(request):
     unread_notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')
     context['unread_notifications'] = unread_notifications
 
+    # Czas
+    context['now'] = timezone.now()
+
+    # Globalne ogłoszenie
+    try:
+        from decouple import config
+        context['global_announcement'] = config('GLOBAL_ANNOUNCEMENT', default='')
+    except Exception:
+        from django.conf import settings
+        context['global_announcement'] = getattr(settings, 'GLOBAL_ANNOUNCEMENT', '')
+
+    # conflict_count: liczba niepotwierdzonych/skonfliktowanych miesięcy (status in ['KONFLIKT', 'OCZEKUJE'])
+    conflict_qs = MonthlyConfirmation.objects.filter(status__in=['KONFLIKT', 'OCZEKUJE'])
+    if not request.user.is_staff and not request.user.is_superuser:
+        user_mpks = Permission.objects.filter(user=request.user, active=True).values_list('mpk_number', flat=True)
+        conflict_qs = conflict_qs.filter(mpk_number__in=user_mpks)
+    context['conflict_count'] = conflict_qs.count()
+
+    # active_pickups_count: liczba aktywnych zleceń użytkownika w bieżącym miesiącu
+    current_month_start = context['now'].replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    context['active_pickups_count'] = Pickup.objects.filter(
+        reporter=request.user,
+        created_at__gte=current_month_start
+    ).count()
+
+    # last_import_date
+    last_import = DataTransferLog.objects.filter(action='IMPORT').order_by('-created_at').first()
+    context['last_import_date'] = last_import.created_at if last_import else None
+
+    # system_healthy: boolean sprawdzający ostatnie błędy w DataTransferLog
+    last_log = DataTransferLog.objects.order_by('-created_at').first()
+    context['system_healthy'] = last_log.status != 'ERROR' if last_log else True
+
     return render(request, 'core/home.html', context)
 
 @staff_member_required
