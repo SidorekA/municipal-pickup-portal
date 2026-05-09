@@ -1,9 +1,9 @@
 /* Glassmorphism effect for the navbar toggler */
 .navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -42,4 +42,42 @@
 
 .navbar-toggler[aria-expanded="true"] .line:nth-child(3) {
     transform: translateY(-9.5px) rotate(-45deg);
+}
+
+/* Menu panel styling (Glassmorphism + absolute positioning) */
+#navbarNav {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-right: 12px;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    max-width: 350px;
+    width: calc(100vw - 24px);
+    z-index: 1000;
+}
+
+/* Bootstrap sets height to 0 for collapsing, we want to animate opacity and transform too */
+.collapsing {
+    transition: height 0.3s ease;
+}
+
+/* Add custom animation class when fully shown */
+.collapse.show {
+    animation: fadeAndSlideDown 0.4s ease forwards;
+}
+
+@keyframes fadeAndSlideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
