@@ -1,9 +1,8 @@
-/* ─── Hamburger toggler ─────────────────────────────────────────── */
 .navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -22,26 +21,20 @@
 }
 
 .navbar-toggler:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.01);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Hamburger lines */
 .navbar-toggler .line {
     width: 30px;
     height: 3px;
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 3px;
-    /*
-     * Czas identyczny z animacją menu (0.3s).
-     * Poprzednie 0.65s powodowało widoczny rozjazd.
-     */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity   0.2s cubic-bezier(0.4, 0, 0.2, 1);
     margin: 0 auto;
 }
 
-/* Stan: otwarte */
 .navbar-toggler[aria-expanded="true"] .line:nth-child(1) {
     transform: translateY(9.5px) rotate(45deg);
 }
@@ -55,64 +48,113 @@
     transform: translateY(-9.5px) rotate(-45deg);
 }
 
-/* ─── Panel menu ────────────────────────────────────────────────── */
-/*
- * Kluczowa zmiana: zamiast Bootstrap collapse (height: 0 → auto),
- * używamy opacity + transform + visibility.
- * display: block !important sprawia, że Bootstrap nie ukrywa elementu,
- * a wizualna widoczność sterowana jest przez klasę .nav-open.
- */
 #navbarNav {
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
-    background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1rem;
     min-width: 250px;
     z-index: 1000;
 
-    /* Nadpisanie Bootstrap collapse */
     display: block !important;
     height: auto !important;
     overflow: visible !important;
 
-    /* Stan domyślny: ukryty */
+    transform-origin: top center;
+
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-8px) scale(0.97);
     pointer-events: none;
-
-    /*
-     * visibility przełącza się natychmiast przy otwieraniu (0s delay),
-     * ale z opóźnieniem 0.3s przy zamykaniu — czeka aż opacity zdąży
-     * spaść do 0, zanim element zniknie dla screen readerów.
-     */
-    transition:
-        opacity    0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        transform  0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        visibility 0s   linear 0.3s;
 }
 
-/* Stan: otwarte */
 #navbarNav.nav-open {
-    opacity: 1;
     visibility: visible;
-    transform: translateY(0) scale(1);
     pointer-events: all;
-
-    transition:
-        opacity    0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        transform  0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        visibility 0s   linear 0s;
+    -webkit-animation: swing-in-top-fwd 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            animation: swing-in-top-fwd 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
-/* Linki w menu */
+#navbarNav.nav-closing {
+    visibility: visible;
+    pointer-events: none;
+    -webkit-animation: swing-out-top-fwd 0.25s ease-in both;
+            animation: swing-out-top-fwd 0.25s ease-in both;
+}
+
+@-webkit-keyframes swing-in-top-fwd {
+    0% {
+        -webkit-transform: perspective(700px) rotateX(-100deg);
+                transform: perspective(700px) rotateX(-100deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: perspective(700px) rotateX(0deg);
+                transform: perspective(700px) rotateX(0deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 1;
+    }
+}
+@keyframes swing-in-top-fwd {
+    0% {
+        -webkit-transform: perspective(700px) rotateX(-100deg);
+                transform: perspective(700px) rotateX(-100deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: perspective(700px) rotateX(0deg);
+                transform: perspective(700px) rotateX(0deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes swing-out-top-fwd {
+    0% {
+        -webkit-transform: perspective(700px) rotateX(0deg);
+                transform: perspective(700px) rotateX(0deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 1;
+    }
+    100% {
+        -webkit-transform: perspective(700px) rotateX(-100deg);
+                transform: perspective(700px) rotateX(-100deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 0;
+    }
+}
+@keyframes swing-out-top-fwd {
+    0% {
+        -webkit-transform: perspective(700px) rotateX(0deg);
+                transform: perspective(700px) rotateX(0deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 1;
+    }
+    100% {
+        -webkit-transform: perspective(700px) rotateX(-100deg);
+                transform: perspective(700px) rotateX(-100deg);
+        -webkit-transform-origin: top;
+                transform-origin: top;
+        opacity: 0;
+    }
+}
+
 #navbarNav .nav-link {
-    transition: color 0.15s ease, opacity 0.15s ease;
+    color: rgba(79, 155, 64, 0.897);
+    transition: opacity 0.15s ease;
 }
 
 #navbarNav .nav-link:hover {
