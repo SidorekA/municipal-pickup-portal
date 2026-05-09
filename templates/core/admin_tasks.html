@@ -10,7 +10,7 @@
     </div>
 
     <div class="row">
-        <!-- Import Data -->
+        
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-primary text-white">
@@ -31,29 +31,20 @@
             </div>
         </div>
 
-        <!-- Email Tasks -->
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Komunikacja e-mail</h5>
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-table me-2"></i>Edycja Zestawień Dostawcy</h5>
                 </div>
-                <div class="card-body d-flex flex-column gap-3">
-                    <a href="{% url 'core:draft_email_unconfirmed' %}" class="btn btn-outline-success text-start">
-                        <i class="bi bi-envelope-exclamation me-2"></i>Wygeneruj draft: brak potwierdzeń
-                    </a>
-                    <a href="{% url 'core:draft_email_all_users' %}" class="btn btn-outline-success text-start">
-                        <i class="bi bi-envelope-paper me-2"></i>Wygeneruj draft: wszyscy użytkownicy
-                    </a>
-                    <a href="{% url 'core:draft_email_coordinators' %}" class="btn btn-outline-success text-start">
-                        <i class="bi bi-envelope-at me-2"></i>Wygeneruj draft: Koordynatorzy MPK
+                <div class="card-body">
+                    <p class="card-text text-muted">Przeglądaj, filtruj i edytuj na żywo zaimportowane zestawienia od dostawcy.</p>
+                    <a href="{% url 'reports:edit_summaries' %}" class="btn btn-dark w-100">
+                        <i class="bi bi-pencil-square me-2"></i>Przejdź do edycji
                     </a>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <!-- Eksport Danych z Dowolnej Tabeli -->
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-info text-white">
@@ -87,109 +78,6 @@
             </div>
         </div>
 
-        <!-- Edycja Zestawień Miesięcznych -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0"><i class="bi bi-table me-2"></i>Edycja Zestawień Dostawcy</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Przeglądaj, filtruj i edytuj na żywo zaimportowane zestawienia od dostawcy.</p>
-                    <a href="{% url 'reports:edit_summaries' %}" class="btn btn-dark w-100">
-                        <i class="bi bi-pencil-square me-2"></i>Przejdź do edycji
-                    </a>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Eksport Historii Zmian (Auditlog) -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Eksport Historii Zmian (Auditlog)</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Wygeneruj plik zawierający logi audytowe dla wybranych parametrów (wszystkie opcjonalne).</p>
-                    <form method="GET" action="{% url 'core:admin_task_auditlog_export' %}">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="auditlog_date_from" class="form-label">Data od</label>
-                                <input type="date" class="form-control" id="auditlog_date_from" name="date_from">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="auditlog_date_to" class="form-label">Data do</label>
-                                <input type="date" class="form-control" id="auditlog_date_to" name="date_to">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="auditlog_user" class="form-label">Użytkownik</label>
-                            <select class="form-select" id="auditlog_user" name="user_id">
-                                <option value="" selected>--- Wszyscy użytkownicy ---</option>
-                                {% for u in users %}
-                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
-        <!-- Generowanie Raportu Kosztowego -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header text-white" style="background-color: #6f42c1;">
-                    <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Generowanie Raportu Kosztowego</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Wygeneruj raport kosztowy z zestawień z podziałem na MPK.</p>
-                    <form method="GET" action="{% url 'core:admin_task_cost_report' %}">
-                        <div class="mb-3">
-                            <label for="report_year" class="form-label">Rok (opcjonalnie)</label>
-                            <select class="form-select" id="report_year" name="year">
-                                <option value="" selected>--- Wszystkie lata ---</option>
-                                {% for year in years %}
-                                    <option value="{{ year }}">{{ year }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="report_month" class="form-label">Miesiąc (opcjonalnie)</label>
-                            <select class="form-select" id="report_month" name="month">
-                                <option value="" selected>--- Wszystkie miesiące ---</option>
-                                {% for month_num, month_name in months %}
-                                    <option value="{{ month_num }}">{{ month_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="auditlog_content_type" class="form-label">Model/Tabela</label>
-                            <select class="form-select" id="auditlog_content_type" name="content_type_id">
-                                <option value="" selected>--- Wszystkie tabele ---</option>
-                                {% for ct in log_content_types %}
-                                    <option value="{{ ct.id }}">{{ ct.name|title }} ({{ ct.app_label }}.{{ ct.model }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-secondary w-100">
-                            <i class="bi bi-cloud-download me-2"></i>Pobierz historię
-                            <label for="report_mpk" class="form-label">Numer MPK (opcjonalnie)</label>
-                            <select class="form-select" id="report_mpk" name="mpk_number_id">
-                                <option value="" selected>--- Wszystkie MPK ---</option>
-                                {% for mpk in mpk_numbers %}
-                                    <option value="{{ mpk.id }}">{{ mpk.mpk_number }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="report_format" class="form-label">Format pliku</label>
-                            <select class="form-select" id="report_format" name="format">
-                                <option value="xlsx" selected>Excel (.xlsx)</option>
-                                <option value="csv">CSV (.csv)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn text-white w-100" style="background-color: #6f42c1;">
-                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generuj Raport
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Import Danych do Dowolnej Tabeli -->
         <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-warning text-dark">
@@ -219,10 +107,121 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Rejestr Pobrań i Importów -->
-    <div class="card shadow-sm border-0 mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header text-white" style="background-color: #6f42c1;">
+                    <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Generowanie Raportu Kosztowego</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">Wygeneruj raport kosztowy z zestawień z podziałem na MPK.</p>
+                    <form method="GET" action="{% url 'core:admin_task_cost_report' %}">
+                        <div class="mb-3">
+                            <label for="report_year" class="form-label">Rok (opcjonalnie)</label>
+                            <select class="form-select" id="report_year" name="year">
+                                <option value="" selected>--- Wszystkie lata ---</option>
+                                {% for year in years %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="report_month" class="form-label">Miesiąc (opcjonalnie)</label>
+                            <select class="form-select" id="report_month" name="month">
+                                <option value="" selected>--- Wszystkie miesiące ---</option>
+                                {% for month_num, month_name in months %}
+                                    <option value="{{ month_num }}">{{ month_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="report_mpk" class="form-label">Numer MPK (opcjonalnie)</label>
+                            <select class="form-select" id="report_mpk" name="mpk_number_id">
+                                <option value="" selected>--- Wszystkie MPK ---</option>
+                                {% for mpk in mpk_numbers %}
+                                    <option value="{{ mpk.id }}">{{ mpk.mpk_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="report_format" class="form-label">Format pliku</label>
+                            <select class="form-select" id="report_format" name="format">
+                                <option value="xlsx" selected>Excel (.xlsx)</option>
+                                <option value="csv">CSV (.csv)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn text-white w-100" style="background-color: #6f42c1;">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generuj Raport
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Eksport Historii Zmian (Auditlog)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">Wygeneruj plik zawierający logi audytowe dla wybranych parametrów (wszystkie opcjonalne).</p>
+                    <form method="GET" action="{% url 'core:admin_task_auditlog_export' %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="auditlog_date_from" class="form-label">Data od</label>
+                                <input type="date" class="form-control" id="auditlog_date_from" name="date_from">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="auditlog_date_to" class="form-label">Data do</label>
+                                <input type="date" class="form-control" id="auditlog_date_to" name="date_to">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="auditlog_user" class="form-label">Użytkownik</label>
+                            <select class="form-select" id="auditlog_user" name="user_id">
+                                <option value="" selected>--- Wszyscy użytkownicy ---</option>
+                                {% for u in users %}
+                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="auditlog_content_type" class="form-label">Model/Tabela</label>
+                            <select class="form-select" id="auditlog_content_type" name="content_type_id">
+                                <option value="" selected>--- Wszystkie tabele ---</option>
+                                {% for ct in log_content_types %}
+                                    <option value="{{ ct.id }}">{{ ct.name|title }} ({{ ct.app_label }}.{{ ct.model }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="bi bi-cloud-download me-2"></i>Pobierz historię
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Komunikacja e-mail</h5>
+                </div>
+                <div class="card-body d-flex flex-column gap-3">
+                    <a href="{% url 'core:draft_email_unconfirmed' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-envelope-exclamation me-2"></i>Wygeneruj draft: brak potwierdzeń
+                    </a>
+                    <a href="{% url 'core:draft_email_all_users' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-envelope-paper me-2"></i>Wygeneruj draft: wszyscy użytkownicy
+                    </a>
+                    <a href="{% url 'core:draft_email_coordinators' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-envelope-at me-2"></i>Wygeneruj draft: Koordynatorzy MPK
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div> <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-secondary text-white">
             <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Rejestr Pobrań i Importów</h5>
         </div>
@@ -288,7 +287,6 @@
 
 </div>
 
-<!-- Inicjalizacja popoverów dla szczegółów błędów -->
 <script>
     document.addEventListener("DOMContentLoaded", function(){
         var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
