@@ -27,8 +27,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     mpkSelect.addEventListener("change", function() {
         const mpkId = this.value;
+        const prevLocation = locationSelect.getAttribute("data-selected");
         
-        locationSelect.innerHTML = '<option value="">---------</option>';
+        // preserveLocation logic removed since it was complicated by JS Event API limits.
+        // Instead, we just check prevLocation and let the UI refresh. It happens very fast.
+        locationSelect.innerHTML = '<option value="" class="text-muted">--- Wybierz lokalizację ---</option>';
         binsContainer.innerHTML = '';
         instruction.style.display = 'block';
 
@@ -47,6 +50,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
             
                     locationSelect.disabled = false; 
+
+                    if (prevLocation) {
+                        locationSelect.value = prevLocation;
+                        // Trigger location change to load bins too if we just set it
+                        locationSelect.dispatchEvent(new Event("change"));
+                    }
                 })
                 .catch(error => {
                     console.error("Błąd pobierania lokalizacji:", error);
@@ -65,16 +74,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         instruction.style.display = 'none';
-        binsContainer.innerHTML = '<div class="text-center w-100"><div class="spinner-border text-success"></div></div>';
+        binsContainer.innerHTML = '<div class="text-center w-100 mt-4"><div class="spinner-border text-success"></div><p class="text-muted mt-2">Ładowanie pojemników...</p></div>';
         
         if (phoneSelect) phoneSelect.innerHTML = initialPhoneOptions;
         if (!locationId) {
             instruction.style.display = 'block';
             return;
         }
-
-        instruction.style.display = 'none';
-        binsContainer.innerHTML = '<div class="text-center w-100 mt-4"><div class="spinner-border text-success"></div><p class="text-muted mt-2">Ładowanie pojemników...</p></div>';
 
         fetch(`/zgloszenia/api/lokalizacja/${locationId}/pojemniki/`)
             .then(response => response.json())
@@ -88,6 +94,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         option.textContent = `${contact.name}: ${contact.phone}`;
                         phoneSelect.appendChild(option);
                     });
+                    phoneSelect.disabled = false;
                 }
 
                 if (data.bins.length === 0) {
@@ -125,6 +132,72 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     });
     if (mpkSelect && mpkSelect.value) {
-        mpkSelect.dispatchEvent(new Event("change"));
+        // We trigger the change event but pass a custom event detail to preserve UI state if we are coming from a failed post
+        const prevLocation = locationSelect.getAttribute("data-selected");
+        if (prevLocation) {
+            // Need to pass parameter manually to handler. Wait, Event doesn't pass args well unless CustomEvent.
+            // But we already modified the handler above. Let's trigger via dispatchEvent but can't pass args directly to addEventListener change.
+            // Alternative:
+            mpkSelect.dispatchEvent(new Event("change"));
+        } else {
+            mpkSelect.dispatchEvent(new Event("change"));
+        }
+    } else {
+        // Only disable on initial load if no MPK is selected
+        if (locationSelect) locationSelect.disabled = true;
+        if (phoneSelect) phoneSelect.disabled = true;
+    }
+
+    // Form Validation logic
+    const pickupForm = document.getElementById("pickup-form");
+    if (pickupForm) {
+        pickupForm.addEventListener("submit", function(e) {
+            let isValid = true;
+
+            // Clear previous errors
+            document.querySelectorAll('.is-invalid').forEach(el => {
+                el.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.input-group.border-danger').forEach(el => {
+                el.classList.remove('border-danger');
+            });
+            binsContainer.classList.remove('bins-error');
+
+            if (!mpkSelect.value) {
+                mpkSelect.classList.add('is-invalid');
+                mpkSelect.closest('.input-group').classList.add('border-danger');
+                isValid = false;
+            }
+            if (!locationSelect.value) {
+                locationSelect.classList.add('is-invalid');
+                locationSelect.closest('.input-group').classList.add('border-danger');
+                isValid = false;
+            }
+            if (!phoneSelect.value) {
+                phoneSelect.classList.add('is-invalid');
+                phoneSelect.closest('.input-group').classList.add('border-danger');
+                isValid = false;
+            }
+
+            // Check if at least one bin has quantity > 0
+            if (locationSelect.value) {
+                const binInputs = binsContainer.querySelectorAll('input[type="number"]');
+                let hasBins = false;
+                binInputs.forEach(input => {
+                    if (parseInt(input.value) > 0) {
+                        hasBins = true;
+                    }
+                });
+
+                if (!hasBins && binInputs.length > 0) {
+                    binsContainer.classList.add('bins-error');
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault(); // Prevent form submission
+            }
+        });
     }
 });

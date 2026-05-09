@@ -21,6 +21,9 @@ class PickupForm(forms.ModelForm):
         self.location_id = kwargs.pop('location_id', None)
         super().__init__(*args, **kwargs)
         
+        self.fields['mpk_number'].empty_label = "--- Wybierz nr MPK ---"
+        self.fields['location'].empty_label = "--- Wybierz lokalizację ---"
+
         if self.user and not self.user.is_superuser:
             allowed_mpk_ids = Permission.objects.filter(
                 user=self.user, 

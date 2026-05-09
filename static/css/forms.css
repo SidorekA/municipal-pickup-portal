@@ -109,3 +109,25 @@
     font-weight: 600;
     color: #495057;
 }
+
+/* --- Validation Error Styles --- */
+.input-group.border-danger {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8;
+}
+
+.input-group.border-danger .input-group-text {
+    color: #dc3545 !important;
+}
+
+.bins-error {
+    border: 2px solid #dc3545 !important;
+    border-radius: 16px;
+    padding: 10px;
+    background-color: #fff8f8;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+}
+
+.text-muted {
+    color: #adb5bd !important;
+}
