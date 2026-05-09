@@ -1,0 +1,45 @@
+/* Glassmorphism effect for the navbar toggler */
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 44px;
+    height: 38px;
+    padding: 8px 6px;
+    cursor: pointer;
+    border-radius: 0.375rem; /* Match bootstrap border radius */
+    box-shadow: none !important;
+}
+
+/* Remove default focus outline */
+.navbar-toggler:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* Styles for the hamburger lines */
+.navbar-toggler .line {
+    width: 30px;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.9); /* Light color for navbar-dark */
+    border-radius: 3px;
+    transition: all 0.65s ease;
+    margin: 0 auto;
+}
+
+/* Animation when the menu is opened (not collapsed) */
+.navbar-toggler[aria-expanded="true"] .line:nth-child(1) {
+    transform: translateY(9.5px) rotate(45deg);
+}
+
+.navbar-toggler[aria-expanded="true"] .line:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-toggler[aria-expanded="true"] .line:nth-child(3) {
+    transform: translateY(-9.5px) rotate(-45deg);
+}
