@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
 from pickups.models import Pickup, PickupWasteBin
-from locations.models import Location, MPKNumber, WasteFraction, WasteFractionType
+from locations.models import Location, MPKNumber
+from waste.models import WasteFraction, WasteFractionType
 
 User = get_user_model()
 
