@@ -1,6 +1,10 @@
 {% extends 'base.html' %} 
 {% load static %} 
 
+{% block extra_css %}
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block title %}Podsumowanie Odbiorów | System Odpadów{% endblock %} 
 
 {% block content %}
@@ -28,21 +32,48 @@
 
         <hr class="my-4 opacity-25" />
 
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
+        <form method="get" class="row g-3 align-items-end" id="reportFilterForm">
+            <div class="col-12 col-md-auto">
                 <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.mpk.label }}</label>
-                {{ form.mpk }}
+                <div class="input-group flex-nowrap shadow-sm rounded filter-group-mpk">
+                    <button class="btn btn-list-step" type="button" data-target="id_mpk" data-step="-1" title="Poprzedni na liście">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    {{ form.mpk }}
+                    <button class="btn btn-list-step" type="button" data-target="id_mpk" data-step="1" title="Następny na liście">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-3">
+            
+            <div class="col-12 col-md-auto">
                 <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.month.label }}</label>
-                {{ form.month }}
+                <div class="input-group flex-nowrap shadow-sm rounded filter-group-date">
+                    <button class="btn btn-list-step" type="button" data-target="id_month" data-step="-1" title="Poprzedni miesiąc">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    {{ form.month }}
+                    <button class="btn btn-list-step" type="button" data-target="id_month" data-step="1" title="Następny miesiąc">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-3">
+            
+            <div class="col-12 col-md-auto">
                 <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.year.label }}</label>
-                {{ form.year }}
+                <div class="input-group flex-nowrap shadow-sm rounded filter-group-date">
+                    <button class="btn btn-list-step" type="button" data-target="id_year" data-step="-1" title="Poprzedni rok">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    {{ form.year }}
+                    <button class="btn btn-list-step" type="button" data-target="id_year" data-step="1" title="Następny rok">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-success w-100 fw-bold">Filtruj</button>
+            
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">Filtruj</button>
             </div>
         </form>
     </div>
@@ -52,6 +83,14 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold mb-0">
                 <i class="bi bi-geo-alt-fill text-success me-2"></i>MPK: {{ group.mpk_name }}
+                <span class="badge ms-3 fs-6 fw-normal {% if group.status == 'OCZEKUJE' %}bg-warning text-dark{% elif group.status == 'KONFLIKT' %}bg-danger{% else %}bg-success{% endif %}">
+                    <i class="bi bi-info-circle me-1"></i>
+                    {% if group.status == 'OCZEKUJE' %}Oczekuje na weryfikację
+                    {% elif group.status == 'POTWIERDZONE' %}Potwierdzone
+                    {% elif group.status == 'ZATWIERDZONE' %}Zatwierdzone
+                    {% elif group.status == 'KONFLIKT' %}Rozbieżności (Konflikt)
+                    {% else %}{{ group.status }}{% endif %}
+                </span>
             </h4>
 
             <div>
@@ -95,4 +134,76 @@
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Inicjalizacja Tom Select dla wszystkich filtrów
+    const settings = {
+        create: false,
+        controlInput: null, // Wyłącza wpisywanie tekstu dla krótkich list (miesiąc/rok)
+        hideSelected: true,
+    };
+
+    const mpkTs = new TomSelect('#id_mpk', { ...settings, controlInput: undefined, placeholder: "Wybierz MPK" });
+    const monthTs = new TomSelect('#id_month', settings);
+    const yearTs = new TomSelect('#id_year', settings);
+
+    // Mapa instancji dla przycisków
+    const tsInstances = {
+        'id_mpk': mpkTs,
+        'id_month': monthTs,
+        'id_year': yearTs
+    };
+
+    // 2. Obsługa przycisków strzałek
+    const stepButtons = document.querySelectorAll('.btn-list-step');
+
+    function updateButtonStates() {
+        stepButtons.forEach(btn => {
+            const targetId = btn.getAttribute('data-target');
+            const ts = tsInstances[targetId];
+            if (!ts) return;
+
+            const currentIndex = ts.getOption(ts.getValue()).index;
+            const totalOptions = Object.keys(ts.options).length;
+            const step = parseInt(btn.getAttribute('data-step'), 10);
+
+            if (step === -1 && currentIndex <= 0) {
+                btn.disabled = true;
+            } else if (step === 1 && currentIndex >= totalOptions - 1) {
+                btn.disabled = true;
+            } else {
+                btn.disabled = false;
+            }
+        });
+    }
+
+    stepButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const ts = tsInstances[targetId];
+            const step = parseInt(this.getAttribute('data-step'), 10);
+
+            if (ts) {
+                // Pobieramy wszystkie aktualne klucze (values) opcji w kolejności
+                const keys = Object.keys(ts.options);
+                const currentVal = ts.getValue();
+                const currentIndex = keys.indexOf(currentVal);
+                const newIndex = currentIndex + step;
+
+                if (newIndex >= 0 && newIndex < keys.length) {
+                    ts.setValue(keys[newIndex]);
+                    // Tom Select automatycznie zaktualizuje ukryty select, więc wysyłamy form
+                    ts.wrapper.closest('form').submit();
+                }
+            }
+        });
+    });
+
+    updateButtonStates();
+});
+</script>
 {% endblock %}

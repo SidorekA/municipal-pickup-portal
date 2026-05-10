@@ -5,17 +5,29 @@
 
 {% block content %}
 <div class="container dashboard-container">
+    
+    <div class="hero-banner">
+        <div class="container-fluid py-2">
+            <h1 class="hero-banner__title">
+                <i class="bi bi-recycle text-success me-3"></i>Witaj, {{ user.first_name|default:user.username }}! 👋
+            </h1>
+            <p class="hero-banner__description">
+                Dzisiaj jest {{ now|date:"l, d F Y" }}. Sprawdź aktualne zadania i statystyki poniżej.
+            </p>
+        </div>
+    </div>
+
     {% if global_announcement %}
     <div class="alert alert-{{ global_announcement.alert_type }} border-start border-4 shadow-sm d-flex justify-content-between align-items-center mb-4" role="alert">
         <div>
             {% if global_announcement.alert_type == 'warning' %}
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
             {% elif global_announcement.alert_type == 'danger' %}
-            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>
             {% elif global_announcement.alert_type == 'success' %}
-            <i class="bi bi-check-circle-fill me-2"></i>
+                <i class="bi bi-check-circle-fill me-2"></i>
             {% else %}
-            <i class="bi bi-info-circle-fill me-2"></i>
+                <i class="bi bi-info-circle-fill me-2"></i>
             {% endif %}
             {{ global_announcement.message }}
         </div>
@@ -25,17 +37,6 @@
         </form>
     </div>
     {% endif %}
-
-    <div class="hero-banner">
-        <div class="container-fluid py-2">
-            <h1 class="hero-banner__title">
-                <i class="bi bi-recycle text-success me-3"></i>Witaj, {{ user.first_name|default:user.username }}! 👋
-            </h1>
-            <p class="hero-banner__description">
-                Dzisiaj jest {{ now|date:"l, d F Y" }}. Sprawdź aktualne zadania poniżej.
-            </p>
-        </div>
-    </div>
 
     {% if unread_notifications %}
     <div class="row mb-4">
@@ -63,16 +64,14 @@
     </div>
     {% endif %}
 
-    <div class="row align-items-md-stretch action-cards-wrapper">
+    <div class="row align-items-md-stretch action-cards-wrapper mb-5">
         
         <div class="col-12 col-md-6 col-xl-3 mb-4">
             <div class="action-card action-card--primary">
-                <i class="bi bi-plus-circle action-card__bg-icon"></i>
+                <i class="bi bi-plus-circle action-card__bg-icon" aria-hidden="true"></i>
                 <h2 class="action-card__title">Nowe zgłoszenie</h2>
-                <p class="action-card__description">
-                    Wybierz numer MPK, określ lokalizację i uzupełnij ilości.
-                </p>
-                <a href="{% url 'pickups:pickup_create' %}" class="btn btn-light btn-lg action-card__btn">
+                <p class="action-card__description">Wybierz numer MPK, określ lokalizację i uzupełnij ilości.</p>
+                <a href="{% url 'pickups:pickup_create' %}" class="btn btn-light btn-lg action-card__btn stretched-link">
                     Dodaj zgłoszenie
                 </a>
             </div>
@@ -80,54 +79,50 @@
 
         <div class="col-12 col-md-6 col-xl-3 mb-4">
             <div class="action-card action-card--secondary">
-                <i class="bi bi-clock-history action-card__bg-icon"></i>
+                <i class="bi bi-clock-history action-card__bg-icon" aria-hidden="true"></i>
                 <h2 class="action-card__title">
-                    Historia zamówień
+                    Historia
                     {% if active_pickups_count > 0 %}
                     <span class="badge bg-primary rounded-pill ms-2 align-middle fs-6">{{ active_pickups_count }}</span>
                     {% endif %}
                 </h2>
-                <p class="action-card__description">
-                    Przeglądaj archiwalne zgłoszenia i sprawdzaj statusy realizacji.
-                </p>
-                <a href="{% url 'pickups:pickup_list' %}" class="btn btn-outline-success btn-lg action-card__btn">
+                <p class="action-card__description">Przeglądaj archiwalne zgłoszenia i sprawdzaj statusy.</p>
+                <a href="{% url 'pickups:pickup_list' %}" class="btn btn-outline-success btn-lg action-card__btn stretched-link">
                     Zobacz historię
                 </a>
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-xl-3 mb-4">
-            <div class="action-card" style="background: linear-gradient(135deg, #198754 0%, #0d6efd 100%); color: white; overflow: hidden; position: relative;">
-                <i class="bi bi-file-earmark-check action-card__bg-icon" style="position: absolute; right: -20px; top: -20px; font-size: 8rem; opacity: 0.1;"></i>
+            <div class="action-card action-card--verification">
+                <i class="bi bi-file-earmark-check action-card__bg-icon" aria-hidden="true"></i>
                 <h2 class="action-card__title">
                     Weryfikacja
                     {% if conflict_count > 0 %}
                     <span class="badge bg-danger rounded-pill ms-2 align-middle fs-6 badge-pulse">{{ conflict_count }}</span>
                     {% endif %}
                 </h2>
-                <p class="action-card__description">
-                    Potwierdź zgodność zgłoszeń z fakturami dostawcy za dany miesiąc.
-                </p>
-                <a href="{% url 'reports:monthly_summary' %}" class="btn btn-light btn-lg action-card__btn">
-                    Raporty miesięczne
+                <p class="action-card__description">Potwierdź zgodność zgłoszeń z fakturami dostawcy.</p>
+                <a href="{% url 'reports:monthly_summary' %}" class="btn btn-light btn-lg action-card__btn stretched-link">
+                    Raporty
                 </a>
             </div>
         </div>
 
         {% if user.is_staff %}
         <div class="col-12 col-md-6 col-xl-3 mb-4">
-            <div class="action-card" style="background: linear-gradient(135deg, #212529 0%, #495057 100%); color: white; overflow: hidden; position: relative;">
-                <i class="bi bi-shield-lock action-card__bg-icon" style="position: absolute; right: -20px; top: -20px; font-size: 8rem; opacity: 0.1;"></i>
+            <div class="action-card action-card--admin">
+                <i class="bi bi-shield-lock action-card__bg-icon" aria-hidden="true"></i>
                 <h2 class="action-card__title">Zarządzanie</h2>
                 <p class="action-card__description">
-                    Narzędzia administracyjne systemu.
+                    Narzędzia administracyjne.
                     <br>
                     <small class="text-white-50 d-flex align-items-center mt-2">
-                        Ostatni import: {{ last_import_date|date:"d.m.Y"|default:"---" }}
-                        <i class="bi {% if system_healthy %}bi-circle-fill text-success{% else %}bi-circle-fill text-danger{% endif %} ms-2" style="font-size: 0.5rem;" title="System Status"></i>
+                        Import: {{ last_import_date|date:"d.m.Y"|default:"---" }}
+                        <i class="bi bi-circle-fill {% if system_healthy %}text-success{% else %}text-danger{% endif %} ms-2" style="font-size: 0.5rem;"></i>
                     </small>
                 </p>
-                <a href="{% url 'core:admin_tasks' %}" class="btn btn-light btn-lg action-card__btn">
+                <a href="{% url 'core:admin_tasks' %}" class="btn btn-light btn-lg action-card__btn stretched-link">
                     Panel Admina
                 </a>
             </div>
@@ -136,36 +131,79 @@
 
     </div>
 
-    <hr class="my-5">
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <p class="kpi-label"><i class="bi bi-send me-1"></i>Zgłoszenia ({{ kpi.current_month_name }})</p>
+                <p class="kpi-value">{{ kpi.pickups_this_month }}</p>
+            </div>
+        </div>
 
-    <div class="row text-center mt-5">
-        <div class="col-md-4">
-            <div class="step-item">
-                <div class="step-item__icon-wrapper">
-                    <i class="bi bi-1-circle-fill step-item__icon text-success"></i>
-                </div>
-                <h5 class="step-item__title">1. Wybierz MPK</h5>
-                <p class="step-item__description">System automatycznie odfiltruje widoki i pokaże tylko te lokalizacje, do których posiadasz dostęp.</p>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card {% if kpi.pickups_pending > 0 %}kpi-card--warn{% endif %}">
+                <p class="kpi-label"><i class="bi bi-hourglass-split me-1"></i>Oczekujące</p>
+                <p class="kpi-value {% if kpi.pickups_pending > 0 %}text-warning{% endif %}">{{ kpi.pickups_pending }}</p>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="step-item">
-                <div class="step-item__icon-wrapper">
-                    <i class="bi bi-2-circle-fill step-item__icon text-success"></i>
-                </div>
-                <h5 class="step-item__title">2. Wpisz ilości</h5>
-                <p class="step-item__description">Wskaż ile sztuk danego typu czeka na wywóz – system zajmie się resztą.</p>
+
+        <div class="col-6 col-md-3">
+            <div class="kpi-card {% if kpi.unconfirmed_mpks > 0 %}kpi-card--warn{% endif %} position-relative">
+                <p class="kpi-label"><i class="bi bi-exclamation-circle me-1"></i>MPK bez potwierdzenia</p>
+                <p class="kpi-value {% if kpi.unconfirmed_mpks > 0 %}text-warning{% endif %}">{{ kpi.unconfirmed_mpks }}</p>
+                {% if kpi.unconfirmed_mpks > 0 %}
+                    <a href="{% url 'reports:monthly_summary' %}" class="kpi-action-link stretched-link">Przejdź do raportów →</a>
+                {% endif %}
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="step-item">
-                <div class="step-item__icon-wrapper">
-                    <i class="bi bi-3-circle-fill step-item__icon text-success"></i>
+
+        <div class="col-6 col-md-3">
+            <div class="kpi-card kpi-card--chart">
+                <p class="kpi-label"><i class="bi bi-bar-chart-fill me-1"></i>Trend (5 mies.)</p>
+                <div class="kpi-mini-chart" aria-label="Wykres zgłoszeń">
+                    {% for m in monthly_counts %}
+                    <div class="kpi-bar-col">
+                        <div class="kpi-bar {% if m.is_current %}kpi-bar--current{% endif %}"
+                             style="height: {% widthratio m.count monthly_max 48 %}px;"
+                             title="{{ m.label }}: {{ m.count }}">
+                        </div>
+                        <span class="kpi-bar-label">{{ m.label }}</span>
+                    </div>
+                    {% endfor %}
                 </div>
-                <h5 class="step-item__title">3. Potwierdź miesiąc</h5>
-                <p class="step-item__description">Na koniec miesiąca zweryfikuj dane z raportem dostawcy w nowym module weryfikacji.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="steps-section mt-5 border-top pt-5">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="step-item">
+                    <div class="step-item__icon-wrapper">
+                        <i class="bi bi-1-circle-fill step-item__icon text-success"></i>
+                    </div>
+                    <h5 class="step-item__title">1. Wybierz MPK</h5>
+                    <p class="step-item__description">System pokaże tylko lokalizacje, do których masz uprawnienia.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="step-item">
+                    <div class="step-item__icon-wrapper">
+                        <i class="bi bi-2-circle-fill step-item__icon text-success"></i>
+                    </div>
+                    <h5 class="step-item__title">2. Wpisz ilości</h5>
+                    <p class="step-item__description">Wskaż liczbę sztuk do wywozu – system obliczy resztę.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="step-item">
+                    <div class="step-item__icon-wrapper">
+                        <i class="bi bi-3-circle-fill step-item__icon text-success"></i>
+                    </div>
+                    <h5 class="step-item__title">3. Potwierdź miesiąc</h5>
+                    <p class="step-item__description">Zweryfikuj dane z raportem dostawcy w module weryfikacji.</p>
+                </div>
             </div>
         </div>
     </div>

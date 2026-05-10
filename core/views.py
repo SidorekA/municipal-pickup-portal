@@ -201,13 +201,24 @@ def import_table_data_view(request):
                             clean_dict = {}
 
                             for key, value in row_dict.items():
-                                if pd.isna(value):
-                                    clean_dict[key] = None
-                                else:
-                                    clean_dict[key] = value
+                                # Znajdź prawdziwą nazwę pola (bez dopisku _id z Pandas)
+                                field_name = key[:-3] if key.endswith('_id') else key
+                                
+                                try:
+                                    field = model._meta.get_field(field_name)
+                                    is_char = field.get_internal_type() in ['CharField', 'TextField']
+                                except Exception:
+                                    is_char = False
 
-                                if key in fk_fields and key + '_id' not in clean_dict:
-                                    pass
+                                if pd.isna(value):
+                                    if is_char:
+                                        clean_dict[key] = ""
+                                else:
+                                    # Zabezpieczenie przed liczbami z Excela (np. "697612038.0" -> 697612038)
+                                    if isinstance(value, float) and value.is_integer():
+                                        clean_dict[key] = int(value)
+                                    else:
+                                        clean_dict[key] = value
 
                             if 'id' in clean_dict and clean_dict['id'] is not None:
                                 obj_id = clean_dict.pop('id')
@@ -218,9 +229,9 @@ def import_table_data_view(request):
                                     records_updated += 1
                             else:
                                 clean_dict.pop('id', None)
-                                obj, created = model.objects.get_or_create(**clean_dict)
-                                if created:
-                                    records_created += 1
+                                # Zamiast nieprzewidywalnego get_or_create używamy prostej metody create()
+                                obj = model.objects.create(**clean_dict)
+                                records_created += 1
 
                     except Exception as e:
                         errors.append(f"Wiersz {index+2}: {str(e)}")

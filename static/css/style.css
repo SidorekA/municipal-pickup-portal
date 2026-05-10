@@ -3,37 +3,54 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
+    /* Podstawowe kolory */
+    --color-primary: #0d6efd;
     --color-success: #198754;
+    --color-success-dark: #157347;
+    --color-warning: #ffc107;
+    --color-warning-light: rgba(255, 193, 7, 0.05);
+    --color-danger: #dc3545;
+    --color-danger-bg: #f8d7da;
+    --color-danger-text: #842029;
+    
+    /* Skala szarości i tła */
     --color-light: #f8f9fa;
     --color-white: #ffffff;
     --color-dark: #212529;
     --color-muted: #6c757d;
+    --color-bg-main: #f4f7f6;
+    --color-text-main: #2c3e50;
+    --color-border: #dee2e6;
+    
+    /* Cienie i zaokrąglenia */
     --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
     --shadow-hover: 0 1rem 3rem rgba(0,0,0,.15);
     --border-radius-lg: 1rem;
 }
 
+/* Dostępność: widoczny focus przy nawigacji klawiaturą */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f4f7f6;
-    color: #2c3e50;
+    background-color: var(--color-bg-main);
+    color: var(--color-text-main);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    /* Usunięto user-select: none; aby poprawić UX (możliwość kopiowania danych) */
 }
 
 main {
     flex: 1;
 }
 
-/* 3. GŁÓWNA NAWIGACJA (NAVBAR) */
+/* --- GŁÓWNA NAWIGACJA (NAVBAR) --- */
 .navbar {
-    background-color: #198754 !important;
+    background-color: var(--color-success) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -46,22 +63,26 @@ main {
     font-weight: 500;
     transition: color 0.2s;
 }
+
 .card {
     border: none;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
     transition: box-shadow 0.3s;
 }
+
 .card-header {
     border-top-left-radius: 12px !important;
     border-top-right-radius: 12px !important;
     border-bottom: 1px solid rgba(0,0,0,0.05);
 }
+
 .btn {
     border-radius: 8px;
     font-weight: 600;
     letter-spacing: 0.3px;
-    transition: all 0.2s ease-in-out;
+    /* Zoptymalizowane animacje: zamiast 'all', wskazujemy konkretne właściwości */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 .btn:hover {
@@ -82,7 +103,7 @@ main {
 
 .transition-hover:hover {
     transform: translateY(-5px);
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.15)!important;
+    box-shadow: var(--shadow-hover) !important;
 }
 
 .dashboard-container {
@@ -122,7 +143,7 @@ main {
 /* --- Sekcja: Kafelki Akcji --- */
 .action-cards-wrapper {
     margin-bottom: 3rem;
-    gap: 1.5rem 0; /* Odstęp między kolumnami na mobile */
+    gap: 1.5rem 0;
 }
 
 .action-card {
@@ -132,7 +153,8 @@ main {
     box-shadow: var(--shadow-sm);
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    /* Zoptymalizowana animacja */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -153,6 +175,16 @@ main {
     color: var(--color-dark);
 }
 
+.action-card--verification {
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-primary) 100%);
+    color: var(--color-white);
+}
+
+.action-card--admin {
+    background: linear-gradient(135deg, var(--color-dark) 0%, #495057 100%);
+    color: var(--color-white);
+}
+
 .action-card__title {
     font-weight: 700;
     position: relative;
@@ -166,13 +198,14 @@ main {
     position: relative;
     z-index: 1;
 }
+
 .action-card--secondary .action-card__description {
     color: var(--color-muted);
 }
 
 .action-card__btn {
     position: relative;
-    z-index: 1;
+    z-index: 2; /* Musi być wyżej niż stretched-link, jeśli chcemy by sam przycisk reagował osobno, ale stretched-link pokryje całą kartę */
     padding: 0.5rem 1.5rem;
     box-shadow: var(--shadow-sm);
     margin-top: auto;
@@ -184,11 +217,18 @@ main {
     right: -30px;
     bottom: -50px;
     opacity: 0.25;
+    z-index: 0;
 }
 
 .action-card__bg-icon--dark {
     opacity: 0.05;
     color: var(--color-dark);
+}
+
+.action-card--verification .action-card__bg-icon,
+.action-card--admin .action-card__bg-icon {
+    opacity: 0.1;
+    color: var(--color-white);
 }
 
 /* --- Sekcja: Kroki (Jak to działa) --- */
@@ -248,6 +288,7 @@ main {
     padding: 0 1rem;
 }
 
+/* --- Tabele i listy --- */
 .list-container {
     margin-top: 1.5rem;
     margin-bottom: 3rem;
@@ -279,7 +320,7 @@ main {
 
 .data-table__head {
     background-color: var(--color-light);
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .data-table__th {
@@ -297,7 +338,7 @@ main {
 }
 
 .data-table__row:hover {
-    background-color: #fcfcfc;
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
 .data-table__td {
@@ -322,6 +363,7 @@ main {
     font-weight: 600;
 }
 
+/* --- Modale --- */
 .detail-modal__content {
     border-radius: var(--border-radius-lg);
     border: none;
@@ -374,7 +416,7 @@ main {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 0;
-    border-bottom: 1px solid #f8f9fa;
+    border-bottom: 1px solid var(--color-light);
 }
 
 .bin-list__info {
@@ -417,6 +459,7 @@ main {
     border-top: none;
 }
 
+/* --- Formularz Logowania --- */
 .login-wrapper {
     min-height: 75vh;
     display: flex;
@@ -460,8 +503,8 @@ main {
 }
 
 .login-alert {
-    background-color: #f8d7da;
-    color: #842029;
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger-text);
     padding: 0.5rem;
     font-size: 0.875rem;
     margin-bottom: 1.5rem;
@@ -489,6 +532,7 @@ main {
     box-shadow: var(--shadow-sm);
 }
 
+/* --- Moduł Raportów --- */
 .report-container {
     margin-top: 2rem;
     margin-bottom: 4rem;
@@ -639,28 +683,23 @@ main {
 }
 
 .bg-light-warning {
-    background-color: rgba(255, 193, 7, 0.05) !important;
+    background-color: var(--color-warning-light) !important;
 }
 
 .border-warning {
-    border: 1px solid #ffc107 !important;
+    border: 1px solid var(--color-warning) !important;
 }
 
-.data-table__row:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-}
 /* --- Animacje --- */
 @keyframes pulse {
     0% {
         transform: scale(0.95);
         box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
     }
-
     70% {
         transform: scale(1);
         box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
     }
-
     100% {
         transform: scale(0.95);
         box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
@@ -671,8 +710,7 @@ main {
     animation: pulse 2s infinite;
 }
 
-/* ── Karty KPI na dashboardzie ───────────────────────────────────── */
-
+/* --- Karty KPI na dashboardzie --- */
 .kpi-card {
     background-color: var(--color-white);
     border-radius: var(--border-radius-lg);
@@ -689,7 +727,7 @@ main {
 }
 
 .kpi-card--warn {
-    border-top-color: #ffc107;
+    border-top-color: var(--color-warning);
 }
 
 .kpi-label {
@@ -713,7 +751,7 @@ main {
     display: block;
     margin-top: 0.4rem;
     font-size: 0.7rem;
-    color: #198754;
+    color: var(--color-success);
     text-decoration: none;
     font-weight: 600;
 }
@@ -754,7 +792,7 @@ main {
 }
 
 .kpi-bar--current {
-    background-color: #198754;
+    background-color: var(--color-success);
 }
 
 .kpi-bar-label {
@@ -773,8 +811,7 @@ main {
     }
 }
 
-/* ── Walidacja inline — formularz weryfikacji ────────────────────── */
-
+/* --- Walidacja inline — formularz weryfikacji --- */
 .note-field-wrap {
     transition: opacity 0.2s ease, max-height 0.25s ease;
     overflow: hidden;
@@ -804,41 +841,39 @@ main {
     background-color: rgba(255, 193, 7, 0.06) !important;
 }
 
-/* ── Pill-filtry statusu ─────────────────────────────────────────── */
-
+/* --- Pill-filtry statusu --- */
 .pill-filter {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 5px 14px;
     border-radius: 20px;
-    border: 1.5px solid #dee2e6;
-    background: #ffffff;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-white);
     font-size: 0.8rem;
     font-weight: 500;
     color: #495057;
     text-decoration: none;
-    transition: border-color 0.15s ease, background-color 0.15s ease,
-                color 0.15s ease;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
     cursor: pointer;
     white-space: nowrap;
 }
 
 .pill-filter:hover {
-    border-color: #198754;
-    color: #198754;
+    border-color: var(--color-success);
+    color: var(--color-success);
     background: rgba(25, 135, 84, 0.05);
 }
 
 .pill-filter--active {
-    border-color: #198754;
-    background: #198754;
-    color: #ffffff;
+    border-color: var(--color-success);
+    background: var(--color-success);
+    color: var(--color-white);
 }
 
 .pill-filter--active:hover {
-    background: #157347;
-    color: #ffffff;
+    background: var(--color-success-dark);
+    color: var(--color-white);
 }
 
 .pill-dot {
@@ -848,10 +883,121 @@ main {
     flex-shrink: 0;
 }
 
-.pill-dot--new   { background: #0d6efd; }
-.pill-dot--sent  { background: #ffc107; }
-.pill-dot--done  { background: #198754; }
+.pill-dot--new   { background: var(--color-primary); }
+.pill-dot--sent  { background: var(--color-warning); }
+.pill-dot--done  { background: var(--color-success); }
 
 .pill-filter--active .pill-dot {
     background: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Wygląd niestandardowych list wyboru (Tom Select) --- */
+.ts-wrapper.form-select {
+    padding: 0; 
+    border: none;
+    box-shadow: none;
+}
+.ts-control {
+    border: none;
+    background-color: var(--color-light);
+    padding: 0.85rem 1rem;
+}
+.ts-control > input {
+    font-weight: 500;
+}
+.ts-dropdown {
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+.ts-dropdown .option {
+    padding: 0.8rem 1rem;
+    font-weight: 500;
+    text-align: center; /* Wyśrodkowanie tekstu, o które prosiłeś! */
+    transition: background-color 0.2s, color 0.2s;
+}
+.ts-dropdown .option:hover, .ts-dropdown .option.active {
+    background-color: rgba(25, 135, 84, 0.1); /* Subtelny zielony odcień */
+    color: var(--color-success);
+}
+
+/* --- Steppery nawigacyjne dla list w raportach --- */
+.btn-list-step {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    color: var(--color-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, color 0.15s;
+    z-index: 0 !important; /* Zapobiega nachodzeniu borderów w input-group */
+}
+
+.btn-list-step:hover:not(:disabled) {
+    background-color: var(--color-success);
+    color: var(--color-white);
+    border-color: var(--color-success);
+}
+
+.btn-list-step:disabled {
+    background-color: var(--color-light);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Wygładzenie obramowania centralnego selecta w tej grupie */
+.input-group .report-filter__select {
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    border-left: none;
+    border-right: none;
+    text-align: center;
+    border-radius: 0;
+}
+
+.filter-group-mpk .ts-wrapper {
+    width: 220px !important; /* Idealne na nr MPK */
+    flex: none !important;
+    background-image: none !important;
+}
+
+.filter-group-date .ts-wrapper {
+    width: 80px !important; /* W sam raz na 2- i 4-cyfrowe daty */
+    flex: none !important;
+    background-image: none !important;
+}
+
+.input-group .ts-control {
+    border-radius: 0 !important; /* Usuwamy zaokrąglenia wewnętrzne, by pasowały do przycisków */
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    border-left: none;
+    border-right: none;
+    text-align: center;
+    padding: 0.45rem 1rem;
+}
+
+.input-group .ts-wrapper .single .item {
+    width: 100%;
+    text-align: center;
+    font-weight: 600;
+}
+
+.input-group .ts-wrapper .ts-control {
+    width: 100%;
+    height: 100%;
+    border-radius: 0 !important; 
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    border-left: none;
+    border-right: none;
+    padding: 0.45rem 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.filter-group-mpk, 
+.filter-group-date {
+    width: fit-content !important;
 }
