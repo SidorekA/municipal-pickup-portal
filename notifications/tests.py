@@ -25,12 +25,18 @@ class NotificationSignalTest(TestCase):
     def test_monthly_confirmation_creation_triggers_notification(self):
         # Admin creates MonthlyConfirmation
         first_day = timezone.now().replace(day=1).date()
-        MonthlyConfirmation.objects.create(
-            mpk_number=self.mpk,
-            month=first_day,
-            created_by=self.staff_user,
-            status='POTWIERDZONE'
-        )
+
+        # In testing without request, we need to mock current user or assign explicitly
+        # But signals are triggered synchronously on `.create()`.
+        # To avoid the signal triggering with `None` acting user, let's mock it
+        from unittest.mock import patch
+
+        with patch('core.models.get_current_user', return_value=self.staff_user):
+            MonthlyConfirmation.objects.create(
+                mpk_number=self.mpk,
+                month=first_day,
+                status='POTWIERDZONE'
+            )
 
         # Notification should be created for testuser
         self.assertEqual(Notification.objects.count(), 1)
