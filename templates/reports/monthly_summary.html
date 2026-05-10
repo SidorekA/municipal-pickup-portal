@@ -22,7 +22,7 @@
                 <form action="{% url 'reports:import_excel' %}" method="post" enctype="multipart/form-data" class="d-inline" id="importExcelForm">
                     {% csrf_token %}
                     <input type="file" name="excel_file" id="excelFileInput" style="display: none;" accept=".xlsx,.csv" onchange="document.getElementById('importExcelForm').submit();">
-                    <button type="button" class="btn btn-outline-success fw-bold" onclick="document.getElementById('excelFileInput').click();">
+                    <button type="button" class="wf-btn-outline fw-bold" onclick="document.getElementById('excelFileInput').click();">
                         <i class="bi bi-file-earmark-excel me-2"></i>Importuj dane z Excela
                     </button>
                 </form>
@@ -73,7 +73,7 @@
             </div>
             
             <div class="col-12 col-md-auto">
-                <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">Filtruj</button>
+                <button type="submit" class="wf-btn-primary px-4 fw-bold shadow-sm">Filtruj</button>
             </div>
         </form>
     </div>
@@ -96,7 +96,7 @@
             <div>
                 {% if group.status == 'POTWIERDZONE' or group.status == 'ZATWIERDZONE' or group.status == 'KONFLIKT' %}
                     <a href="{% url 'reports:verification' %}?mpk={{ group.mpk_id }}&month={{ selected_month }}&year={{ selected_year }}"
-                       class="btn btn-outline-secondary btn-sm fw-bold px-3 shadow-sm me-2">
+                       class="wf-btn-outline btn-sm fw-bold px-3 shadow-sm me-2">
                         <i class="bi bi-eye me-2"></i>Pokaż potwierdzenie
                     </a>
                 {% else %}

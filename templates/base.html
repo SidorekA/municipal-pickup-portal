@@ -4,133 +4,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}System Zarządzania Odpadami{% endblock %}</title>
+    <title>System Zarządzania Odpadami</title>
  
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/nav.css' %}">
+    <link rel="stylesheet" href="{% static 'css/wasteflow.css' %}">
  
     {% block extra_css %}
     {% endblock %}
 </head>
 <body>
- 
-    <nav class="navbar navbar-dark mb-4">
-        <div class="container">
- 
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-recycle me-2"></i>Odpady Komunalne
-            </a>
- 
-            <div class="d-flex align-items-center gap-3">
-                {% if user.is_authenticated %}
-                <div class="position-relative" style="line-height:1">
-                    <a href="/"
-                       class="nav-link text-light px-0 py-0"
-                       title="Powiadomienia"
-                       aria-label="Powiadomienia – {{ unread_notifications_count }} nieprzeczytanych">
-                        <i class="bi {% if unread_notifications_count %}bi-bell-fill{% else %}bi-bell{% endif %}"
-                           style="font-size:1.1rem"></i>
-                        {% if unread_notifications_count %}
-                        <span class="position-absolute top-0 start-100 translate-middle
-                                     badge rounded-pill bg-danger"
-                              style="font-size:0.6rem;min-width:16px;padding:2px 4px;
-                                     pointer-events:none"
-                              aria-hidden="true">
-                            {{ unread_notifications_count }}
-                        </span>
-                        {% endif %}
-                    </a>
-                </div>
-                {% endif %}
-                <ul class="navbar-nav flex-row gap-3">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link text-light px-0" href="/konto/profil/">
-                                <i class="bi bi-person-circle me-1"></i>
-                                <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
-                            </a>
-                        </li>
-                        <li class="nav-item d-flex align-items-center">
-                            <form method="post" action="{% url 'logout' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link text-light px-0 py-0">Wyloguj</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link px-0" href="{% url 'login' %}">Zaloguj się</a>
-                        </li>
-                    {% endif %}
-                </ul>
-                <div class="position-relative">
-                    <button
-                        class="navbar-toggler"
-                        type="button"
-                        id="navToggler"
-                        aria-expanded="false"
-                        aria-controls="navbarNav"
-                        aria-label="Przełącz nawigację"
-                    >
-                        <span class="line"></span>
-                        <span class="line"></span>
-                        <span class="line"></span>
-                    </button>
- 
-                    <div id="navbarNav">
-                        <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i> Start</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/zgloszenia/lista/"><i class="bi bi-list-ul me-1"></i> Lista zgłoszeń</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/zgloszenia/dodaj/"><i class="bi bi-plus-circle me-1"></i> Nowe zgłoszenie</a>
-                            </li>
-                            {% if user.is_staff %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'core:admin_tasks' %}"><i class="bi bi-tools me-1"></i> Narzędzia</a>
-                            </li>
-                            {% endif %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'scheduling:calendar' %}"><i class="bi bi-calendar3 me-1"></i> Harmonogram</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+<div class="wf-layout">
+    <!-- Sidebar -->
+        <aside class="wf-sidebar">
+        <div class="wf-logo-area">
+            <div class="wf-logo-icon">
+                <i class="bi bi-recycle"></i>
+            </div>
+            <div class="wf-logo-text">
+                <span class="wf-app-name">WasteFlow B2B</span>
+                <span class="wf-app-subtitle">Municipal Management</span>
             </div>
         </div>
-    </nav>
- 
-    <div class="container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    </div>
- 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
- 
-    <footer class="bg-dark text-light py-4 mt-auto">
-        <div class="container text-center">
-            <small class="text-muted">
-                &copy; {% now "Y" %} System Zarządzania Odpadami Komunalnymi. Wszelkie prawa zastrzeżone.
-            </small>
-        </div>
-    </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <nav class="wf-nav">
+            <a href="/" class="wf-nav-item {% if request.path == '/' %}active{% endif %}">
+                <i class="bi bi-grid wf-nav-icon"></i> Start
+            </a>
+            <a href="/zgloszenia/lista/" class="wf-nav-item {% if '/zgloszenia/lista/' in request.path %}active{% endif %}">
+                <i class="bi bi-list-ul wf-nav-icon"></i> Lista zgłoszeń
+            </a>
+            <a href="/zgloszenia/dodaj/" class="wf-nav-item {% if '/zgloszenia/dodaj/' in request.path %}active{% endif %}">
+                <i class="bi bi-plus-circle wf-nav-icon"></i> Nowe zgłoszenie
+            </a>
+            {% if user.is_staff %}
+            <a href="{% url 'core:admin_tasks' %}" class="wf-nav-item {% if '/admin-tasks/' in request.path %}active{% endif %}">
+                <i class="bi bi-tools wf-nav-icon"></i> Narzędzia
+            </a>
+            {% endif %}
+            <a href="{% url 'scheduling:calendar' %}" class="wf-nav-item {% if '/harmonogram/' in request.path %}active{% endif %}">
+                <i class="bi bi-calendar3 wf-nav-icon"></i> Harmonogram
+            </a>
+        </nav>
+
+        {% if user.is_authenticated %}
+        <div class="wf-user-section">
+            <div class="wf-avatar">
+                {{ user.first_name|first|default:user.username|first|upper }}
+            </div>
+            <div class="wf-user-info">
+                <span class="wf-username">{{ user.get_full_name|default:user.username }}</span>
+                <span class="wf-user-email">{{ user.email|default:"" }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- Main Content -->
+    <div class="wf-main">
+        <!-- Topbar -->
+                <header class="wf-topbar">
+            <div class="wf-breadcrumb">
+                {% block breadcrumb %}
+                <span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>
+                {% endblock %}
+            </div>
+            <div class="wf-topbar-actions">
+                {% if user.is_authenticated %}
+                <a href="/" title="Powiadomienia" style="text-decoration:none; color:inherit; position:relative;">
+                    <i class="bi bi-bell wf-bell-icon"></i>
+                    {% if unread_notifications_count %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;padding:2px 4px;">
+                        {{ unread_notifications_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                <a href="/konto/profil/" style="text-decoration:none; color:inherit;">
+                    <div class="wf-avatar wf-topbar-avatar">
+                        {{ user.first_name|first|default:user.username|first|upper }}
+                    </div>
+                </a>
+                <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link text-muted p-0"><i class="bi bi-box-arrow-right"></i></button>
+                </form>
+                {% else %}
+                <a href="{% url 'login' %}" class="wf-btn-outline">Zaloguj się</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="wf-content">
+            <div class="container-fluid px-0">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert" style="background-color: {% if message.tags == 'success' %}#F0FDF4{% elif message.tags == 'warning' %}#FFFBEB{% elif message.tags == 'error' %}#FEF2F2{% else %}#F0FDF4{% endif %}; border-left: 4px solid {% if message.tags == 'success' %}#166534{% elif message.tags == 'warning' %}#F59E0B{% elif message.tags == 'error' %}#DC2626{% else %}#166534{% endif %}; color: {% if message.tags == 'success' %}#166534{% elif message.tags == 'warning' %}#92400E{% elif message.tags == 'error' %}#991B1B{% else %}#166534{% endif %}; border-radius: 0 6px 6px 0; padding: 16px;">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{% static 'js/nav.js' %}?v=1.1"></script>
+
 
     {% block extra_js %}
     {% endblock %}
