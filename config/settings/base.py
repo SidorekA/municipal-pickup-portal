@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     "notifications.apps.NotificationsConfig",
     "scheduling.apps.SchedulingConfig",
     "core.apps.CoreConfig",
-    "widget_tweaks",
 ]
 
 MIDDLEWARE = [

@@ -5,16 +5,23 @@
 
 {% block content %}
 <div class="container dashboard-container">
-    
     {% if global_announcement %}
-    <div class="alert alert-info border-start border-4 shadow-sm d-flex justify-content-between align-items-center mb-4" role="alert">
+    <div class="alert alert-{{ global_announcement.alert_type }} border-start border-4 shadow-sm d-flex justify-content-between align-items-center mb-4" role="alert">
         <div>
+            {% if global_announcement.alert_type == 'warning' %}
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif global_announcement.alert_type == 'danger' %}
+            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+            {% elif global_announcement.alert_type == 'success' %}
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {% else %}
             <i class="bi bi-info-circle-fill me-2"></i>
+            {% endif %}
             {{ global_announcement.message }}
         </div>
         <form method="post" action="{% url 'notifications:mark_as_read' global_announcement.id %}" class="m-0">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-info">Zrozumiałem</button>
+            <button type="submit" class="btn btn-sm btn-outline-{{ global_announcement.alert_type }}">Zrozumiałem</button>
         </form>
     </div>
     {% endif %}
