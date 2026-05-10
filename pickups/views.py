@@ -61,6 +61,38 @@ def pickup_success(request):
     """Wyświetla stronę z podziękowaniem po dodaniu zgłoszenia."""
     return render(request, 'pickups/pickup_success.html')
 
+@login_required
+def api_get_pickup_dates(request, location_id):
+    """
+    Zwraca przewidywane daty odbioru dla frakcji przypisanych
+    do danej lokalizacji, obliczone na podstawie harmonogramu.
+    Używane przez dynamic_bins.js do wyświetlenia daty przed submitem.
+    """
+    from django.utils import timezone
+    from scheduling.services import get_next_pickup_date
+
+    bins = LocationWasteBin.objects.filter(
+        location_id=location_id
+    ).select_related(
+        'waste_fraction__fraction_type'
+    ).prefetch_related(
+        'waste_fraction__fraction_type__schedules'
+    )
+
+    now = timezone.now()
+    data = []
+    for b in bins:
+        planned = get_next_pickup_date(
+            fraction_type=b.waste_fraction.fraction_type,
+            submitted_at=now
+        )
+        data.append({
+            'fraction_id': b.waste_fraction.id,
+            'planned_date': planned.strftime('%d.%m.%Y (%A)') if planned else None,
+        })
+
+    return JsonResponse({'dates': data})
+
 def api_get_location_bins(request, location_id):
     """Zwraca listę przypisanych pojemników dla danej lokalizacji w formacie JSON."""
     try:
@@ -157,6 +189,10 @@ def pickup_list(request):
             queryset = queryset.filter(mpk_number_id=mpk)
         if location:
             queryset = queryset.filter(location_id=location)
+
+        status = request.GET.get('status', '').strip()
+        if status and status in dict(Pickup.STATUS_CHOICES):
+            queryset = queryset.filter(status=status)
     
     pickups = list(queryset.order_by('-created_at'))
 

@@ -14,6 +14,7 @@ from .services import generate_auditlog_export
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from pickups.models import Pickup
+from django.db.models import Count
 from notifications.models import Notification
 
 from django.contrib.admin.views.decorators import staff_member_required
@@ -383,12 +384,65 @@ def home_view(request):
         recent_pickups = Pickup.objects.all().order_by('-created_at')[:3]
         context['recent_pickups'] = recent_pickups
 
-    # Pobieranie nieprzeczytanych powiadomień
-    unread_notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')
-    context['unread_notifications'] = unread_notifications
+    # Lista do wyświetlenia na home — tylko nieprzeczytane (max 5)
+    context['unread_notifications'] = Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).order_by('-created_at')[:5]
 
     # Czas
     context['now'] = timezone.now()
+
+    # ── KPI ──────────────────────────────────────────────────────────────
+    today = timezone.now()
+    first_day_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Zgłoszenia w bieżącym miesiącu (z uwzględnieniem uprawnień)
+    if request.user.is_superuser:
+        pickups_qs = Pickup.objects.filter(reported_at__gte=first_day_month)
+    else:
+        from users.models import Permission as MPKPermission
+        allowed_mpk_ids = MPKPermission.objects.filter(
+            user=request.user, active=True
+        ).values_list('mpk_number_id', flat=True)
+        pickups_qs = Pickup.objects.filter(
+            reported_at__gte=first_day_month,
+            mpk_number_id__in=allowed_mpk_ids
+        )
+
+    context['kpi'] = {
+        'pickups_this_month': pickups_qs.count(),
+        'pickups_pending': pickups_qs.filter(status='NOWE').count(),
+        'unconfirmed_mpks': MonthlyConfirmation.objects.filter(
+            month=first_day_month.date().replace(day=1),
+            status='OCZEKUJE'
+        ).count(),
+        'current_month_name': today.strftime('%B %Y'),
+    }
+
+    # Dane do mini-wykresu słupkowego — ostatnie 5 miesięcy
+    monthly_counts = []
+    for i in range(4, -1, -1):
+        # Cofamy się o i miesięcy
+        target = (first_day_month - datetime.timedelta(days=i * 28)).replace(day=1)
+        if target.month == 12:
+            next_month = target.replace(year=target.year + 1, month=1)
+        else:
+            next_month = target.replace(month=target.month + 1)
+
+        count = Pickup.objects.filter(
+            reported_at__gte=target,
+            reported_at__lt=next_month
+        ).count()
+        monthly_counts.append({
+            'label': target.strftime('%b'),
+            'count': count,
+            'is_current': (i == 0),
+        })
+
+    context['monthly_counts'] = monthly_counts
+    max_count = max((m['count'] for m in monthly_counts), default=1)
+    context['monthly_max'] = max_count if max_count > 0 else 1
 
     # Globalne ogłoszenie
     global_announcement = Notification.objects.filter(is_global=True, is_active=True).exclude(read_by=request.user).order_by('-created_at').first()
