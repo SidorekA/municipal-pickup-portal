@@ -1,3 +1,5 @@
-## 2024-03-21 - Backend Performance: `prefetch_related` with `.filter()` vs `.all()`
-**Learning:** Running `.filter()` or `.values_list()` on a related manager ignores the prefetched cache from `prefetch_related` and generates an N+1 query. This is because Django's ORM translates those calls directly into SQL queries rather than operating on the in-memory cached objects.
-**Action:** When a queryset is prefetched (e.g. `prefetch_related("...__schedules")`), avoid `.filter(condition=True)` and `.values_list()`. Instead, re-filter in Python using `.all()` and list/generator comprehensions (e.g., `[obj.field for obj in related.all() if obj.condition]`) to utilize the cached query and avoid N+1 queries.
+## 2025-05-10 - Refactoring DB operations with atomic bulk and collections
+
+**Learning:** When generating massive dataset reporting or doing import cycles on large excels, always implement `defaultdict` over filtering iterations and pull keys initially using `select_for_update()` over raw `update_or_create`. Using a set mapping to verify keys and `bulk_create` / `bulk_update` completely eliminates O(n^2) logic flows and N+1 DB operations.
+
+**Action:** Whenever a function loops through DB operations (save, create, delete, match) inside a loop, migrate to `bulk_create` / `bulk_update` arrays and do all dictionary pre-mapping offline before atomic transaction blocks.
