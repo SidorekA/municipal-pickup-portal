@@ -15,6 +15,15 @@ class Notification(CoreModel):
     message = models.TextField(verbose_name='Wiadomość')
     is_read = models.BooleanField(default=False, verbose_name='Przeczytane')
 
+    ALERT_CHOICES = [
+        ('info', 'Informacja'),
+        ('warning', 'Ostrzeżenie'),
+        ('danger', 'Krytyczne'),
+        ('success', 'Sukces'),
+    ]
+    alert_type = models.CharField(max_length=20, choices=ALERT_CHOICES, default='info', verbose_name='Typ alertu')
+
+
     is_global = models.BooleanField(default=False, verbose_name='Ogólne (dla wszystkich)')
     is_active = models.BooleanField(default=True, verbose_name='Aktywne')
     read_by = models.ManyToManyField(

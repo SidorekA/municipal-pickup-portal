@@ -11,11 +11,12 @@ from .models import DataTransferLog
 from django.db import transaction
 from .services import generate_auditlog_export
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from pickups.models import Pickup
 from django.db.models import Count
 from notifications.models import Notification
+from core.forms import GlobalAnnouncementForm
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
@@ -70,6 +71,10 @@ def admin_tasks_view(request):
         (9, 'Wrzesień'), (10, 'Październik'), (11, 'Listopad'), (12, 'Grudzień')
     ]
 
+    # Global announcements
+    active_announcement = Notification.objects.filter(is_global=True, is_active=True).first()
+    form_announcement = GlobalAnnouncementForm()
+
     context = {
         'models_list': models_list,
         'transfer_logs': transfer_logs,
@@ -78,6 +83,8 @@ def admin_tasks_view(request):
         'mpk_numbers': mpk_numbers,
         'years': years,
         'months': months,
+        'active_announcement': active_announcement,
+        'form_announcement': form_announcement,
     }
     return render(request, 'core/admin_tasks.html', context)
 
@@ -537,3 +544,30 @@ def export_auditlog_view(request):
         pass # Ignorujemy błędy przy zapisywaniu logu transferu
 
     return response
+
+@staff_member_required
+def create_global_announcement_view(request):
+    if request.method == 'POST':
+        form = GlobalAnnouncementForm(request.POST)
+        if form.is_valid():
+            # Deactivate all previous global announcements
+            Notification.objects.filter(is_global=True, is_active=True).update(is_active=False)
+
+            # Create the new one
+            announcement = form.save(commit=False)
+            announcement.is_global = True
+            announcement.is_active = True
+            # Notification requires a user, but global might not. We could assign the admin
+            announcement.user = request.user
+            announcement.save()
+            messages.success(request, "Ogłoszenie globalne zostało opublikowane.")
+        else:
+            messages.error(request, "Błąd w formularzu ogłoszenia.")
+    return redirect('core:admin_tasks')
+
+@staff_member_required
+def disable_global_announcement_view(request):
+    if request.method == 'POST':
+        Notification.objects.filter(is_global=True, is_active=True).update(is_active=False)
+        messages.success(request, "Ogłoszenie globalne zostało wyłączone.")
+    return redirect('core:admin_tasks')

@@ -5,80 +5,23 @@
 
 {% block content %}
 <div class="container dashboard-container">
-    
-    <!-- ── Pasek KPI ─────────────────────────────────────────────────── -->
-    <div class="row g-3 mb-4">
-
-        <div class="col-6 col-md-3">
-            <div class="kpi-card">
-                <p class="kpi-label">
-                    <i class="bi bi-send me-1" aria-hidden="true"></i>
-                    Zgłoszenia w {{ kpi.current_month_name }}
-                </p>
-                <p class="kpi-value">{{ kpi.pickups_this_month }}</p>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-3">
-            <div class="kpi-card {% if kpi.pickups_pending > 0 %}kpi-card--warn{% endif %}">
-                <p class="kpi-label">
-                    <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>
-                    Oczekujące
-                </p>
-                <p class="kpi-value {% if kpi.pickups_pending > 0 %}text-warning{% endif %}">
-                    {{ kpi.pickups_pending }}
-                </p>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-3">
-            <div class="kpi-card {% if kpi.unconfirmed_mpks > 0 %}kpi-card--warn{% endif %}">
-                <p class="kpi-label">
-                    <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
-                    MPK bez potwierdzenia
-                </p>
-                <p class="kpi-value {% if kpi.unconfirmed_mpks > 0 %}text-warning{% endif %}">
-                    {{ kpi.unconfirmed_mpks }}
-                </p>
-                {% if kpi.unconfirmed_mpks > 0 %}
-                <a href="{% url 'reports:monthly_summary' %}"
-                   class="kpi-action-link">Przejdź do raportów →</a>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="col-6 col-md-3">
-            <div class="kpi-card kpi-card--chart">
-                <p class="kpi-label">
-                    <i class="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>
-                    Trend (5 mies.)
-                </p>
-                <div class="kpi-mini-chart" aria-label="Wykres zgłoszeń">
-                    {% for m in monthly_counts %}
-                    <div class="kpi-bar-col">
-                        <div class="kpi-bar {% if m.is_current %}kpi-bar--current{% endif %}"
-                             style="height: {% widthratio m.count monthly_max 48 %}px"
-                             title="{{ m.label }}: {{ m.count }}">
-                        </div>
-                        <span class="kpi-bar-label">{{ m.label }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <!-- ── Koniec paska KPI ───────────────────────────────────────────── -->
-
     {% if global_announcement %}
-    <div class="alert alert-info border-start border-4 shadow-sm d-flex justify-content-between align-items-center mb-4" role="alert">
+    <div class="alert alert-{{ global_announcement.alert_type }} border-start border-4 shadow-sm d-flex justify-content-between align-items-center mb-4" role="alert">
         <div>
+            {% if global_announcement.alert_type == 'warning' %}
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif global_announcement.alert_type == 'danger' %}
+            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+            {% elif global_announcement.alert_type == 'success' %}
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {% else %}
             <i class="bi bi-info-circle-fill me-2"></i>
+            {% endif %}
             {{ global_announcement.message }}
         </div>
         <form method="post" action="{% url 'notifications:mark_as_read' global_announcement.id %}" class="m-0">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-info">Zrozumiałem</button>
+            <button type="submit" class="btn btn-sm btn-outline-{{ global_announcement.alert_type }}">Zrozumiałem</button>
         </form>
     </div>
     {% endif %}
