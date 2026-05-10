@@ -1,78 +1,144 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('verificationForm');
     if (!form) return;
 
-    form.addEventListener('submit', function(e) {
-        const decision = document.getElementById('decisionStatus').value;
-        const rows = document.querySelectorAll('.fraction-row');
-        
-        let isValid = true;
-        let anyChanges = false;
-        let htmlErrorList = "";
+    const decisionSelect = document.getElementById('decisionStatus');
+    const saveBtn = form.querySelector('button[type="submit"]');
 
-        rows.forEach(row => {
-            const supplierQty = parseInt(row.dataset.reported) || 0; 
-            const confirmedInput = row.querySelector('.confirmed-qty-input');
-            const confirmedQty = parseInt(confirmedInput.value) || 0;
-            const noteInput = row.querySelector('.note-input');
-            const noteValue = noteInput.value.trim();
-            const fractionName = row.dataset.name;
+    // ── Walidacja inline przy każdej zmianie ilości ──────────────────
+    form.addEventListener('input', function (e) {
+        const input = e.target;
 
-            // Sprawdzamy czy nastąpiła zmiana ilości
-            if (confirmedQty !== supplierQty) {
-                anyChanges = true;
-                
-                // Walidacja 1: Brak uwagi przy rozbieżności
-                if (noteValue === "") {
-                    htmlErrorList += `<li><b>${fractionName}</b>: wymagana uwaga (zmiana z ${supplierQty} na ${confirmedQty})</li>`;
-                    noteInput.classList.add('is-invalid');
-                    isValid = false;
+        if (input.classList.contains('confirmed-qty-input')) {
+            handleQtyChange(input);
+            updateDecisionAndButton();
+        }
+
+        if (input.classList.contains('note-input')) {
+            validateNoteField(input);
+            updateDecisionAndButton();
+        }
+    });
+
+    function handleQtyChange(input) {
+        const row       = input.closest('.fraction-row');
+        const fractionId = row.dataset.fractionId;
+        const supplierQty = parseInt(row.dataset.supplierQty, 10);
+        const currentQty  = parseInt(input.value, 10) || 0;
+        const changed     = currentQty !== supplierQty;
+
+        // Aktualizuj klasy wiersza
+        row.classList.toggle('bg-light-warning', changed);
+        row.classList.toggle('border-warning', changed);
+
+        // Styl pola ilości
+        input.classList.toggle('border-warning', changed);
+        input.classList.toggle('border-success', !changed && input.value !== '');
+
+        // Pokaż lub ukryj pole uwagi
+        const noteCell = form.querySelector(`[data-note-cell="${fractionId}"]`);
+        if (!noteCell) return;
+
+        const wrap = noteCell.querySelector('.note-field-wrap');
+        if (!wrap) return;
+
+        if (changed) {
+            wrap.classList.remove('note-field-wrap--hidden');
+            wrap.classList.add('note-field-wrap--visible');
+            // Fokus na pole uwagi żeby użytkownik wiedział co uzupełnić
+            const noteInput = wrap.querySelector('.note-input');
+            if (noteInput && !noteInput.value.trim()) {
+                setTimeout(() => noteInput.focus(), 50);
+            }
+        } else {
+            wrap.classList.remove('note-field-wrap--visible');
+            wrap.classList.add('note-field-wrap--hidden');
+            const noteInput = wrap.querySelector('.note-input');
+            if (noteInput) {
+                noteInput.value = '';
+                noteInput.classList.remove('is-invalid');
+            }
+        }
+    }
+
+    function validateNoteField(noteInput) {
+        const wrap    = noteInput.closest('.note-field-wrap');
+        const isVisible = wrap && wrap.classList.contains('note-field-wrap--visible');
+        const filled  = noteInput.value.trim().length > 0;
+
+        if (isVisible) {
+            noteInput.classList.toggle('is-invalid', !filled);
+            noteInput.classList.toggle('is-valid', filled);
+        }
+    }
+
+    function updateDecisionAndButton() {
+        let anyChange       = false;
+        let anyMissingNote  = false;
+
+        form.querySelectorAll('.fraction-row').forEach(row => {
+            const qtyInput    = row.querySelector('.confirmed-qty-input');
+            const supplierQty = parseInt(row.dataset.supplierQty, 10);
+            const currentQty  = parseInt(qtyInput?.value, 10) || 0;
+            const changed     = currentQty !== supplierQty;
+
+            if (changed) {
+                anyChange = true;
+                const fractionId = row.dataset.fractionId;
+                const noteCell   = form.querySelector(`[data-note-cell="${fractionId}"]`);
+                const noteInput  = noteCell?.querySelector('.note-input');
+                if (!noteInput || !noteInput.value.trim()) {
+                    anyMissingNote = true;
                 }
             }
         });
 
-        // NOWA WALIDACJA: Zmiana liczb przy statusie "Potwierdzam"
-        if (anyChanges && decision === 'POTWIERDZONE') {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Niezgodność decyzji',
-                html: `Wprowadzono ilości inne niż wskazane przez dostawcę. <br><br>Jeśli faktycznie odebrano inne ilości, <b>zmień decyzję na "Występują rozbieżności (Nie potwierdzam)"</b>.`,
-                icon: 'warning',
-                confirmButtonColor: '#0d6efd',
-                confirmButtonText: 'Popraw decyzję'
-            });
-            return;
+        // Auto-wybór decyzji
+        if (decisionSelect && !decisionSelect.disabled) {
+            decisionSelect.value = anyChange ? 'KONFLIKT' : 'POTWIERDZONE';
         }
 
-        // Walidacja 2: Brak uwag (jeśli status był poprawny)
-        if (!isValid) {
-            e.preventDefault();
-            Swal.fire({
-                title: '<span style="color: #d33">Wymagane uzasadnienie</span>',
-                icon: 'error',
-                html: `<div style="text-align: left;">Proszę uzupełnić powód zmiany dla:<ul>${htmlErrorList}</ul></div>`,
-                confirmButtonText: 'Popraw dane',
-                confirmButtonColor: '#d33'
-            });
-            return;
+        // Blokuj submit jeśli brakuje uzasadnień
+        if (saveBtn) {
+            saveBtn.disabled = anyMissingNote;
+            saveBtn.title = anyMissingNote
+                ? 'Uzupełnij uzasadnienie dla wszystkich zmienionych ilości'
+                : '';
         }
+    }
 
-        // Walidacja 3: Status "Konflikt" bez zmian w tabeli
-        if (decision === 'KONFLIKT' && !anyChanges) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Brak rozbieżności',
-                text: 'Wybrałeś status o braku potwierdzenia, ale Twoje liczby są identyczne z raportem dostawcy. Skoryguj wartości lub zmień decyzję na "Potwierdzam".',
-                icon: 'info',
-                confirmButtonColor: '#ffc107'
-            });
-        }
-    });
+    // ── Blokada submitu — ostatnia linia obrony ───────────────────────
+    form.addEventListener('submit', function (e) {
+        let hasErrors = false;
 
-    // Resetowanie czerwonych ramek
-    document.querySelectorAll('.note-input').forEach(input => {
-        input.addEventListener('input', function() {
-            if (this.value.trim() !== "") this.classList.remove('is-invalid');
+        form.querySelectorAll('.fraction-row').forEach(row => {
+            const qtyInput    = row.querySelector('.confirmed-qty-input');
+            const supplierQty = parseInt(row.dataset.supplierQty, 10);
+            const currentQty  = parseInt(qtyInput?.value, 10) || 0;
+
+            if (currentQty !== supplierQty) {
+                const fractionId = row.dataset.fractionId;
+                const noteCell   = form.querySelector(`[data-note-cell="${fractionId}"]`);
+                const noteInput  = noteCell?.querySelector('.note-input');
+
+                if (!noteInput || !noteInput.value.trim()) {
+                    hasErrors = true;
+                    if (noteInput) noteInput.classList.add('is-invalid');
+                }
+            }
         });
+
+        if (hasErrors) {
+            e.preventDefault();
+            // Przewiń do pierwszego błędu
+            const firstInvalid = form.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+            }
+        }
     });
+
+    // ── Inicjalizacja — sprawdź stan przy załadowaniu ─────────────────
+    updateDecisionAndButton();
 });

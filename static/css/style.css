@@ -670,3 +670,188 @@ main {
 .badge-pulse {
     animation: pulse 2s infinite;
 }
+
+/* ── Karty KPI na dashboardzie ───────────────────────────────────── */
+
+.kpi-card {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 1.25rem;
+    height: 100%;
+    border-top: 3px solid transparent;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.kpi-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.kpi-card--warn {
+    border-top-color: #ffc107;
+}
+
+.kpi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--color-muted);
+    margin: 0 0 0.4rem;
+}
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 0;
+    color: var(--color-dark);
+}
+
+.kpi-action-link {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
+    color: #198754;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.kpi-action-link:hover {
+    text-decoration: underline;
+}
+
+/* Mini wykres słupkowy wewnątrz karty KPI */
+.kpi-card--chart {
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 52px;
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.kpi-bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    gap: 2px;
+}
+
+.kpi-bar {
+    width: 100%;
+    background-color: #c3e6cb;
+    border-radius: 2px 2px 0 0;
+    min-height: 3px;
+    transition: background-color 0.2s;
+}
+
+.kpi-bar--current {
+    background-color: #198754;
+}
+
+.kpi-bar-label {
+    font-size: 0.6rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+}
+
+/* Responsywność kart KPI na bardzo małych ekranach */
+@media (max-width: 400px) {
+    .kpi-value {
+        font-size: 1.6rem;
+    }
+    .kpi-label {
+        font-size: 0.65rem;
+    }
+}
+
+/* ── Walidacja inline — formularz weryfikacji ────────────────────── */
+
+.note-field-wrap {
+    transition: opacity 0.2s ease, max-height 0.25s ease;
+    overflow: hidden;
+}
+
+.note-field-wrap--hidden {
+    opacity: 0;
+    max-height: 0;
+    pointer-events: none;
+}
+
+.note-field-wrap--visible {
+    opacity: 1;
+    max-height: 120px;
+}
+
+.note-required-hint {
+    font-size: 0.7rem;
+    color: #856404;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+}
+
+/* Podświetlenie wiersza z konfliktem */
+.fraction-row.bg-light-warning {
+    background-color: rgba(255, 193, 7, 0.06) !important;
+}
+
+/* ── Pill-filtry statusu ─────────────────────────────────────────── */
+
+.pill-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #dee2e6;
+    background: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #495057;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease,
+                color 0.15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.pill-filter:hover {
+    border-color: #198754;
+    color: #198754;
+    background: rgba(25, 135, 84, 0.05);
+}
+
+.pill-filter--active {
+    border-color: #198754;
+    background: #198754;
+    color: #ffffff;
+}
+
+.pill-filter--active:hover {
+    background: #157347;
+    color: #ffffff;
+}
+
+.pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.pill-dot--new   { background: #0d6efd; }
+.pill-dot--sent  { background: #ffc107; }
+.pill-dot--done  { background: #198754; }
+
+.pill-filter--active .pill-dot {
+    background: rgba(255, 255, 255, 0.8);
+}

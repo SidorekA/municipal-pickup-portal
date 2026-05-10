@@ -41,6 +41,29 @@
         </form>
     </div>
 
+    <!-- Szybkie filtry statusu -->
+    <div class="d-flex gap-2 flex-wrap mb-3" role="group" aria-label="Filtruj po statusie">
+        <a href="{% url 'pickups:pickup_list' %}"
+           class="pill-filter {% if not request.GET.status %}pill-filter--active{% endif %}">
+            Wszystkie
+        </a>
+        <a href="?status=NOWE{% if request.GET.mpk %}&mpk={{ request.GET.mpk }}{% endif %}"
+           class="pill-filter {% if request.GET.status == 'NOWE' %}pill-filter--active{% endif %}">
+            <span class="pill-dot pill-dot--new" aria-hidden="true"></span>
+            Nowe
+        </a>
+        <a href="?status=WYSŁANE{% if request.GET.mpk %}&mpk={{ request.GET.mpk }}{% endif %}"
+           class="pill-filter {% if request.GET.status == 'WYSŁANE' %}pill-filter--active{% endif %}">
+            <span class="pill-dot pill-dot--sent" aria-hidden="true"></span>
+            Wysłane
+        </a>
+        <a href="?status=ZREALIZOWANE{% if request.GET.mpk %}&mpk={{ request.GET.mpk }}{% endif %}"
+           class="pill-filter {% if request.GET.status == 'ZREALIZOWANE' %}pill-filter--active{% endif %}">
+            <span class="pill-dot pill-dot--done" aria-hidden="true"></span>
+            Zrealizowane
+        </a>
+    </div>
+
     <div class="data-card">
         <div class="data-card__body">
             <div class="table-responsive">

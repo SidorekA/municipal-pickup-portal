@@ -24,6 +24,26 @@
             </a>
  
             <div class="d-flex align-items-center gap-3">
+                {% if user.is_authenticated %}
+                <div class="position-relative" style="line-height:1">
+                    <a href="/"
+                       class="nav-link text-light px-0 py-0"
+                       title="Powiadomienia"
+                       aria-label="Powiadomienia – {{ unread_notifications_count }} nieprzeczytanych">
+                        <i class="bi {% if unread_notifications_count %}bi-bell-fill{% else %}bi-bell{% endif %}"
+                           style="font-size:1.1rem"></i>
+                        {% if unread_notifications_count %}
+                        <span class="position-absolute top-0 start-100 translate-middle
+                                     badge rounded-pill bg-danger"
+                              style="font-size:0.6rem;min-width:16px;padding:2px 4px;
+                                     pointer-events:none"
+                              aria-hidden="true">
+                            {{ unread_notifications_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+                {% endif %}
                 <ul class="navbar-nav flex-row gap-3">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
