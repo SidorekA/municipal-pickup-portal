@@ -1,16 +1,87 @@
 /* static/css/forms.css */
-/* Kafelki pojemników - ogólny wygląd i płynne przejścia */
 
+/* --- Soft UI Cards --- */
+.soft-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    background-color: #ffffff;
+}
+
+/* --- Input Groups & Form Controls --- */
+.input-group {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 2px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.input-group:focus-within {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.15);
+    border-color: #28a745;
+}
+
+.input-group-text {
+    background-color: transparent !important;
+    color: #adb5bd;
+}
+
+.custom-input {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding-left: 0;
+}
+
+.custom-input:focus {
+    box-shadow: none !important;
+    background-color: transparent !important;
+}
+
+/* --- Empty State --- */
+.empty-state {
+    border: 2px dashed #dee2e6;
+    border-radius: 16px;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: #adb5bd;
+    opacity: 0.6;
+}
+
+/* --- Submit Button --- */
+.btn-submit {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(40, 167, 69, 0.3) !important;
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+}
+
+/* --- Kafelki pojemników (Bin Cards) --- */
 .bin-card { 
     transition: all 0.2s ease-in-out; 
-    border-width: 2px !important; 
-    background-color: #fafafa;
+    border-radius: 16px;
+    border: none !important;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
+
 .bin-card:hover { 
     transform: translateY(-5px); 
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important; 
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
     background-color: #ffffff; 
 }
+
 .bin-icon { 
     font-size: 3rem; 
     transition: transform 0.2s ease-in-out;
@@ -19,6 +90,7 @@
 .bin-card:hover .bin-icon {
     transform: scale(1.1); 
 }
+
 .bin-card input[type="number"] {
     font-size: 1.25rem;
     border-radius: 8px;
@@ -26,12 +98,36 @@
     border: 1px solid #dee2e6;
     transition: all 0.2s;
 }
+
 .bin-card input[type="number"]:focus {
-    box-shadow: none;
     background-color: #fff;
-    border-width: 2px;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
 }
+
 #pickup-form .form-label {
     font-weight: 600;
     color: #495057;
+}
+
+/* --- Validation Error Styles --- */
+.input-group.border-danger {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8;
+}
+
+.input-group.border-danger .input-group-text {
+    color: #dc3545 !important;
+}
+
+.bins-error {
+    border: 2px solid #dc3545 !important;
+    border-radius: 16px;
+    padding: 10px;
+    background-color: #fff8f8;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+}
+
+.text-muted {
+    color: #adb5bd !important;
 }
