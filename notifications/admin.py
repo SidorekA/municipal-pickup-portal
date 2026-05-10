@@ -3,9 +3,10 @@ from .models import Notification, NotificationSetting
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'message_short', 'is_read', 'created_at')
-    list_filter = ('is_read', 'created_at')
+    list_display = ('user', 'is_global', 'message_short', 'is_read', 'is_active', 'created_at')
+    list_filter = ('is_global', 'is_active', 'is_read', 'created_at')
     search_fields = ('user__username', 'message')
+    filter_horizontal = ('read_by',)
 
     def message_short(self, obj):
         return obj.message[:50]

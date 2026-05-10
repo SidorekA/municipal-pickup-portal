@@ -391,12 +391,8 @@ def home_view(request):
     context['now'] = timezone.now()
 
     # Globalne ogłoszenie
-    try:
-        from decouple import config
-        context['global_announcement'] = config('GLOBAL_ANNOUNCEMENT', default='')
-    except Exception:
-        from django.conf import settings
-        context['global_announcement'] = getattr(settings, 'GLOBAL_ANNOUNCEMENT', '')
+    global_announcement = Notification.objects.filter(is_global=True, is_active=True).exclude(read_by=request.user).order_by('-created_at').first()
+    context['global_announcement'] = global_announcement
 
     # conflict_count: liczba niepotwierdzonych/skonfliktowanych miesięcy (status in ['KONFLIKT', 'OCZEKUJE'])
     conflict_qs = MonthlyConfirmation.objects.filter(status__in=['KONFLIKT', 'OCZEKUJE'])
