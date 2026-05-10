@@ -254,28 +254,30 @@ def generate_mpk_cost_report(year=None, month=None, mpk_number_id=None, report_f
 
     summaries = list(qs)
 
-    # Pre-fetch all costs to memory
+    # ⚡ Bolt: Replace O(n*m) loop over all_costs with O(n*k) lookup using defaultdict
     all_costs = list(WasteCost.objects.all())
+    costs_by_fraction = defaultdict(list)
+    for cost in all_costs:
+        costs_by_fraction[cost.waste_fraction_id].append(cost)
 
     # Pre-fetch locations to memory
     # We want obj_name from Location for the given MPK.
     # An MPK can have multiple locations, we can just join them or take the first one.
     locations = list(Location.objects.filter(active=True))
-    mpk_locations = defaultdict(list)
+    mpk_locations = defaultdict(set)
     for loc in locations:
-        mpk_locations[loc.mpk_number_id].append(loc.obj_name)
+        mpk_locations[loc.mpk_number_id].add(loc.obj_name)
 
     def get_location_name(mpk_id):
         locs = mpk_locations.get(mpk_id)
         if locs:
-            return ", ".join(set(locs))
+            return ", ".join(locs)
         return "Brak lokalizacji"
 
     def get_cost_for_fraction_and_date(fraction_id, target_date):
-        for cost in all_costs:
-            if cost.waste_fraction_id == fraction_id:
-                if cost.date_from <= target_date and (cost.date_to is None or cost.date_to >= target_date):
-                    return cost.cost
+        for cost in costs_by_fraction.get(fraction_id, []):
+            if cost.date_from <= target_date and (cost.date_to is None or cost.date_to >= target_date):
+                return cost.cost
         return None
 
     data = []
