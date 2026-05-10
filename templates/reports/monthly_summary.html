@@ -34,7 +34,7 @@
 
         <form method="get" class="row g-3 align-items-end" id="reportFilterForm">
             <div class="col-12 col-md-auto">
-                <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.mpk.label }}</label>
+                <label for="{{ form.mpk.id_for_label }}" class="small fw-bold text-uppercase text-muted mb-1">{{ form.mpk.label }}</label>
                 <div class="input-group flex-nowrap shadow-sm rounded filter-group-mpk">
                     <button class="btn btn-list-step" type="button" data-target="id_mpk" data-step="-1" title="Poprzedni na liście">
                         <i class="bi bi-chevron-left" aria-hidden="true"></i>
@@ -47,7 +47,7 @@
             </div>
             
             <div class="col-12 col-md-auto">
-                <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.month.label }}</label>
+                <label for="{{ form.month.id_for_label }}" class="small fw-bold text-uppercase text-muted mb-1">{{ form.month.label }}</label>
                 <div class="input-group flex-nowrap shadow-sm rounded filter-group-date">
                     <button class="btn btn-list-step" type="button" data-target="id_month" data-step="-1" title="Poprzedni miesiąc">
                         <i class="bi bi-chevron-left" aria-hidden="true"></i>
@@ -60,7 +60,7 @@
             </div>
             
             <div class="col-12 col-md-auto">
-                <label class="small fw-bold text-uppercase text-muted mb-1">{{ form.year.label }}</label>
+                <label for="{{ form.year.id_for_label }}" class="small fw-bold text-uppercase text-muted mb-1">{{ form.year.label }}</label>
                 <div class="input-group flex-nowrap shadow-sm rounded filter-group-date">
                     <button class="btn btn-list-step" type="button" data-target="id_year" data-step="-1" title="Poprzedni rok">
                         <i class="bi bi-chevron-left" aria-hidden="true"></i>

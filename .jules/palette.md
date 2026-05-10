@@ -1,0 +1,3 @@
+## 2024-05-24 - Missing label `for` attributes
+**Learning:** Manually rendered form fields (e.g., `{{ form.field_name }}`) often lose their association with their corresponding `<label>` tags if the `for="{{ form.field_name.id_for_label }}"` attribute is not explicitly included. This causes issues for screen reader users and breaks click-to-focus behavior, degrading both accessibility and general UX.
+**Action:** When manually writing or modifying `<label>` elements for form fields in Django templates, always verify that the `for` attribute is properly set using the field's `id_for_label` property or the corresponding static ID.

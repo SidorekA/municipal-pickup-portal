@@ -108,7 +108,7 @@
         <div class="mt-4 p-4 bg-white rounded shadow-sm border">
             <div class="row align-items-center">
                 <div class="col-md-5">
-                    <label class="fw-bold small text-uppercase text-muted mb-2 d-block">Twoja decyzja:</label>
+                    <label for="decisionStatus" class="fw-bold small text-uppercase text-muted mb-2 d-block">Twoja decyzja:</label>
                     <select name="decision_status" id="decisionStatus" class="form-select border-2" {% if confirmation.status == 'ZATWIERDZONE' %}disabled{% endif %}>
                         <option value="POTWIERDZONE" {% if confirmation.status == 'POTWIERDZONE' %}selected{% endif %}>Potwierdzam zgodność danych</option>
                         <option value="KONFLIKT" {% if confirmation.status == 'KONFLIKT' %}selected{% endif %}>Występują rozbieżności (Nie potwierdzam)</option>
