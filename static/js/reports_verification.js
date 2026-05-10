@@ -1,78 +1,109 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('verificationForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const decisionStatus = document.getElementById('decisionStatus');
+    const rows = document.querySelectorAll('.fraction-row');
+
     if (!form) return;
 
-    form.addEventListener('submit', function(e) {
-        const decision = document.getElementById('decisionStatus').value;
-        const rows = document.querySelectorAll('.fraction-row');
-        
-        let isValid = true;
+    function evaluateForm() {
         let anyChanges = false;
-        let htmlErrorList = "";
+        let allNotesFilled = true;
 
         rows.forEach(row => {
-            const supplierQty = parseInt(row.dataset.reported) || 0; 
             const confirmedInput = row.querySelector('.confirmed-qty-input');
+            if (!confirmedInput) return; // pomin jesli readonly lub cos
+
+            const supplierQty = parseInt(confirmedInput.dataset.dostawca) || 0;
             const confirmedQty = parseInt(confirmedInput.value) || 0;
             const noteInput = row.querySelector('.note-input');
-            const noteValue = noteInput.value.trim();
-            const fractionName = row.dataset.name;
+            const complianceText = row.querySelector('.compliance-text');
 
-            // Sprawdzamy czy nastąpiła zmiana ilości
-            if (confirmedQty !== supplierQty) {
+            // Jeśli ilości są równe (zgodność)
+            if (confirmedQty === supplierQty) {
+                if (noteInput) {
+                    noteInput.classList.add('d-none');
+                    noteInput.classList.remove('is-invalid');
+                    noteInput.classList.remove('fade-in');
+                    noteInput.value = "";
+                }
+                if (complianceText) complianceText.classList.remove('d-none');
+                row.classList.remove('bg-light-warning');
+                confirmedInput.classList.remove('border-warning');
+            }
+            // Jeśli się różnią (rozbieżność)
+            else {
                 anyChanges = true;
                 
-                // Walidacja 1: Brak uwagi przy rozbieżności
-                if (noteValue === "") {
-                    htmlErrorList += `<li><b>${fractionName}</b>: wymagana uwaga (zmiana z ${supplierQty} na ${confirmedQty})</li>`;
-                    noteInput.classList.add('is-invalid');
-                    isValid = false;
+                if (complianceText) complianceText.classList.add('d-none');
+                row.classList.add('bg-light-warning');
+                confirmedInput.classList.add('border-warning');
+
+                if (noteInput) {
+                    if (noteInput.classList.contains('d-none')) {
+                        noteInput.classList.remove('d-none');
+                        noteInput.classList.add('fade-in');
+                    }
+
+                    if (noteInput.value.trim() === "") {
+                        noteInput.classList.add('is-invalid');
+                        allNotesFilled = false;
+                    } else {
+                        noteInput.classList.remove('is-invalid');
+                    }
                 }
             }
         });
 
-        // NOWA WALIDACJA: Zmiana liczb przy statusie "Potwierdzam"
-        if (anyChanges && decision === 'POTWIERDZONE') {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Niezgodność decyzji',
-                html: `Wprowadzono ilości inne niż wskazane przez dostawcę. <br><br>Jeśli faktycznie odebrano inne ilości, <b>zmień decyzję na "Występują rozbieżności (Nie potwierdzam)"</b>.`,
-                icon: 'warning',
-                confirmButtonColor: '#0d6efd',
-                confirmButtonText: 'Popraw decyzję'
-            });
-            return;
+        // Globalna ewaluacja
+        if (anyChanges) {
+            if (decisionStatus && !decisionStatus.disabled) {
+                decisionStatus.value = 'KONFLIKT';
+            }
+        } else {
+            if (decisionStatus && !decisionStatus.disabled) {
+                decisionStatus.value = 'POTWIERDZONE';
+            }
         }
 
-        // Walidacja 2: Brak uwag (jeśli status był poprawny)
-        if (!isValid) {
+        // Blokada submit
+        if (submitBtn) {
+            if (anyChanges && !allNotesFilled) {
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    // Podpięcie zdarzeń
+    rows.forEach(row => {
+        const confirmedInput = row.querySelector('.confirmed-qty-input');
+        const noteInput = row.querySelector('.note-input');
+
+        if (confirmedInput) {
+            confirmedInput.addEventListener('input', evaluateForm);
+        }
+        if (noteInput) {
+            noteInput.addEventListener('input', evaluateForm);
+        }
+    });
+
+    // Uruchomienie ewaluacji przy starcie, aby upewnić się, że stan jest poprawny
+    evaluateForm();
+
+    form.addEventListener('submit', function(e) {
+        // Dodatkowe zabezpieczenie przed nieprawidłowym wysłaniem
+        evaluateForm();
+        if (submitBtn && submitBtn.disabled) {
             e.preventDefault();
             Swal.fire({
                 title: '<span style="color: #d33">Wymagane uzasadnienie</span>',
                 icon: 'error',
-                html: `<div style="text-align: left;">Proszę uzupełnić powód zmiany dla:<ul>${htmlErrorList}</ul></div>`,
-                confirmButtonText: 'Popraw dane',
+                html: 'Proszę uzupełnić wszystkie powody zmian w polach zaznaczonych na czerwono.',
+                confirmButtonText: 'Rozumiem',
                 confirmButtonColor: '#d33'
             });
-            return;
         }
-
-        // Walidacja 3: Status "Konflikt" bez zmian w tabeli
-        if (decision === 'KONFLIKT' && !anyChanges) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Brak rozbieżności',
-                text: 'Wybrałeś status o braku potwierdzenia, ale Twoje liczby są identyczne z raportem dostawcy. Skoryguj wartości lub zmień decyzję na "Potwierdzam".',
-                icon: 'info',
-                confirmButtonColor: '#ffc107'
-            });
-        }
-    });
-
-    // Resetowanie czerwonych ramek
-    document.querySelectorAll('.note-input').forEach(input => {
-        input.addEventListener('input', function() {
-            if (this.value.trim() !== "") this.classList.remove('is-invalid');
-        });
     });
 });

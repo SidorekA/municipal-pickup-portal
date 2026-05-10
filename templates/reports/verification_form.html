@@ -4,6 +4,20 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    button:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.65;
+    }
 </style>
 {% endblock %}
 
@@ -76,13 +90,15 @@
                         <td class="data-table__td">
                             <input type="number" step="1" name="qty_{{ item.fraction.id }}" 
                                    value="{{ item.confirmed_qty }}" 
+                                   data-dostawca="{{ item.collected_qty|floatformat:0 }}"
                                    class="form-control form-control-sm confirmed-qty-input {% if item.is_conflict %}border-warning{% endif %}"
                                    {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
                         </td>
                         <td class="data-table__td pe-4">
+                            <span class="text-muted small compliance-text {% if item.is_conflict %}d-none{% endif %}">— zgodność</span>
                             <input type="text" name="note_{{ item.fraction.id }}" 
                                    value="{{ item.note }}" 
-                                   class="form-control form-control-sm note-input" 
+                                   class="form-control form-control-sm note-input {% if not item.is_conflict %}d-none{% endif %}"
                                    placeholder="Wymagane przy rozbieżności..."
                                    {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
                         </td>
@@ -96,7 +112,7 @@
             <div class="row align-items-center">
                 <div class="col-md-5">
                     <label class="fw-bold small text-uppercase text-muted mb-2 d-block">Twoja decyzja:</label>
-                    <select name="decision_status" id="decisionStatus" class="form-select border-2" {% if confirmation.status == 'ZATWIERDZONE' %}disabled{% endif %}>
+                    <select name="decision_status" id="decisionStatus" class="form-select border-2 auto-decision" {% if confirmation.status == 'ZATWIERDZONE' %}disabled{% endif %}>
                         <option value="POTWIERDZONE" {% if confirmation.status == 'POTWIERDZONE' %}selected{% endif %}>Potwierdzam zgodność danych</option>
                         <option value="KONFLIKT" {% if confirmation.status == 'KONFLIKT' %}selected{% endif %}>Występują rozbieżności (Nie potwierdzam)</option>
                     </select>
@@ -107,7 +123,7 @@
                         <i class="bi bi-arrow-left-circle me-2"></i>Wróć (Anuluj)
                     </a>
                     {% if confirmation.status != 'ZATWIERDZONE' %}
-                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm me-2">
+                    <button type="submit" id="submitBtn" class="btn btn-primary px-4 fw-bold shadow-sm me-2">
                         <i class="bi bi-save me-2"></i>Zapisz zmiany
                     </button>
                     {% endif %}
