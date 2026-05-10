@@ -1,0 +1,3 @@
+## 2024-03-21 - Backend Performance: `prefetch_related` with `.filter()` vs `.all()`
+**Learning:** Running `.filter()` or `.values_list()` on a related manager ignores the prefetched cache from `prefetch_related` and generates an N+1 query. This is because Django's ORM translates those calls directly into SQL queries rather than operating on the in-memory cached objects.
+**Action:** When a queryset is prefetched (e.g. `prefetch_related("...__schedules")`), avoid `.filter(condition=True)` and `.values_list()`. Instead, re-filter in Python using `.all()` and list/generator comprehensions (e.g., `[obj.field for obj in related.all() if obj.condition]`) to utilize the cached query and avoid N+1 queries.

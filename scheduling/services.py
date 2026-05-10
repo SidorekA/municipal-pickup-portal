@@ -36,10 +36,10 @@ def get_next_pickup_date(
     elif submitted_at.tzinfo is None:
         submitted_at = submitted_at.replace(tzinfo=WARSAW_TZ)
 
+    # ⚡ Bolt: We use list comprehension over .all() rather than .filter() or .values_list()
+    # to leverage prefetch_related and avoid breaking the cache, resolving an N+1 query issue.
     pickup_days: set[int] = set(
-        fraction_type.schedules
-        .filter(active=True)
-        .values_list("day_of_week", flat=True)
+        schedule.day_of_week for schedule in fraction_type.schedules.all() if schedule.active
     )
 
     if not pickup_days:
