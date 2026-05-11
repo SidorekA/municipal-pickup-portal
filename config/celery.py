@@ -2,18 +2,19 @@
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 
-os.environ.setdefault(
-    "DJANGO_SETTINGS_MODULE",
-    "config.settings.development",
-)
+if "DJANGO_SETTINGS_MODULE" not in os.environ:
+    raise RuntimeError(
+        "Zmienna środowiskowa DJANGO_SETTINGS_MODULE nie jest ustawiona. "
+        "Ustaw ją przed uruchomieniem: "
+        "export DJANGO_SETTINGS_MODULE=config.settings.development"
+    )
 
 app = Celery("config")
 
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
-
-from celery.schedules import crontab
 
 app.conf.beat_schedule = {
     'check-overdue-confirmations-daily': {

@@ -12,10 +12,6 @@ dependencies = [
     "django-celery-beat>=2.9.0",
     "django-celery-results>=2.6.0",
     "django-crum>=0.7.9",
-    "django-debug-toolbar>=6.3.0",
-    "django-silk>=5.5.0",
-    "factory-boy>=3.3.3",
-    "flower>=2.0.1",
     "gunicorn>=25.3.0",
     "openpyxl>=3.1.5",
     "pandas>=3.0.2",
@@ -24,4 +20,12 @@ dependencies = [
     "pytest-django>=4.12.0",
     "python-decouple>=3.8",
     "ruff>=0.15.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-silk>=5.5.0",
+    "django-debug-toolbar>=6.3.0",
+    "flower>=2.0.1",
+    "factory-boy>=3.3.3",
 ]

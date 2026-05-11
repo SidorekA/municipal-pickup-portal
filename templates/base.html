@@ -24,6 +24,19 @@
             </a>
  
             <div class="d-flex align-items-center gap-3">
+                {% if user.is_authenticated %}
+                <div class="position-relative">
+                    <a href="/" class="nav-link text-light px-0" title="Powiadomienia">
+                        <i class="bi bi-bell{% if unread_notifications_count %}-fill{% endif %}"></i>
+                        {% if unread_notifications_count %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size: 0.6rem; min-width: 16px;">
+                            {{ unread_notifications_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+                {% endif %}
                 <ul class="navbar-nav flex-row gap-3">
                     {% if user.is_authenticated %}
                         <li class="nav-item">

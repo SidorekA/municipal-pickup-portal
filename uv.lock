@@ -413,10 +413,6 @@ dependencies = [
     { name = "django-celery-beat" },
     { name = "django-celery-results" },
     { name = "django-crum" },
-    { name = "django-debug-toolbar" },
-    { name = "django-silk" },
-    { name = "factory-boy" },
-    { name = "flower" },
     { name = "gunicorn" },
     { name = "openpyxl" },
     { name = "pandas" },
@@ -425,6 +421,14 @@ dependencies = [
     { name = "pytest-django" },
     { name = "python-decouple" },
     { name = "ruff" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "django-debug-toolbar" },
+    { name = "django-silk" },
+    { name = "factory-boy" },
+    { name = "flower" },
 ]
 
 [package.metadata]
@@ -436,10 +440,10 @@ requires-dist = [
     { name = "django-celery-beat", specifier = ">=2.9.0" },
     { name = "django-celery-results", specifier = ">=2.6.0" },
     { name = "django-crum", specifier = ">=0.7.9" },
-    { name = "django-debug-toolbar", specifier = ">=6.3.0" },
-    { name = "django-silk", specifier = ">=5.5.0" },
-    { name = "factory-boy", specifier = ">=3.3.3" },
-    { name = "flower", specifier = ">=2.0.1" },
+    { name = "django-debug-toolbar", marker = "extra == 'dev'", specifier = ">=6.3.0" },
+    { name = "django-silk", marker = "extra == 'dev'", specifier = ">=5.5.0" },
+    { name = "factory-boy", marker = "extra == 'dev'", specifier = ">=3.3.3" },
+    { name = "flower", marker = "extra == 'dev'", specifier = ">=2.0.1" },
     { name = "gunicorn", specifier = ">=25.3.0" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=3.0.2" },
@@ -449,6 +453,7 @@ requires-dist = [
     { name = "python-decouple", specifier = ">=3.8" },
     { name = "ruff", specifier = ">=0.15.12" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "openpyxl"
