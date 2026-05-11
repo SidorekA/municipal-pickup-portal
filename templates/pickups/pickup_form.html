@@ -24,12 +24,12 @@
                         <div class="mb-4">
                             <div class="input-group {% if form.mpk_number.errors %}border-danger{% endif %}">
                                 <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2">
-                                    <i class="bi bi-hash fs-5"></i>
+                                    <i class="bi bi-hash fs-5">Numer MPK</i>
                                 </span>
                                 {% if form.mpk_number.errors %}
-                                    {% render_field form.mpk_number class="form-select custom-input is-invalid" %}
+                                    {% render_field form.mpk_number class="wf-form-control custom-input is-invalid" %}
                                 {% else %}
-                                    {% render_field form.mpk_number class="form-select custom-input" %}
+                                    {% render_field form.mpk_number class="wf-form-control custom-input" %}
                                 {% endif %}
                             </div>
                             {% if form.mpk_number.errors %}
@@ -43,9 +43,9 @@
                                     <i class="bi bi-geo-alt fs-5"></i>
                                 </span>
                                 {% if form.location.errors %}
-                                    {% render_field form.location class="form-select custom-input is-invalid" data-selected=form.location.value %}
+                                    {% render_field form.location class="wf-form-control custom-input is-invalid" data-selected=form.location.value %}
                                 {% else %}
-                                    {% render_field form.location class="form-select custom-input" data-selected=form.location.value %}
+                                    {% render_field form.location class="wf-form-control custom-input" data-selected=form.location.value %}
                                 {% endif %}
                             </div>
                             {% if form.location.errors %}
@@ -59,9 +59,9 @@
                                     <i class="bi bi-telephone fs-5"></i>
                                 </span>
                                 {% if form.contact_phone.errors %}
-                                    {% render_field form.contact_phone class="form-select custom-input is-invalid" %}
+                                    {% render_field form.contact_phone class="wf-form-control custom-input is-invalid" %}
                                 {% else %}
-                                    {% render_field form.contact_phone class="form-select custom-input" %}
+                                    {% render_field form.contact_phone class="wf-form-control custom-input" %}
                                 {% endif %}
                             </div>
                             {% if form.contact_phone.errors %}
@@ -74,7 +74,7 @@
                                 <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2 align-items-start pt-2">
                                     <i class="bi bi-chat-left-text fs-5"></i>
                                 </span>
-                                {% render_field form.note class="form-control custom-input" placeholder="Dodatkowe uwagi (opcjonalnie)" rows="3" %}
+                                {% render_field form.note class="wf-form-control custom-input" placeholder="Dodatkowe uwagi (opcjonalnie)" rows="3" %}
                             </div>
                             {% if form.note.errors %}
                                 <div class="text-danger small mt-1 ps-2">{{ form.note.errors|join:", " }}</div>
@@ -82,8 +82,8 @@
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-5">
-                            <a href="/" class="btn btn-outline-secondary px-4 rounded-pill">Anuluj</a>
-                            <button type="submit" class="btn btn-success px-5 fw-bold rounded-pill btn-submit shadow-sm">
+                            <a href="/" class="wf-btn-outline px-4 rounded-pill">Anuluj</a>
+                            <button type="submit" class="wf-btn-primary px-5 fw-bold rounded-pill btn-submit shadow-sm">
                                 Wyślij Zgłoszenie
                             </button>
                         </div>

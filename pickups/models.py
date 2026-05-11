@@ -1,6 +1,5 @@
 # requests/models.py
 from __future__ import annotations
-from pickle import TRUE
 from django.conf import settings
 from django.db import models
 from core.models import CoreModel
@@ -49,7 +48,7 @@ class Pickup(CoreModel):
     )
     contact_phone = models.CharField(
         max_length=64, 
-        blank=TRUE,
+        blank=True,
         verbose_name='Telefon kontaktowy'
     )
 

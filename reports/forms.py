@@ -5,9 +5,11 @@ from users.models import Permission
 import datetime
 
 class ReportFilterForm(forms.Form):
-    MONTH_CHOICES = [(i, f"{i:02d}") for i in range(1, 13)]
+    # DOKLEJAMY PUSTĄ OPCJĘ NA POCZĄTEK LISTY MIESIĘCY I LAT
+    MONTH_CHOICES = [('', 'Wszystkie')] + [(i, f"{i:02d}") for i in range(1, 13)]
+    
     current_year = datetime.date.today().year
-    YEAR_CHOICES = [(year, str(year)) for year in range(current_year - 2, current_year + 2)]
+    YEAR_CHOICES = [('', 'Wszystkie')] + [(year, str(year)) for year in range(current_year - 2, current_year + 2)]
 
     mpk = forms.ChoiceField(
         required=False,

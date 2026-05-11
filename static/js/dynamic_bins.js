@@ -171,10 +171,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 } else {
                     // BRAK DODATKOWYCH KONTAKTÓW (NP. MPK 6014)
-                    // Kafelki nie powstają, po prostu odblokowujemy standardowy select
                     if (phoneSelect) {
                         phoneSelect.disabled = false;
-                        // Automatycznie zaznaczamy "Mój numer" żeby użytkownik nie musiał klikać
                         for (let i = 0; i < phoneSelect.options.length; i++) {
                             if (phoneSelect.options[i].text.includes('Mój numer')) {
                                 phoneSelect.selectedIndex = i;
@@ -223,40 +221,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     binsContainer.innerHTML += cardHtml;
                 });
 
-                binsContainer.addEventListener('click', function(e) {
-                    const btn = e.target.closest('.btn-stepper');
-                    if (!btn) return;
-
-                    const fractionId = btn.dataset.fractionId;
-                    const valEl  = document.getElementById('stepper-val-' + fractionId);
-                    const input  = document.getElementById('bin-input-' + fractionId);
-                    const card   = btn.closest('.bin-card');
-                    const max    = parseInt(card.dataset.max, 10);
-                    let current = parseInt(valEl.textContent, 10);
-
-                    if (btn.classList.contains('btn-stepper-plus')) {
-                        if (current < max) current++;
-                    } else {
-                        if (current > 0) current--;
-                    }
-
-                    valEl.textContent = current;
-                    input.value = current;
-
-                    if (current > 0) {
-                        card.classList.add('bin-card--active');
-                    } else {
-                        card.classList.remove('bin-card--active');
-                    }
-
-                    const minusBtn = card.querySelector('.btn-stepper-minus');
-                    const plusBtn  = card.querySelector('.btn-stepper-plus');
-                    minusBtn.disabled = (current === 0);
-                    plusBtn.disabled  = (current === max);
-
-                    updateSubmitCounter();
-                });
-
                 binsContainer.querySelectorAll('.btn-stepper-minus').forEach(btn => {
                     btn.disabled = true;
                 });
@@ -282,7 +246,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     if (window.PREVIOUS_POST_DATA["contact_phone"] && phoneSelect) {
                         const prevPhone = window.PREVIOUS_POST_DATA["contact_phone"];
                         
-                        // Zaznacz kafelki (jeśli istnieją)
                         const tileContainer = document.getElementById('contact-tiles');
                         if (tileContainer) {
                             tileContainer.querySelectorAll('.contact-tile').forEach(t => {
@@ -336,6 +299,43 @@ document.addEventListener("DOMContentLoaded", function() {
                 binsContainer.innerHTML = '<div class="alert alert-danger w-100">Błąd połączenia z serwerem.</div>';
             });
     });
+
+    // --- OBSŁUGA KLIKNIĘĆ W POJEMNIKI (ZDELEGOWANA NA ZEWNĄTRZ) ---
+    if (binsContainer) {
+        binsContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-stepper');
+            if (!btn) return;
+
+            const fractionId = btn.dataset.fractionId;
+            const valEl  = document.getElementById('stepper-val-' + fractionId);
+            const input  = document.getElementById('bin-input-' + fractionId);
+            const card   = btn.closest('.bin-card');
+            const max    = parseInt(card.dataset.max, 10);
+            let current = parseInt(valEl.textContent, 10);
+
+            if (btn.classList.contains('btn-stepper-plus')) {
+                if (current < max) current++;
+            } else {
+                if (current > 0) current--;
+            }
+
+            valEl.textContent = current;
+            input.value = current;
+
+            if (current > 0) {
+                card.classList.add('bin-card--active');
+            } else {
+                card.classList.remove('bin-card--active');
+            }
+
+            const minusBtn = card.querySelector('.btn-stepper-minus');
+            const plusBtn  = card.querySelector('.btn-stepper-plus');
+            if(minusBtn) minusBtn.disabled = (current === 0);
+            if(plusBtn) plusBtn.disabled  = (current === max);
+
+            updateSubmitCounter();
+        });
+    }
 
     if (mpkSelect && mpkSelect.value) {
         const prevLocation = locationSelect.getAttribute("data-selected");

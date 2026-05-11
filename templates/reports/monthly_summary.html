@@ -1,14 +1,51 @@
-{% extends 'base.html' %} 
-{% load static %} 
+{% extends 'base.html' %}
+{% load static %}
 
 {% block extra_css %}
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+    /* Filtry Pills - spójne z listą zgłoszeń */
+    .pill-filter {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 50px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .pill-filter:hover { background-color: #e9ecef; color: #495057; }
+    .pill-filter--active {
+        background-color: #198754;
+        color: white !important;
+        border-color: #198754;
+    }
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+    .pill-dot--danger { background-color: #dc3545; }
+    .pill-dot--done { background-color: #ffffff; opacity: 0.8; }
+
+    /* Badge okresu w nagłówku boxa */
+    .period-badge {
+        font-size: 0.8rem;
+        background: #f1f3f5;
+        padding: 4px 12px;
+        border-radius: 6px;
+        color: #495057;
+        border: 1px solid #dee2e6;
+        text-transform: capitalize;
+    }
+</style>
 {% endblock %}
 
-{% block title %}Podsumowanie Odbiorów | System Odpadów{% endblock %} 
+{% block title %}Podsumowanie Odbiorów | System Odpadów{% endblock %}
 
 {% block content %}
 <div class="container report-container mt-4">
+    
     <div class="report-header bg-white p-4 rounded-4 shadow-sm mb-4">
         <div class="row align-items-center">
             <div class="col-md-6">
@@ -22,7 +59,7 @@
                 <form action="{% url 'reports:import_excel' %}" method="post" enctype="multipart/form-data" class="d-inline" id="importExcelForm">
                     {% csrf_token %}
                     <input type="file" name="excel_file" id="excelFileInput" style="display: none;" accept=".xlsx,.csv" onchange="document.getElementById('importExcelForm').submit();">
-                    <button type="button" class="btn btn-outline-success fw-bold" onclick="document.getElementById('excelFileInput').click();">
+                    <button type="button" class="wf-btn-outline fw-bold" onclick="document.getElementById('excelFileInput').click();">
                         <i class="bi bi-file-earmark-excel me-2"></i>Importuj dane z Excela
                     </button>
                 </form>
@@ -73,57 +110,81 @@
             </div>
             
             <div class="col-12 col-md-auto">
-                <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">Filtruj</button>
+                <button type="submit" class="wf-btn-primary px-4 fw-bold shadow-sm">Filtruj</button>
             </div>
         </form>
     </div>
 
-    {% for group in grouped_data %}
-    <div class="mpk-section mb-5 bg-white p-4 rounded-4 shadow-sm">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold mb-0">
-                <i class="bi bi-geo-alt-fill text-success me-2"></i>MPK: {{ group.mpk_name }}
-                <span class="badge ms-3 fs-6 fw-normal {% if group.status == 'OCZEKUJE' %}bg-warning text-dark{% elif group.status == 'KONFLIKT' %}bg-danger{% else %}bg-success{% endif %}">
-                    <i class="bi bi-info-circle me-1"></i>
-                    {% if group.status == 'OCZEKUJE' %}Oczekuje na weryfikację
-                    {% elif group.status == 'POTWIERDZONE' %}Potwierdzone
-                    {% elif group.status == 'ZATWIERDZONE' %}Zatwierdzone
-                    {% elif group.status == 'KONFLIKT' %}Rozbieżności (Konflikt)
-                    {% else %}{{ group.status }}{% endif %}
-                </span>
-            </h4>
+    <div class="d-flex gap-2 flex-wrap mb-4">
+        <a href="?month={{ request.GET.month }}&year={{ request.GET.year }}&mpk={{ request.GET.mpk }}"
+           class="pill-filter {% if not request.GET.filter_status %}pill-filter--active{% endif %}">
+            Wszystkie
+        </a>
+        <a href="?filter_status=action_required&month={{ request.GET.month }}&year={{ request.GET.year }}&mpk={{ request.GET.mpk }}"
+           class="pill-filter {% if request.GET.filter_status == 'action_required' %}pill-filter--active{% endif %}">
+            <span class="pill-dot pill-dot--danger"></span> Wymaga uwagi
+        </a>
+        <a href="?filter_status=confirmed&month={{ request.GET.month }}&year={{ request.GET.year }}&mpk={{ request.GET.mpk }}"
+           class="pill-filter {% if request.GET.filter_status == 'confirmed' %}pill-filter--active{% endif %}">
+            <span class="pill-dot pill-dot--done"></span> Zatwierdzone
+        </a>
+    </div>
 
+    {% for data in summary_data %}
+    <div class="card mb-4 shadow-sm border-0 rounded-4 overflow-hidden">
+        
+        <div class="card-header bg-white pt-4 px-4 d-flex justify-content-between align-items-start border-bottom-0">
             <div>
-                {% if group.status == 'POTWIERDZONE' or group.status == 'ZATWIERDZONE' or group.status == 'KONFLIKT' %}
-                    <a href="{% url 'reports:verification' %}?mpk={{ group.mpk_id }}&month={{ selected_month }}&year={{ selected_year }}"
-                       class="btn btn-outline-secondary btn-sm fw-bold px-3 shadow-sm me-2">
-                        <i class="bi bi-eye me-2"></i>Pokaż potwierdzenie
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <span class="period-badge fw-bold">
+                        <i class="bi bi-calendar3 me-1"></i> {{ data.month_name }} {{ data.year }}
+                    </span>
+                    <h4 class="fw-bold mb-0">MPK: {{ data.mpk_number }}</h4>
+                </div>
+                <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ data.location }}</p>
+            </div>
+            
+            <div class="text-end">
+                {% if data.status == 'ZATWIERDZONE' or data.status == 'POTWIERDZONE' %}
+                    <span class="badge bg-success-subtle text-success mb-2 d-block border border-success-subtle px-3 py-1 rounded-pill">
+                        <i class="bi bi-check-circle-fill me-1"></i> Zatwierdzone
+                    </span>
+                    <a href="{% url 'reports:verification' %}?mpk={{ data.mpk_id }}&month={{ data.month }}&year={{ data.year }}" 
+                       class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold shadow-sm">
+                        <i class="bi bi-eye me-1"></i> Pokaż potwierdzenie
                     </a>
                 {% else %}
-                    <a href="{% url 'reports:verification' %}?mpk={{ group.mpk_id }}&month={{ selected_month }}&year={{ selected_year }}"
-                       class="btn btn-primary btn-sm fw-bold px-3 shadow-sm">
-                        <i class="bi bi-check2-square me-2"></i>Weryfikuj i Potwierdź
+                    <span class="badge bg-warning-subtle text-warning-emphasis mb-2 d-block border border-warning-subtle px-3 py-1 rounded-pill">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Czeka na akcję
+                    </span>
+                    <a href="{% url 'reports:verification' %}?mpk={{ data.mpk_id }}&month={{ data.month }}&year={{ data.year }}" 
+                       class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-bold">
+                        <i class="bi bi-shield-check me-1"></i> Weryfikuj i Potwierdź
                     </a>
                 {% endif %}
             </div>
         </div>
-
-        <div class="row g-4">
-            {% for item in group.fractions %}
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="stat-card p-3 border rounded-3 border-start-4 border-{{ item.color }}"
-                    style="border-left-width: 5px !important">
-                    <div class="d-flex justify-content-between mb-2">
-                        <i class="bi {{ item.icon }} fs-3 text-{{ item.color }}"></i>
-                        <span class="badge bg-{{ item.color }} text-white align-self-start">{{ item.capacity }}</span>
+        
+        <div class="card-body px-4 pb-4">
+            <div class="row g-4 mt-1">
+                {% for item in data.fractions %}
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="stat-card p-3 border rounded-3 border-start-4 border-{{ item.color|default:'secondary' }}"
+                        style="border-left-width: 5px !important">
+                        <div class="d-flex justify-content-between mb-2">
+                            <i class="bi {{ item.icon|default:'bi-trash' }} fs-3 text-{{ item.color|default:'secondary' }}"></i>
+                            {% if item.capacity %}
+                            <span class="badge bg-{{ item.color|default:'secondary' }} text-white align-self-start">{{ item.capacity }}</span>
+                            {% endif %}
+                        </div>
+                        <h6 class="text-muted small fw-bold mb-1">{{ item.name }}</h6>
+                        <h3 class="fw-bold text-{{ item.color|default:'secondary' }} mb-0">
+                            {{ item.qty|floatformat:0 }} <span class="small opacity-75">szt.</span>
+                        </h3>
                     </div>
-                    <h6 class="text-muted small fw-bold mb-1">{{ item.name }}</h6>
-                    <h3 class="fw-bold text-{{ item.color }} mb-0">
-                        {{ item.total_collected|floatformat:0 }} <span class="small opacity-75">szt.</span>
-                    </h3>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
     {% empty %}
@@ -133,6 +194,7 @@
         <p class="text-muted mb-0">Spróbuj zmienić filtry lub upewnij się, że dane z Excela zostały zaimportowane.</p>
     </div>
     {% endfor %}
+
 </div>
 {% endblock %}
 
@@ -140,25 +202,23 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Inicjalizacja Tom Select dla wszystkich filtrów
     const settings = {
         create: false,
-        controlInput: null, // Wyłącza wpisywanie tekstu dla krótkich list (miesiąc/rok)
+        controlInput: null,
         hideSelected: true,
+        allowEmptyOption: true,
     };
 
     const mpkTs = new TomSelect('#id_mpk', { ...settings, controlInput: undefined, placeholder: "Wybierz MPK" });
     const monthTs = new TomSelect('#id_month', settings);
     const yearTs = new TomSelect('#id_year', settings);
 
-    // Mapa instancji dla przycisków
     const tsInstances = {
         'id_mpk': mpkTs,
         'id_month': monthTs,
         'id_year': yearTs
     };
 
-    // 2. Obsługa przycisków strzałek
     const stepButtons = document.querySelectorAll('.btn-list-step');
 
     function updateButtonStates() {
@@ -188,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const step = parseInt(this.getAttribute('data-step'), 10);
 
             if (ts) {
-                // Pobieramy wszystkie aktualne klucze (values) opcji w kolejności
                 const keys = Object.keys(ts.options);
                 const currentVal = ts.getValue();
                 const currentIndex = keys.indexOf(currentVal);
@@ -196,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (newIndex >= 0 && newIndex < keys.length) {
                     ts.setValue(keys[newIndex]);
-                    // Tom Select automatycznie zaktualizuje ukryty select, więc wysyłamy form
                     ts.wrapper.closest('form').submit();
                 }
             }

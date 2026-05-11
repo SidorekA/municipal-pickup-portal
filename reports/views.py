@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, formats
 from pickups.models import PickupWasteBin
 from users.models import Permission
 from waste.models import WasteFraction
@@ -106,116 +106,117 @@ def approve_confirmation(request, pk):
 @login_required
 def monthly_summary_view(request):
     today = timezone.now().date()
+    filter_status = request.GET.get('filter_status')
 
-    form = ReportFilterForm(
-        request.GET or {"month": today.month, "year": today.year}, user=request.user
-    )
-
-    selected_month = today.month
-    selected_year = today.year
+    form = ReportFilterForm(request.GET or None, user=request.user)
+    
+    selected_month = None
+    selected_year = None
     selected_mpk = None
-
+    
     if form.is_valid():
-        selected_month = int(form.cleaned_data.get("month") or today.month)
-        selected_year = int(form.cleaned_data.get("year") or today.year)
-        selected_mpk = form.cleaned_data.get("mpk")
+        selected_month = form.cleaned_data.get("month") or None
+        selected_year = form.cleaned_data.get("year") or None
+        selected_mpk = form.cleaned_data.get("mpk") or None
 
-    query_filters = {"year": selected_year, "month": selected_month}
-
+    # 1. Filtrowanie rekordów z harmonogramu
+    query_filters = {}
+    if selected_year: query_filters["year"] = int(selected_year)
+    if selected_month: query_filters["month"] = int(selected_month)
+    if selected_mpk: query_filters["mpk_number_id"] = selected_mpk
+    
     if not request.user.is_superuser:
-        allowed_mpk_ids = Permission.objects.filter(
+        allowed_ids = Permission.objects.filter(
             user=request.user, active=True
         ).values_list("mpk_number_id", flat=True)
-        query_filters["mpk_number_id__in"] = allowed_mpk_ids
-
-    if selected_mpk:
-        query_filters["mpk_number_id"] = selected_mpk
+        query_filters["mpk_number_id__in"] = allowed_ids
 
     records = SummaryCollectionSchedule.objects.filter(**query_filters).select_related(
-        "waste_fraction", "mpk_number", "waste_fraction__fraction_type"
+        "mpk_number", "waste_fraction", "waste_fraction__fraction_type"
+    ).prefetch_related("mpk_number__locations")
+
+    # 2. Pobranie statusów potwierdzeń
+    conf_filters = {}
+    if selected_year: conf_filters["month__year"] = int(selected_year)
+    if selected_month: conf_filters["month__month"] = int(selected_month)
+    
+    confirmations = MonthlyConfirmation.objects.filter(**conf_filters).values(
+        "mpk_number_id", "month", "status"
     )
+    status_map = {(c["mpk_number_id"], c["month"]): c["status"] for c in confirmations}
 
-    first_day_month = datetime.date(selected_year, selected_month, 1)
-    confirmations = MonthlyConfirmation.objects.filter(month=first_day_month).values(
-        "mpk_number_id", "status"
-    )
-
-    status_map = {c["mpk_number_id"]: c["status"] for c in confirmations}
-
+    # 3. Grupowanie danych i generowanie stylów dla kafelków
     grouped_data = {}
-
     for record in records:
-        mpk_obj = record.mpk_number
-        mpk_name = str(mpk_obj.mpk_number)
+        group_id = f"{record.mpk_number_id}_{record.year}_{record.month}"
+        
+        if group_id not in grouped_data:
+            rec_date_obj = datetime.date(record.year, record.month, 1)
+            current_status = status_map.get((record.mpk_number_id, rec_date_obj), "OCZEKUJE")
+            
+            # FILTRY (Pills)
+            if filter_status == 'confirmed' and current_status not in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
+            if filter_status == 'action_required' and current_status in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
 
-        if mpk_name not in grouped_data:
-            grouped_data[mpk_name] = {
-                "mpk_id": mpk_obj.id,
-                "status": status_map.get(
-                    mpk_obj.id, "OCZEKUJE"
-                ),  # Pobieramy status z mapy
+            # Pobranie lokalizacji
+            first_location = record.mpk_number.locations.first()
+            loc_name = first_location.obj_name if first_location else "Brak nazwy"
+
+            grouped_data[group_id] = {
+                "mpk_id": record.mpk_number_id,
+                "mpk_number": record.mpk_number.mpk_number,
+                "location": loc_name,
+                "year": record.year,
+                "month": record.month,
+                "month_name": formats.date_format(rec_date_obj, "F"),
+                "status": current_status,
                 "fractions": {},
             }
-
+        
         wf = record.waste_fraction
         name = wf.fraction_type.name if wf.fraction_type else "Inne"
         capacity = getattr(wf, "capacity", "")
         capacity_str = f"{capacity}L" if capacity else ""
+        
+        # Unikalny klucz grupujący pojemniki tego samego typu w jednym boxie MPK
         group_key = f"{name}_{capacity}"
 
-        if group_key not in grouped_data[mpk_name]["fractions"]:
+        # Jeśli danej frakcji jeszcze nie ma w kafelkach tego miesiąca - stwórz ją
+        if group_key not in grouped_data[group_id]["fractions"]:
             lower_name = name.lower()
-            if "zmieszane" in lower_name:
-                icon, color = "bi-trash3-fill", "secondary"
-            elif any(x in lower_name for x in ["plastik", "metal", "tworzywa"]):
-                icon, color = "bi-recycle", "warning"
-            elif any(x in lower_name for x in ["papier", "makulatura"]):
-                icon, color = "bi-box-seam", "primary"
-            elif "szk" in lower_name:
-                icon, color = "bi-cup-straw", "success"
-            elif "bio" in lower_name:
-                icon, color = "bi-tree-fill", "success"
-            else:
-                icon, color = "bi-trash", "dark"
+            if "zmieszane" in lower_name: icon, color = "bi-trash3-fill", "secondary"
+            elif any(x in lower_name for x in ["plastik", "metal", "tworzywa"]): icon, color = "bi-recycle", "warning"
+            elif any(x in lower_name for x in ["papier", "makulatura"]): icon, color = "bi-box-seam", "primary"
+            elif "szk" in lower_name: icon, color = "bi-cup-straw", "success"
+            elif "bio" in lower_name: icon, color = "bi-tree-fill", "success"
+            else: icon, color = "bi-trash", "dark"
 
-            grouped_data[mpk_name]["fractions"][group_key] = {
+            grouped_data[group_id]["fractions"][group_key] = {
                 "name": name,
                 "capacity": capacity_str,
-                "total_collected": 0,
+                "qty": 0,
                 "icon": icon,
                 "color": color,
             }
+        
+        # Zsumuj ilość zgłoszeń do wybranego kafelka
+        grouped_data[group_id]["fractions"][group_key]["qty"] += record.quantity
 
-        grouped_data[mpk_name]["fractions"][group_key]["total_collected"] += (
-            record.quantity
-        )
-
+    # 4. Formatowanie przed wysłaniem do HTML
     final_grouped_data = []
-    for mpk_name, data in grouped_data.items():
-        fractions_list = list(data["fractions"].values())
-        fractions_list.sort(key=lambda x: (x["name"], x["capacity"]))
+    for data in grouped_data.values():
+        # Zamień słownik frakcji z powrotem na listę i posortuj
+        data["fractions"] = sorted(data["fractions"].values(), key=lambda x: (x["name"], x["capacity"]))
+        final_grouped_data.append(data)
 
-        final_grouped_data.append(
-            {
-                "mpk_name": mpk_name,
-                "mpk_id": data["mpk_id"],
-                "status": data["status"],
-                "fractions": fractions_list,
-            }
-        )
+    sorted_summary = sorted(final_grouped_data, key=lambda x: (-x["year"], -x["month"], x["mpk_number"]))
 
-    final_grouped_data.sort(key=lambda x: x["mpk_name"])
-
-    return render(
-        request,
-        "reports/monthly_summary.html",
-        {
-            "form": form,
-            "grouped_data": final_grouped_data,
-            "selected_month": selected_month,
-            "selected_year": selected_year,
-        },
-    )
+    return render(request, "reports/monthly_summary.html", {
+        "form": form,
+        "summary_data": sorted_summary,
+        "selected_month": selected_month,
+        "selected_year": selected_year,
+    })
 
 
 def _prepare_verification_data(mpk_id, month, year, confirmation):

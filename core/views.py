@@ -7,6 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.http import HttpResponse
 import pandas as pd
+
+from scheduling.services import get_next_pickup_date
 from .models import DataTransferLog
 from django.db import transaction
 from .services import generate_auditlog_export
@@ -21,7 +23,7 @@ from core.forms import GlobalAnnouncementForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.utils import timezone
+from django.utils import timezone, formats
 import datetime
 from django.contrib.auth import get_user_model
 import urllib.parse
@@ -389,44 +391,74 @@ def draft_email_coordinators_view(request):
 
     return render(request, 'core/email_draft.html', {'mailto_url': mailto_url, 'title': 'E-mail do Koordynatorów'})
 
-
 @login_required
 def home_view(request):
     """Widok strony głównej (Dashboard)."""
     context = {}
+    today = timezone.now()
+    today_date = today.date()
+    first_day_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
+    # 1. UPRAWNIENIA - Pobieramy MPK, do których użytkownik ma dostęp
+    allowed_mpk_ids = []
     if not request.user.is_superuser:
-        recent_pickups = Pickup.objects.filter(reporter=request.user).order_by('-created_at')[:3]
-        context['recent_pickups'] = recent_pickups
-    else:
-        recent_pickups = Pickup.objects.all().order_by('-created_at')[:3]
-        context['recent_pickups'] = recent_pickups
+        allowed_mpk_ids = Permission.objects.filter(
+            user=request.user, active=True
+        ).values_list('mpk_number_id', flat=True)
 
-    # Lista do wyświetlenia na home — tylko nieprzeczytane (max 5)
+    # 2. OSTATNIE ZGŁOSZENIA (Dla nowej karty "Historia")
+    if request.user.is_superuser:
+        recent_pickups = Pickup.objects.all().order_by('-created_at')[:5]
+    else:
+        recent_pickups = Pickup.objects.filter(
+            mpk_number_id__in=allowed_mpk_ids
+        ).order_by('-created_at')[:5]
+    context['recent_pickups'] = recent_pickups
+
+    # 3. POWIADOMIENIA
     context['unread_notifications'] = Notification.objects.filter(
         user=request.user,
         is_read=False
     ).order_by('-created_at')[:5]
+    context['now'] = today
 
-    # Czas
-    context['now'] = timezone.now()
-
-    # ── KPI ──────────────────────────────────────────────────────────────
-    today = timezone.now()
-    first_day_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-    # Zgłoszenia w bieżącym miesiącu (z uwzględnieniem uprawnień)
+    # 4. KPI & STATYSTYKI ZGŁOSZEŃ
+    last_day_prev_month = first_day_month - datetime.timedelta(days=1)
+    first_day_prev_month = last_day_prev_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
     if request.user.is_superuser:
         pickups_qs = Pickup.objects.filter(reported_at__gte=first_day_month)
+        active_pickups_for_date = Pickup.objects.filter(
+            status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
+        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type')
+        pickups_prev_qs = Pickup.objects.filter(
+            reported_at__gte=first_day_prev_month, 
+            reported_at__lt=first_day_month
+        )
     else:
-        from users.models import Permission as MPKPermission
-        allowed_mpk_ids = MPKPermission.objects.filter(
-            user=request.user, active=True
-        ).values_list('mpk_number_id', flat=True)
         pickups_qs = Pickup.objects.filter(
             reported_at__gte=first_day_month,
             mpk_number_id__in=allowed_mpk_ids
         )
+        pickups_prev_qs = Pickup.objects.filter(
+            reported_at__gte=first_day_prev_month,
+            reported_at__lt=first_day_month,
+            mpk_number_id__in=allowed_mpk_ids
+        )
+        active_pickups_for_date = Pickup.objects.filter(
+            mpk_number_id__in=allowed_mpk_ids,
+            status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
+        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type')
+
+# Obliczanie trendu procentowego
+    current_count = pickups_qs.count()
+    prev_count = pickups_prev_qs.count()
+
+    if prev_count > 0:
+        trend_pct = round(((current_count - prev_count) / prev_count) * 100)
+    else:
+        # Jeśli w poprzednim miesiącu było 0, a teraz jest >0, to wzrost wynosi 100%
+        trend_pct = 100 if current_count > 0 else 0
 
     context['kpi'] = {
         'pickups_this_month': pickups_qs.count(),
@@ -435,13 +467,36 @@ def home_view(request):
             month=first_day_month.date().replace(day=1),
             status='OCZEKUJE'
         ).count(),
-        'current_month_name': today.strftime('%B %Y'),
+        'current_month_name': formats.date_format(today, "F Y"),
+        'pickups_trend_pct': trend_pct,
     }
 
-    # Dane do mini-wykresu słupkowego — ostatnie 5 miesięcy
+    # 5. NOWA LOGIKA: OBLICZANIE NASTĘPNEGO ODBIORU
+    closest_date = None
+    next_pickup_data = None
+
+    for pickup in active_pickups_for_date:
+        for bin in pickup.waste_bins.all():
+            planned_date = get_next_pickup_date(
+                fraction_type=bin.waste_fraction.fraction_type,
+                submitted_at=pickup.reported_at
+            )
+            
+            if planned_date and planned_date >= today_date:
+                if closest_date is None or planned_date < closest_date:
+                    closest_date = planned_date
+                    next_pickup_data = {
+                        'scheduled_date': planned_date,
+                        'fraction_name': bin.waste_fraction.fraction_type.name,
+                        'mpk_name': pickup.mpk_number.mpk_number if pickup.mpk_number else "Nieznany MPK"
+                    }
+
+    # Dodajemy wyliczone dane do kontekstu dla szablonu home.html
+    context['next_pickup'] = next_pickup_data
+
+    # 6. WYKRES (Ostatnie 5 miesięcy)
     monthly_counts = []
     for i in range(4, -1, -1):
-        # Cofamy się o i miesięcy
         target = (first_day_month - datetime.timedelta(days=i * 28)).replace(day=1)
         if target.month == 12:
             next_month = target.replace(year=target.year + 1, month=1)
@@ -462,29 +517,23 @@ def home_view(request):
     max_count = max((m['count'] for m in monthly_counts), default=1)
     context['monthly_max'] = max_count if max_count > 0 else 1
 
-    # Globalne ogłoszenie
+    # 7. INNE DANE
     global_announcement = Notification.objects.filter(is_global=True, is_active=True).exclude(read_by=request.user).order_by('-created_at').first()
     context['global_announcement'] = global_announcement
 
-    # conflict_count: liczba niepotwierdzonych/skonfliktowanych miesięcy (status in ['KONFLIKT', 'OCZEKUJE'])
     conflict_qs = MonthlyConfirmation.objects.filter(status__in=['KONFLIKT', 'OCZEKUJE'])
     if not request.user.is_staff and not request.user.is_superuser:
-        user_mpks = Permission.objects.filter(user=request.user, active=True).values_list('mpk_number', flat=True)
-        conflict_qs = conflict_qs.filter(mpk_number__in=user_mpks)
+        conflict_qs = conflict_qs.filter(mpk_number__in=allowed_mpk_ids)
     context['conflict_count'] = conflict_qs.count()
 
-    # active_pickups_count: liczba aktywnych zleceń użytkownika w bieżącym miesiącu
-    current_month_start = context['now'].replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     context['active_pickups_count'] = Pickup.objects.filter(
         reporter=request.user,
-        created_at__gte=current_month_start
+        created_at__gte=first_day_month
     ).count()
 
-    # last_import_date
     last_import = DataTransferLog.objects.filter(action='IMPORT').order_by('-created_at').first()
     context['last_import_date'] = last_import.created_at if last_import else None
 
-    # system_healthy: boolean sprawdzający ostatnie błędy w DataTransferLog
     last_log = DataTransferLog.objects.order_by('-created_at').first()
     context['system_healthy'] = last_log.status != 'ERROR' if last_log else True
 
