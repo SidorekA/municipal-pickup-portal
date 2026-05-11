@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} | System Zarządzania Odpadami{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
+        <div class="card-header bg-success text-white text-center">
+            <h4 class="mb-0"><i class="bi bi-envelope-check me-2"></i>Gotowe do wysłania</h4>
+        </div>
+        <div class="card-body text-center p-5">
+            <i class="bi bi-envelope-arrow-up display-1 text-muted mb-4 d-block"></i>
+            <h5 class="card-title mb-4">Draft wiadomości został przygotowany.</h5>
+            <p class="text-muted mb-4">Kliknij poniższy przycisk, aby otworzyć domyślny program pocztowy z wypełnionymi adresatami i treścią wiadomości.</p>
+
+            <a href="{{ mailto_url }}" class="btn btn-success btn-lg px-5">
+                <i class="bi bi-box-arrow-up-right me-2"></i>Otwórz program pocztowy
+            </a>
+
+            <div class="mt-4">
+                <a href="{% url 'core:admin_tasks' %}" class="text-decoration-none text-muted">
+                    <i class="bi bi-arrow-left me-1"></i>Powrót do narzędzi administracyjnych
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

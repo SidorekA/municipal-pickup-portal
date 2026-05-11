@@ -33,10 +33,15 @@ class SummaryCollectionSchedule(CoreModel):
     )
 
     class Meta:
-        db_table = 'summary_collection_schedule'
         verbose_name = 'Zestawienie odbioru'
         verbose_name_plural = 'Zestawienia odbiorów'
         ordering = ['-year', '-month', 'mpk_number']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['mpk_number', 'year', 'month', 'waste_fraction'],
+                name='uniq_summary_mpk_year_month_fraction'
+            )
+        ]
 
     def __str__(self):
         return f'{self.mpk_number} {self.year}/{self.month:02d} – {self.waste_fraction.fraction_type.name}'

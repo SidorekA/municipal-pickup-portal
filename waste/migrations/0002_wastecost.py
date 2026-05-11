@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('waste', '0001_initial'),
+        ('reports', '0003_remove_monthlyconfirmation_notes_delete_cost'),
     ]
 
     operations = [

@@ -58,7 +58,7 @@ class WasteFraction(CoreModel):
 class WasteCost(CoreModel):
     """Koszt za frakcję odpadów w danym okresie."""
     waste_fraction = models.ForeignKey(
-        'WasteFraction', on_delete=models.PROTECT,
+        WasteFraction, on_delete=models.PROTECT,
         related_name='costs', verbose_name='Frakcja'
     )
     cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Koszt (PLN)')
@@ -66,10 +66,9 @@ class WasteCost(CoreModel):
     date_to = models.DateField(null=True, blank=True, verbose_name='Obowiązuje do')
 
     class Meta:
-        db_table = 'costs'
         verbose_name = 'Koszt frakcji'
         verbose_name_plural = 'Koszty frakcji'
         ordering = ['-date_from', 'waste_fraction']
 
     def __str__(self):
-        return f'{self.waste_fraction.code} – {self.cost} PLN (od {self.date_from})'
+        return f'{self.waste_fraction.fraction_type.code} – {self.cost} PLN (od {self.date_from})'

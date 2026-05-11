@@ -75,3 +75,80 @@ def generate_pickup_excel(pickup) -> bytes:
     wb.save(buffer)
     buffer.seek(0)
     return buffer.getvalue()
+
+# pickups/excel_generator.py
+
+def generate_mpk_history_excel(new_pickup, all_pickups) -> bytes:
+    """
+    Generuje Excel z historią wszystkich zgłoszeń dla MPK.
+    Najnowsze zgłoszenie na górze (wiersz 2, zaraz pod nagłówkiem).
+    
+    new_pickup:   właśnie dodane zgłoszenie (do podświetlenia)
+    all_pickups:  QuerySet wszystkich zgłoszeń dla tego MPK
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Historia_zgloszen"
+
+    # Nagłówki
+    for col_idx, header in enumerate(HEADERS, 1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+
+    # Style do podświetlenia nowego wiersza
+    from openpyxl.styles import PatternFill, Font as OXLFont
+    highlight_fill = PatternFill(
+        start_color="D9EAD3",  # jasna zieleń
+        end_color="D9EAD3",
+        fill_type="solid"
+    )
+    highlight_font = OXLFont(bold=True)
+
+    # Wiersze — newest first dzięki order_by w QuerySet
+    for row_idx, pickup in enumerate(all_pickups, start=2):
+        waste_bins = list(
+            pickup.waste_bins
+            .select_related('waste_fraction__fraction_type')
+            .all()
+        )
+
+        location = pickup.location
+        row_data = {
+            'numer_mpk':                    pickup.mpk_number.mpk_number,
+            'nazwa_komorki_organizacyjnej': location.org_unit_name,
+            'nazwa_obiektu':                location.obj_name,
+            'lokalizacja':                  location.localization,
+            'numer_telefonu':               getattr(pickup, 'contact_phone', ''),
+            'Utworzony':                    pickup.reported_at.strftime('%Y-%m-%d %H:%M'),
+            'Utworzone przez': (
+                pickup.reporter.get_full_name() or str(pickup.reporter)
+            ),
+            'informacje_dodatkowe':         getattr(pickup, 'note', '') or '',
+        }
+
+        for col_name, keyword, capacity in FRACTION_COLUMNS:
+            quantity = next(
+                (b.quantity for b in waste_bins
+                 if _dopasuj_frakcje(b, keyword, capacity)),
+                0
+            )
+            row_data[col_name] = quantity if quantity > 0 else ''
+
+        ws.append([row_data.get(h, '') for h in HEADERS])
+
+        # Podświetl nowe zgłoszenie
+        if pickup.pk == new_pickup.pk:
+            for col_idx in range(1, len(HEADERS) + 1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.fill = highlight_fill
+                cell.font = highlight_font
+
+    # Szerokość kolumn
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        ws.column_dimensions[col[0].column_letter].width = max(max_len + 2, 14)
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()

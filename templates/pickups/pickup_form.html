@@ -1,67 +1,136 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static widget_tweaks %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5 mb-5">
-    <h2 class="mb-4">♻️ Nowe zgłoszenie odbioru odpadów</h2>
+<div class="container mt-5 mb-5 pickup-form-container">
+    <h2 class="mb-4 fw-bold text-dark">♻️ Nowe zgłoszenie odbioru odpadów</h2>
     
     <form method="POST" id="pickup-form">
         {% csrf_token %} 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light fw-bold">Dane logistyczne</div>
-            <div class="card-body row">
-                
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Numer MPK</label>
-                    {{ form.mpk_number }}
-                    <div class="text-danger small">{{ form.mpk_number.errors }}</div>
-                </div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Lokalizacja</label>
-                    {{ form.location }}
-                    <div class="text-danger small">{{ form.location.errors }}</div>
-                </div>
+        <div class="row g-4">
+            <!-- Lewa kolumna: Dane logistyczne -->
+            <div class="col-lg-5">
+                <div class="card soft-card h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4 text-dark">Dane logistyczne</h5>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Telefon kontaktowy dla kierowcy</label>
-                    {{ form.contact_phone }}
-                    <div class="text-danger small">{{ form.contact_phone.errors }}</div>
-                </div>
+                        <div class="mb-4">
+                            <div class="input-group {% if form.mpk_number.errors %}border-danger{% endif %}">
+                                <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2">
+                                    <i class="bi bi-hash fs-5"></i>
+                                </span>
+                                {% if form.mpk_number.errors %}
+                                    {% render_field form.mpk_number class="form-select custom-input is-invalid" %}
+                                {% else %}
+                                    {% render_field form.mpk_number class="form-select custom-input" %}
+                                {% endif %}
+                            </div>
+                            {% if form.mpk_number.errors %}
+                                <div class="text-danger small mt-1 ps-2">{{ form.mpk_number.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="col-md-12 mb-3">
-                    <label class="form-label">Dodatkowe uwagi (opcjonalnie)</label>
-                    {{ form.note }}
-                    <div class="text-danger small">{{ form.note.errors }}</div>
+                        <div class="mb-4">
+                            <div class="input-group {% if form.location.errors %}border-danger{% endif %}">
+                                <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2">
+                                    <i class="bi bi-geo-alt fs-5"></i>
+                                </span>
+                                {% if form.location.errors %}
+                                    {% render_field form.location class="form-select custom-input is-invalid" data-selected=form.location.value %}
+                                {% else %}
+                                    {% render_field form.location class="form-select custom-input" data-selected=form.location.value %}
+                                {% endif %}
+                            </div>
+                            {% if form.location.errors %}
+                                <div class="text-danger small mt-1 ps-2">{{ form.location.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="input-group {% if form.contact_phone.errors %}border-danger{% endif %}">
+                                <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2">
+                                    <i class="bi bi-telephone fs-5"></i>
+                                </span>
+                                {% if form.contact_phone.errors %}
+                                    {% render_field form.contact_phone class="form-select custom-input is-invalid" %}
+                                {% else %}
+                                    {% render_field form.contact_phone class="form-select custom-input" %}
+                                {% endif %}
+                            </div>
+                            {% if form.contact_phone.errors %}
+                                <div class="text-danger small mt-1 ps-2">{{ form.contact_phone.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2 align-items-start pt-2">
+                                    <i class="bi bi-chat-left-text fs-5"></i>
+                                </span>
+                                {% render_field form.note class="form-control custom-input" placeholder="Dodatkowe uwagi (opcjonalnie)" rows="3" %}
+                            </div>
+                            {% if form.note.errors %}
+                                <div class="text-danger small mt-1 ps-2">{{ form.note.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-5">
+                            <a href="/" class="btn btn-outline-secondary px-4 rounded-pill">Anuluj</a>
+                            <button type="submit" class="btn btn-success px-5 fw-bold rounded-pill btn-submit shadow-sm">
+                                Wyślij Zgłoszenie
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light fw-bold">Wybór pojemników do odbioru</div>
-            <div class="card-body">
-                
-                <p class="text-muted small mb-0" id="bins-instruction">
-                    <i class="bi bi-info-circle me-1"></i> Wybierz najpierw Lokalizację powyżej, aby zobaczyć przypisane do niej pojemniki.
-                </p>
-                <div id="visual-bins-container" class="row g-3 mt-1">
+            <!-- Prawa kolumna: Wybór pojemników -->
+            <div class="col-lg-7">
+                <div class="card soft-card h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4 text-dark">Wybór pojemników do odbioru</h5>
+
+                        <!-- Empty State -->
+                        <div id="bins-instruction" class="empty-state text-center p-5">
+                            <div class="empty-state-icon mb-3">
+                                <i class="bi bi-inboxes"></i>
+                            </div>
+                            <h5 class="text-muted fw-bold">Wybierz lokalizację</h5>
+                            <p class="text-muted mb-0">Wybierz lokalizację z panelu po lewej stronie, aby załadować dostępne pojemniki.</p>
+                        </div>
+
+                        <!-- Container for dynamic bins -->
+                        <div id="visual-bins-container" class="row g-3 {% if messages %}
+                            {% for message in messages %}
+                                {% if 'Musisz wybrać ilość przynajmniej jednego pojemnika' in message.message %}bins-error{% endif %}
+                            {% endfor %}
+                        {% endif %}">
+                        </div>
+
+                    </div>
                 </div>
-
             </div>
-        </div>
-        <div class="text-end">
-            <a href="/" class="btn btn-light me-2">Anuluj</a>
-            <button type="submit" class="btn btn-success px-4 fw-bold">Wyślij Zgłoszenie</button>
         </div>
     </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/dynamic_bins.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        window.PREVIOUS_POST_DATA = {};
+        {% if request.method == "POST" %}
+            {% for key, value in request.POST.items %}
+                window.PREVIOUS_POST_DATA["{{ key|escapejs }}"] = "{{ value|escapejs }}";
+            {% endfor %}
+        {% endif %}
+    </script>
+    <script src="{% static 'js/dynamic_bins.js' %}"></script> 
 {% endblock %}

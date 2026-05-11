@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mój profil | System Zarządzania Odpadami{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 860px; margin-top: 2rem; margin-bottom: 4rem;">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div style="width:56px;height:56px;border-radius:50%;background:#198754;
+                    display:flex;align-items:center;justify-content:center;
+                    color:#fff;font-size:1.4rem;font-weight:600;flex-shrink:0;">
+            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+        </div>
+        <div>
+            <h2 class="mb-0 fw-bold">{{ request.user.get_full_name|default:request.user.username }}</h2>
+            <p class="text-muted mb-0 small">{{ request.user.username }}</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-person me-2"></i>Dane konta
+                </div>
+                <div class="card-body">
+                    <form method="post" id="profile-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="profile">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small text-uppercase text-muted">
+                                    {{ user_form.first_name.label }}
+                                </label>
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="text-danger small">{{ user_form.first_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small text-uppercase text-muted">
+                                    {{ user_form.last_name.label }}
+                                </label>
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="text-danger small">{{ user_form.last_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">
+                                {{ user_form.email.label }}
+                            </label>
+                            {{ user_form.email }}
+                        </div>
+
+                        <hr class="my-4 opacity-25">
+                        <h6 class="fw-bold mb-3 text-muted">Dane jednostki organizacyjnej</h6>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold small text-uppercase text-muted">
+                                    {{ profile_form.department_short.label }}
+                                </label>
+                                {{ profile_form.department_short }}
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold small text-uppercase text-muted">
+                                    {{ profile_form.department_name.label }}
+                                </label>
+                                {{ profile_form.department_name }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">
+                                {{ profile_form.phone.label }}
+                            </label>
+                            {{ profile_form.phone }}
+                            <div class="form-text">
+                                Numer używany domyślnie przy tworzeniu zgłoszeń.
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success fw-bold px-4">
+                                <i class="bi bi-check-lg me-1"></i>Zapisz zmiany
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card mb-4">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-info-circle me-2"></i>Informacje
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted small">Login</span>
+                            <span class="small fw-semibold">{{ request.user.username }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted small">Aktywny od</span>
+                            <span class="small">{{ request.user.date_joined|date:"d.m.Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted small">Rola</span>
+                            <span class="small">
+                                {% if request.user.is_superuser %}
+                                    <span class="badge bg-danger">Administrator</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Użytkownik</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-key me-2"></i>Bezpieczeństwo
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Regularna zmiana hasła zwiększa bezpieczeństwo konta.
+                    </p>
+                    <a href="{% url 'users:change_password' %}" class="btn btn-outline-secondary w-100">
+                        Zmień hasło
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-shield-check me-2"></i>Uprawnienia MPK
+                </div>
+                <div class="card-body p-0">
+                    {% if permissions %}
+                        <ul class="list-group list-group-flush">
+                            {% for perm in permissions %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="small fw-semibold">MPK {{ perm.mpk_number }}</span>
+                                    <span class="badge bg-success rounded-pill">{{ perm.get_role_display }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="p-3 text-muted small text-center">
+                            Brak przypisanych uprawnień.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

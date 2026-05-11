@@ -29,10 +29,24 @@
             <i class="bi bi-person-check fs-3 me-3"></i>
             <div>
                 <h6 class="mb-0 fw-bold">To zestawienie zostało już przetworzone.</h6>
-                <div>Potwierdzone przez: {{ confirmation.created_by.get_full_name|default:confirmation.created_by.username }} dnia {{ confirmation.created_at|date:"d.m.Y H:i" }}</div>
+                <div>Potwierdzone przez:
+                    {% if confirmation.created_by %}
+                        {{ confirmation.created_by.get_full_name|default:confirmation.created_by.username }}
+                    {% else %}
+                        System (import automatyczny)
+                    {% endif %}
+                        dnia {{ confirmation.created_at|date:"d.m.Y H:i" }}
+                </div>
                 {% if confirmation.status == 'ZATWIERDZONE' %}
-                <div>Zatwierdzone przez: {{ confirmation.approved_by.get_full_name|default:confirmation.approved_by.username }} dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}</div>
-                {% endif %}
+                <div>Zatwierdzone przez:
+                    {% if confirmation.approved_by %}
+                        {{ confirmation.approved_by.get_full_name|default:confirmation.approved_by.username }}
+                    {% else %}
+                        Nieznany
+                    {% endif %}
+                    dnia {{ confirmation.approved_at|date:"d.m.Y H:i" }}
+                </div>
+                    {% endif %}
             </div>
         </div>
         {% endif %}
@@ -50,8 +64,10 @@
                 </thead>
                 <tbody class="data-table__body">
                     {% for item in comparison_data %}
-                    <tr class="data-table__row fraction-row {% if item.is_conflict %}bg-light-warning{% endif %}" 
+                    <tr class="data-table__row fraction-row {% if item.is_conflict %}bg-light-warning border-warning{% endif %}"
+                        data-fraction-id="{{ item.fraction.id }}"
                         data-name="{{ item.fraction.fraction_type.name }} {{ item.fraction.capacity }}L"
+                        data-supplier-qty="{{ item.collected_qty }}"
                         data-reported="{{ item.collected_qty }}">
                         <td class="data-table__td ps-4 py-3">
                             <strong>{{ item.fraction.fraction_type.name }}</strong><br>
@@ -65,12 +81,23 @@
                                    class="form-control form-control-sm confirmed-qty-input {% if item.is_conflict %}border-warning{% endif %}"
                                    {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
                         </td>
-                        <td class="data-table__td pe-4">
-                            <input type="text" name="note_{{ item.fraction.id }}" 
-                                   value="{{ item.note }}" 
-                                   class="form-control form-control-sm note-input" 
-                                   placeholder="Wymagane przy rozbieżności..."
-                                   {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
+                        <td class="data-table__td pe-4" data-note-cell="{{ item.fraction.id }}">
+                            {% if item.is_conflict or item.note %}
+                            <div class="note-field-wrap note-field-wrap--visible">
+                            {% else %}
+                            <div class="note-field-wrap note-field-wrap--hidden">
+                            {% endif %}
+                                <input type="text"
+                                       name="note_{{ item.fraction.id }}"
+                                       value="{{ item.note }}"
+                                       class="form-control form-control-sm note-input"
+                                       placeholder="Wymagane przy zmianie ilości..."
+                                       {% if confirmation.status == 'ZATWIERDZONE' %}readonly{% endif %}>
+                                <div class="note-required-hint" aria-live="polite">
+                                    <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                                    Wymagane — wpisz powód różnicy
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
