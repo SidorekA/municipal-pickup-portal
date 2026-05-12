@@ -92,23 +92,24 @@
                         {% if user.is_authenticated %}
                             <a href="/"
                                title="Powiadomienia"
+                               aria-label="Powiadomienia"
                                style="text-decoration:none;
                                       color:inherit;
                                       position:relative">
-                                <i class="bi bi-bell wf-bell-icon"></i>
+                                <i class="bi bi-bell wf-bell-icon" aria-hidden="true"></i>
                                 {% if unread_notifications_count %}
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                           style="font-size:0.6rem;
-                                                 padding:2px 4px">{{ unread_notifications_count }}</span>
+                                                 padding:2px 4px">{{ unread_notifications_count }}<span class="visually-hidden"> nieprzeczytanych powiadomień</span></span>
                                 {% endif %}
                             </a>
-                            <a href="/konto/profil/" style="text-decoration:none; color:inherit;">
-                                <div class="wf-avatar wf-topbar-avatar">{{ user.first_name|first|default:user.username|first|upper }}</div>
+                            <a href="/konto/profil/" title="Profil użytkownika" aria-label="Profil użytkownika" style="text-decoration:none; color:inherit;">
+                                <div class="wf-avatar wf-topbar-avatar" aria-hidden="true">{{ user.first_name|first|default:user.username|first|upper }}</div>
                             </a>
                             <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link text-muted p-0">
-                                    <i class="bi bi-box-arrow-right"></i>
+                                <button type="submit" class="btn btn-link text-muted p-0" title="Wyloguj się" aria-label="Wyloguj się">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </form>
                         {% else %}
