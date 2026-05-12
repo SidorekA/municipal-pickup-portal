@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (data.contacts && data.contacts.length > 0) {
                     let tileContainer = document.createElement('div');
                     tileContainer.id = 'contact-tiles';
-                    tileContainer.className = 'contact-tiles-wrap mb-3';
+                    tileContainer.className = 'contact-tiles-wrap d-flex flex-wrap gap-2 align-items-center align-self-center';
                     
                     if (phoneSelect) {
                         phoneSelect.style.display = 'none'; // Ukrywamy klasyczny select

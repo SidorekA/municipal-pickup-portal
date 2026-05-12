@@ -1,0 +1,721 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Zestawienie Kosztowe | System Zarządzania Odpadami{% endblock %}
+{% block extra_css %}
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css"
+          rel="stylesheet">
+    <style>
+    /* ── Karta sekcji ────────────────────────────────────────────── */
+    .cost-section-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        overflow: hidden;
+    }
+
+    .cost-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid #E5E7EB;
+        background: #F9FAFB;
+    }
+
+    .cost-section-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0;
+    }
+
+    /* ── Legenda wykresu ─────────────────────────────────────────── */
+    .chart-legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #6B7280;
+        font-weight: 500;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    /* ── Wrapper wykresu ─────────────────────────────────────────── */
+    .chart-wrapper {
+        padding: 24px;
+        position: relative;
+        min-height: 320px;
+    }
+
+    /* ── Tabela kosztów ──────────────────────────────────────────── */
+    .cost-table thead th {
+        background: #F9FAFB;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #6B7280;
+        padding: 12px 16px;
+        border-bottom: 2px solid #E5E7EB;
+        white-space: nowrap;
+    }
+
+    .cost-table tbody td {
+        padding: 13px 16px;
+        font-size: 14px;
+        color: #374151;
+        border-bottom: 1px solid #F3F4F6;
+        vertical-align: middle;
+    }
+
+    .cost-table tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    .cost-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cost-table td.fee-cell {
+        font-weight: 600;
+        color: #166534;
+        text-align: right;
+    }
+
+    .cost-table th.text-right {
+        text-align: right;
+    }
+
+    /* ── Frakcja badge ───────────────────────────────────────────── */
+    .fraction-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .fraction-badge--mixed    { background: #374151; color: #fff; }
+    .fraction-badge--paper    { background: #DBEAFE; color: #1E40AF; }
+    .fraction-badge--plastic  { background: #FEF9C3; color: #92400E; }
+    .fraction-badge--glass    { background: #D1FAE5; color: #166534; }
+    .fraction-badge--bio      { background: #ECFDF5; color: #065F46; }
+    .fraction-badge--default  { background: #F3F4F6; color: #374151; }
+
+    /* ── Boczne podsumowanie ─────────────────────────────────────── */
+    .summary-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .summary-total-card {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .summary-total-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #166534;
+        margin-bottom: 6px;
+    }
+
+    .summary-total-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #14532D;
+        line-height: 1;
+    }
+
+    .summary-total-unit {
+        font-size: 15px;
+        color: #166534;
+        margin-left: 4px;
+    }
+
+    .summary-meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .summary-meta-card {
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+    .summary-meta-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6B7280;
+        margin-bottom: 4px;
+    }
+
+    .summary-meta-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    /* ── Top MPK lista ───────────────────────────────────────────── */
+    .top-mpk-list {
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .top-mpk-header {
+        padding: 14px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border-bottom: 1px solid #E5E7EB;
+        background: #F9FAFB;
+    }
+
+    .top-mpk-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .top-mpk-item:last-child { border-bottom: none; }
+
+    .top-mpk-rank {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-right: 10px;
+    }
+
+    .rank-1 { background: #FEE2E2; color: #991B1B; }
+    .rank-2 { background: #FEF9C3; color: #92400E; }
+    .rank-3 { background: #F3F4F6; color: #374151; }
+
+    .top-mpk-cost {
+        font-weight: 600;
+        font-size: 13px;
+        color: #111827;
+    }
+
+    /* ── Brak danych ─────────────────────────────────────────────── */
+    .empty-chart-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 260px;
+        color: #9CA3AF;
+        gap: 8px;
+    }
+
+    /* ── Missing cost warning ────────────────────────────────────── */
+    .missing-cost-row td { background: #FFF7ED !important; }
+    .missing-cost-row td.fee-cell { color: #92400E !important; }
+    </style>
+{% endblock %}
+{% block breadcrumb %}
+    <a href="/" class="wf-breadcrumb-item">Dashboard</a>
+    <span class="material-symbols-outlined"
+          style="font-size:14px;
+                 color:#9CA3AF">chevron_right</span>
+    <span class="wf-breadcrumb-active">Zestawienie Kosztowe</span>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid" style="max-width: 1400px;">
+        {# ── Nagłówek strony ──────────────────────────────────────────────── #}
+        <div class="wf-topbar"
+             style="background:transparent;
+                    border:none;
+                    padding: 0 0 20px 0">
+            <div>
+                <h1 style="font-size:22px;
+                           font-weight:700;
+                           color:#111827;
+                           margin:0 0 3px">
+                    <span class="material-symbols-outlined"
+                          style="font-size:22px;
+                                 vertical-align:-3px;
+                                 color:#166534">payments</span>
+                    Zestawienie Kosztowe
+                </h1>
+                <p style="font-size:13px; color:#6B7280; margin:0;">
+                    Koszty odbioru odpadów na podstawie zestawień dostawcy i aktualnych stawek.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'core:admin_task_cost_report' %}{% if request.GET.year %}?year={{ request.GET.year }}{% if request.GET.month %}&month={{ request.GET.month }}{% endif %}{% if request.GET.mpk_number_id %}&mpk_number_id={{ request.GET.mpk_number_id }}{% endif %}&format=xlsx{% endif %}"
+                   class="wf-btn-outline">
+                    <span class="material-symbols-outlined" style="font-size:16px;">download</span>
+                    Eksportuj XLSX
+                </a>
+            </div>
+        </div>
+        {# ── Filtry ───────────────────────────────────────────────────────── #}
+        <div class="cost-section-card mb-4">
+            <div style="padding: 18px 24px;">
+                <form method="get" id="costFilterForm" class="row g-3 align-items-end">
+                    <div class="col-12 col-sm-auto">
+                        <label class="small fw-bold text-uppercase text-muted mb-1 d-block">Rok</label>
+                        <div class="input-group flex-nowrap shadow-sm rounded filter-group-date">
+                            <button class="btn btn-list-step"
+                                    type="button"
+                                    data-target="id_year"
+                                    data-step="-1">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <select name="year"
+                                    id="id_year"
+                                    class="report-filter__select form-select"
+                                    onchange="document.getElementById('costFilterForm').submit()">
+                                <option value="">Wszystkie</option>
+                                {% for y in available_years %}
+                                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-list-step"
+                                    type="button"
+                                    data-target="id_year"
+                                    data-step="1">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-auto">
+                        <label class="small fw-bold text-uppercase text-muted mb-1 d-block">Miesiąc</label>
+                        <div class="input-group flex-nowrap shadow-sm rounded filter-group-date">
+                            <button class="btn btn-list-step"
+                                    type="button"
+                                    data-target="id_month"
+                                    data-step="-1">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <select name="month"
+                                    id="id_month"
+                                    class="report-filter__select form-select"
+                                    onchange="document.getElementById('costFilterForm').submit()">
+                                <option value="">Wszystkie</option>
+                                {% for m_num, m_name in months %}
+                                    <option value="{{ m_num }}"
+                                            {% if m_num == selected_month %}selected{% endif %}>{{ m_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-list-step"
+                                    type="button"
+                                    data-target="id_month"
+                                    data-step="1">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-auto">
+                        <label class="small fw-bold text-uppercase text-muted mb-1 d-block">Numer MPK</label>
+                        <div class="input-group flex-nowrap shadow-sm rounded filter-group-mpk">
+                            <button class="btn btn-list-step"
+                                    type="button"
+                                    data-target="id_mpk"
+                                    data-step="-1">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <select name="mpk_number_id"
+                                    id="id_mpk"
+                                    class="report-filter__select form-select"
+                                    onchange="document.getElementById('costFilterForm').submit()">
+                                <option value="">Wszystkie MPK</option>
+                                {% for mpk in mpk_numbers %}
+                                    <option value="{{ mpk.id }}"
+                                            {% if mpk.id == selected_mpk_id %}selected{% endif %}>
+                                        {{ mpk.mpk_number }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-list-step"
+                                    type="button"
+                                    data-target="id_mpk"
+                                    data-step="1">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-auto">
+                        <button type="submit" class="wf-btn-primary">
+                            <span class="material-symbols-outlined" style="font-size:16px;">filter_list</span>
+                            Filtruj
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% if rows %}
+            {# ── Główny układ: wykres+tabela | sidebar ─────────────────────── #}
+            <div class="row g-4">
+                {# Lewa kolumna #}
+                <div class="col-xl-8 d-flex flex-column gap-4">
+                    {# ── Wykres słupkowy ──────────────────────────────────────── #}
+                    <div class="cost-section-card">
+                        <div class="cost-section-header">
+                            <h3>
+                                <span class="material-symbols-outlined"
+                                      style="font-size:18px;
+                                             vertical-align:-3px;
+                                             color:#166534">bar_chart</span>
+                                Koszty według MPK i frakcji
+                            </h3>
+                            <div class="chart-legend" id="chartLegend">{# Legenda generowana przez JS #}</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="costChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                    {# ── Tabela szczegółowa ───────────────────────────────────── #}
+                    <div class="cost-section-card">
+                        <div class="cost-section-header">
+                            <h3>
+                                <span class="material-symbols-outlined"
+                                      style="font-size:18px;
+                                             vertical-align:-3px;
+                                             color:#166534">table_chart</span>
+                                Szczegółowe zestawienie kosztów
+                            </h3>
+                            <span style="font-size:12px; color:#6B7280;">{{ rows|length }} pozycji</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table cost-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Rok</th>
+                                        <th>Miesiąc</th>
+                                        <th>Numer MPK</th>
+                                        <th>Frakcja</th>
+                                        <th>Pojemność</th>
+                                        <th style="text-align:right;">Ilość (szt.)</th>
+                                        <th style="text-align:right;">Stawka (PLN/szt.)</th>
+                                        <th style="text-align:right;">Opłata (PLN)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in rows %}
+                                        <tr {% if not row.unit_cost %}class="missing-cost-row"{% endif %}>
+                                            <td>{{ row.year }}</td>
+                                            <td>{{ row.month_name }}</td>
+                                            <td>
+                                                <span class="wf-badge wf-badge-success" style="font-size:12px;">{{ row.mpk_number }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fraction-badge {{ row.fraction_css }}">{{ row.fraction_name }}</span>
+                                            </td>
+                                            <td style="white-space:nowrap;">
+                                                <span style="font-size:13px; color:#6B7280; font-weight:500;">{{ row.capacity }}&nbsp;{{ row.unit }}</span>
+                                            </td>
+                                            <td style="text-align:right; font-weight:500;">{{ row.quantity }}</td>
+                                            <td style="text-align:right;">
+                                                {% if row.unit_cost %}
+                                                    {{ row.unit_cost|floatformat:2 }}
+                                                {% else %}
+                                                    <span class="text-warning" title="Brak stawki w słowniku">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Brak stawki
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="fee-cell">
+                                                {% if row.total_cost %}
+                                                    {{ row.total_cost|floatformat:2 }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background:#F0FDF4; font-weight:700;">
+                                        <td colspan="7" style="padding:14px 16px; color:#166534; font-size:13px;">
+                                            <span class="material-symbols-outlined"
+                                                  style="font-size:14px;
+                                                         vertical-align:-2px">summarize</span>
+                                            SUMA CAŁKOWITA
+                                        </td>
+                                        <td style="padding:14px 16px;
+                                                   text-align:right;
+                                                   color:#14532D;
+                                                   font-size:15px">{{ grand_total|floatformat:2 }} PLN</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% if missing_costs %}
+                            <div style="padding: 12px 20px;
+                                        background:#FFF7ED;
+                                        border-top:1px solid #FED7AA">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                                <span style="font-size:12px; color:#92400E;">
+                                    <strong>{{ missing_costs|length }} frakcji</strong> bez zdefiniowanej stawki kosztowej — wiersze oznaczone na pomarańczowo.
+                                    Uzupełnij stawki w panelu administracyjnym.
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {# /col lewa #}
+                {# Prawa kolumna – sidebar #}
+                <div class="col-xl-4">
+                    <div class="summary-sidebar" style="position: sticky; top: 88px;">
+                        {# Łączna kwota #}
+                        <div class="summary-total-card">
+                            <p class="summary-total-label">
+                                <span class="material-symbols-outlined"
+                                      style="font-size:13px;
+                                             vertical-align:-1px">payments</span>
+                                Łączne koszty
+                            </p>
+                            <div>
+                                <span class="summary-total-value">{{ grand_total|floatformat:0 }}</span>
+                                <span class="summary-total-unit">PLN</span>
+                            </div>
+                            {% if selected_month and selected_year %}
+                                <p style="font-size:12px; color:#166534; margin: 8px 0 0; opacity:.8;">
+                                    za {{ selected_month_name }} {{ selected_year }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        {# Statystyki pomocnicze #}
+                        <div class="summary-meta-grid">
+                            <div class="summary-meta-card">
+                                <p class="summary-meta-label">
+                                    <span class="material-symbols-outlined"
+                                          style="font-size:12px;
+                                                 vertical-align:-1px">corporate_fare</span>
+                                    Aktywne MPK
+                                </p>
+                                <p class="summary-meta-value" style="margin:0;">{{ active_mpk_count }}</p>
+                            </div>
+                            <div class="summary-meta-card">
+                                <p class="summary-meta-label">
+                                    <span class="material-symbols-outlined"
+                                          style="font-size:12px;
+                                                 vertical-align:-1px">recycling</span>
+                                    Frakcje
+                                </p>
+                                <p class="summary-meta-value" style="margin:0;">{{ fraction_count }}</p>
+                            </div>
+                        </div>
+                        {# Top 3 MPK #}
+                        <div class="top-mpk-list">
+                            <div class="top-mpk-header">
+                                <span class="material-symbols-outlined"
+                                      style="font-size:13px;
+                                             vertical-align:-2px">leaderboard</span>
+                                Top MPK według kosztu
+                            </div>
+                            {% for item in top_mpks %}
+                                <div class="top-mpk-item">
+                                    <div style="display:flex; align-items:center;">
+                                        <span class="top-mpk-rank rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
+                                        <div>
+                                            <div style="font-weight:600; font-size:14px; color:#111827;">MPK {{ item.mpk_number }}</div>
+                                        </div>
+                                    </div>
+                                    <span class="top-mpk-cost">{{ item.total|floatformat:0 }} PLN</span>
+                                </div>
+                            {% empty %}
+                                <div style="padding:16px;
+                                            text-align:center;
+                                            color:#9CA3AF;
+                                            font-size:13px">Brak danych</div>
+                            {% endfor %}
+                        </div>
+                        {# Podział kosztów wg frakcji #}
+                        {% if fraction_totals %}
+                            <div class="top-mpk-list">
+                                <div class="top-mpk-header">
+                                    <span class="material-symbols-outlined"
+                                          style="font-size:13px;
+                                                 vertical-align:-2px">donut_small</span>
+                                    Koszty według frakcji
+                                </div>
+                                {% for ft in fraction_totals %}
+                                    <div class="top-mpk-item">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span class="fraction-badge {{ ft.css }} "
+                                                  style="font-size:11px;
+                                                         padding:2px 8px">{{ ft.name }}</span>
+                                        </div>
+                                        <span class="top-mpk-cost">{{ ft.total|floatformat:0 }} PLN</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {# /col prawa #}
+            </div>
+            {# /row #}
+        {% else %}
+            {# Stan pusty #}
+            <div class="cost-section-card">
+                <div class="empty-chart-placeholder">
+                    <span class="material-symbols-outlined"
+                          style="font-size:48px;
+                                 color:#D1D5DB">bar_chart</span>
+                    <p style="font-weight:600; color:#6B7280;">Brak danych dla wybranych filtrów</p>
+                    <p style="font-size:13px; color:#9CA3AF; margin:0;">
+                        Zmień filtry lub upewnij się, że zestawienia zostały zaimportowane.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {# /container #}
+{% endblock %}
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+(function () {
+    'use strict';
+
+    /* ── Dane z Django kontekstu ────────────────────────────────── */
+    const chartData = {{ chart_data_json|safe }};
+
+    /* ── Paleta kolorów per frakcja ─────────────────────────────── */
+    const FRACTION_COLORS = {
+        'zmieszane':  { bg: 'rgba(55,65,81,.80)',  border: '#374151' },
+        'papier':     { bg: 'rgba(59,130,246,.80)', border: '#3B82F6' },
+        'tworzywa':   { bg: 'rgba(245,158,11,.80)', border: '#F59E0B' },
+        'plastik':    { bg: 'rgba(245,158,11,.80)', border: '#F59E0B' },
+        'szkło':      { bg: 'rgba(16,185,129,.80)', border: '#10B981' },
+        'szklo':      { bg: 'rgba(16,185,129,.80)', border: '#10B981' },
+        'bio':        { bg: 'rgba(5,150,105,.80)',  border: '#059669' },
+    };
+
+    const FALLBACK_COLORS = [
+        { bg: 'rgba(99,102,241,.80)',  border: '#6366F1' },
+        { bg: 'rgba(236,72,153,.80)',  border: '#EC4899' },
+        { bg: 'rgba(249,115,22,.80)',  border: '#F97316' },
+        { bg: 'rgba(20,184,166,.80)',  border: '#14B8A6' },
+        { bg: 'rgba(168,85,247,.80)',  border: '#A855F7' },
+    ];
+
+    function colorForFraction(name, idx) {
+        const lower = (name || '').toLowerCase();
+        for (const [key, val] of Object.entries(FRACTION_COLORS)) {
+            if (lower.includes(key)) return val;
+        }
+        return FALLBACK_COLORS[idx % FALLBACK_COLORS.length];
+    }
+
+    /* ── Budowanie legend ───────────────────────────────────────── */
+    const legendEl = document.getElementById('chartLegend');
+
+    chartData.fractions.forEach((frac, i) => {
+        const c = colorForFraction(frac, i);
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `<span class="legend-dot" style="background:${c.bg}; border:1px solid ${c.border};"></span>${frac}`;
+        legendEl.appendChild(item);
+    });
+
+    /* ── Chart.js ───────────────────────────────────────────────── */
+    const ctx = document.getElementById('costChart');
+    if (!ctx || !chartData.mpks.length) return;
+
+    const datasets = chartData.fractions.map((frac, i) => {
+        const c = colorForFraction(frac, i);
+        return {
+            label: frac,
+            data: chartData.mpks.map(mpk => chartData.values[mpk]?.[frac] ?? 0),
+            backgroundColor: c.bg,
+            borderColor: c.border,
+            borderWidth: 1,
+            borderRadius: 4,
+        };
+    });
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.mpks.map(m => 'MPK ' + m),
+            datasets,
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} PLN`,
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12 }, color: '#6B7280' },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#F3F4F6' },
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#9CA3AF',
+                        callback: v => v.toLocaleString('pl-PL') + ' zł',
+                    },
+                },
+            },
+        },
+    });
+
+    /* ── Steppery filtrów (skopiowane z monthly_summary.html) ───── */
+    const stepButtons = document.querySelectorAll('.btn-list-step');
+
+    stepButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const targetId = this.getAttribute('data-target');
+            const select = document.getElementById(targetId);
+            if (!select) return;
+            const step = parseInt(this.getAttribute('data-step'), 10);
+            const newIndex = select.selectedIndex + step;
+            if (newIndex >= 0 && newIndex < select.options.length) {
+                select.selectedIndex = newIndex;
+                document.getElementById('costFilterForm').submit();
+            }
+        });
+    });
+
+})();
+    </script>
+{% endblock %}

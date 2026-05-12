@@ -1,13 +1,16 @@
 # reports/views.py
+from collections import defaultdict
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone, formats
+from locations.models import MPKNumber
 from pickups.models import PickupWasteBin
 from users.models import Permission
-from waste.models import WasteFraction
+from waste.models import WasteCost, WasteFraction
 from .models import (
     MonthlyConfirmation,
     MonthlyConfirmationBin,
@@ -729,3 +732,196 @@ class ExportCostReportView(View):
 
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+def _fraction_css(name: str) -> str:
+    lower = name.lower()
+    if 'zmieszane' in lower or 'zmieszany' in lower:
+        return 'fraction-badge--mixed'
+    if 'papier' in lower or 'makulatura' in lower:
+        return 'fraction-badge--paper'
+    if 'plastik' in lower or 'tworzywa' in lower or 'metal' in lower:
+        return 'fraction-badge--plastic'
+    if 'szkł' in lower or 'szk' in lower:
+        return 'fraction-badge--glass'
+    if 'bio' in lower:
+        return 'fraction-badge--bio'
+    return 'fraction-badge--default'
+
+MONTH_NAMES = {
+    1: 'Styczeń', 2: 'Luty', 3: 'Marzec', 4: 'Kwiecień',
+    5: 'Maj', 6: 'Czerwiec', 7: 'Lipiec', 8: 'Sierpień',
+    9: 'Wrzesień', 10: 'Październik', 11: 'Listopad', 12: 'Grudzień',
+}
+
+MONTH_CHOICES = [(i, MONTH_NAMES[i]) for i in range(1, 13)]
+ 
+ 
+@login_required
+def cost_summary_view(request):
+    """
+    Zestawienie kosztowe: SummaryCollectionSchedule × WasteCost.
+    """
+    today = timezone.now().date()
+ 
+    # ── Odczyt filtrów z GET ─────────────────────────────────────────
+    year_str  = request.GET.get('year', '').strip()
+    month_str = request.GET.get('month', '').strip()
+    mpk_str   = request.GET.get('mpk_number_id', '').strip()
+ 
+    selected_year     = int(year_str)  if year_str.isdigit()  else None
+    selected_month    = int(month_str) if month_str.isdigit() else None
+    selected_mpk_id   = int(mpk_str)   if mpk_str.isdigit()   else None
+ 
+    # Domyślnie: bieżący rok
+    if selected_year is None:
+        selected_year = today.year
+ 
+    # ── Filtracja zestawień odbioru ──────────────────────────────────
+    qs = SummaryCollectionSchedule.objects.select_related(
+        'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
+    )
+ 
+    if selected_year:
+        qs = qs.filter(year=selected_year)
+    if selected_month:
+        qs = qs.filter(month=selected_month)
+    if selected_mpk_id:
+        qs = qs.filter(mpk_number_id=selected_mpk_id)
+ 
+    # Ogranicz do MPK, do których użytkownik ma dostęp
+    if not request.user.is_superuser:
+        allowed_ids = Permission.objects.filter(
+            user=request.user, active=True
+        ).values_list('mpk_number_id', flat=True)
+        qs = qs.filter(mpk_number_id__in=allowed_ids)
+ 
+    summaries = list(qs)
+ 
+    # ── Pobranie wszystkich stawek do pamięci ────────────────────────
+    all_costs = list(WasteCost.objects.all().order_by('-date_from'))
+ 
+    def get_unit_cost(fraction_id, target_date):
+        for cost in all_costs:
+            if cost.waste_fraction_id == fraction_id:
+                if cost.date_from <= target_date and (
+                    cost.date_to is None or cost.date_to >= target_date
+                ):
+                    return cost.cost
+        return None
+ 
+    # ── Budowanie wierszy tabeli ─────────────────────────────────────
+    rows = []
+    grand_total = 0
+    missing_costs = []
+ 
+    # Struktury do wykresu i sidebara
+    chart_values   = defaultdict(lambda: defaultdict(float))  # mpk -> fraction -> koszt
+    mpk_totals     = defaultdict(float)                        # mpk -> łączny koszt
+    fraction_totals_map = defaultdict(float)                   # fraction_name -> łączny koszt
+ 
+    for s in summaries:
+        target_date = s.date_summary
+        unit_cost   = get_unit_cost(s.waste_fraction_id, target_date)
+        total_cost  = (unit_cost * s.quantity) if unit_cost is not None else None
+ 
+        fraction_name = s.waste_fraction.fraction_type.name
+        capacity      = s.waste_fraction.capacity
+        unit          = s.waste_fraction.unit or 'szt'
+        fraction_label = f"{fraction_name} ({capacity} {unit})"
+        
+        row = {
+            'year':          s.year,
+            'month':         s.month,
+            'month_name':    MONTH_NAMES.get(s.month, str(s.month)),
+            'mpk_number':    s.mpk_number.mpk_number,
+            'fraction_name': fraction_name,
+            'fraction_label': fraction_label,
+            'fraction_css':  _fraction_css(fraction_name),
+            'capacity':       capacity,
+            'unit':           unit,
+            'quantity':      s.quantity,
+            'unit_cost':     unit_cost,
+            'total_cost':    total_cost,
+        }
+        rows.append(row)
+ 
+        if unit_cost is None:
+            missing_costs.append(row)
+        else:
+            grand_total += float(total_cost)
+            chart_values[s.mpk_number.mpk_number][fraction_name] += float(total_cost)
+            mpk_totals[s.mpk_number.mpk_number] += float(total_cost)
+            fraction_totals_map[fraction_name] += float(total_cost)
+ 
+    # ── Dane dla Chart.js ────────────────────────────────────────────
+    all_mpks      = sorted(chart_values.keys())
+    all_fractions = sorted({fn for mpk_data in chart_values.values() for fn in mpk_data})
+ 
+    chart_data_json = json.dumps({
+        'mpks':      all_mpks,
+        'fractions': all_fractions,
+        'values':    {
+            str(mpk): {frac: chart_values[mpk].get(frac, 0) for frac in all_fractions}
+            for mpk in all_mpks
+        },
+    })
+ 
+    # ── Top MPK ──────────────────────────────────────────────────────
+    top_mpks = sorted(
+        [{'mpk_number': k, 'total': v} for k, v in mpk_totals.items()],
+        key=lambda x: x['total'],
+        reverse=True,
+    )[:5]
+ 
+    # ── Koszty wg frakcji (sidebar) ──────────────────────────────────
+    fraction_totals = sorted(
+        [
+            {'name': k, 'total': v, 'css': _fraction_css(k)}
+            for k, v in fraction_totals_map.items()
+        ],
+        key=lambda x: x['total'],
+        reverse=True,
+    )
+ 
+    # ── Dane pomocnicze do filtrów ───────────────────────────────────
+    if request.user.is_superuser:
+        mpk_numbers = MPKNumber.objects.filter(active=True).order_by('mpk_number')
+    else:
+        allowed_ids = Permission.objects.filter(
+            user=request.user, active=True
+        ).values_list('mpk_number_id', flat=True)
+        mpk_numbers = MPKNumber.objects.filter(id__in=allowed_ids, active=True).order_by('mpk_number')
+ 
+    available_years = (
+        SummaryCollectionSchedule.objects
+        .values_list('year', flat=True)
+        .distinct()
+        .order_by('-year')
+    )
+ 
+    context = {
+        # Dane tabeli
+        'rows':           rows,
+        'missing_costs':  missing_costs,
+        'grand_total':    grand_total,
+ 
+        # Wykres
+        'chart_data_json': chart_data_json,
+ 
+        # Sidebar
+        'top_mpks':         top_mpks,
+        'fraction_totals':  fraction_totals,
+        'active_mpk_count': len(mpk_totals),
+        'fraction_count':   len(fraction_totals_map),
+ 
+        # Filtry
+        'available_years':   available_years,
+        'months':            MONTH_CHOICES,
+        'mpk_numbers':       mpk_numbers,
+        'selected_year':     selected_year,
+        'selected_month':    selected_month,
+        'selected_mpk_id':   selected_mpk_id,
+        'selected_month_name': MONTH_NAMES.get(selected_month, '') if selected_month else '',
+    }
+ 
+    return render(request, 'reports/cost_summary.html', context)

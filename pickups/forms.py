@@ -21,8 +21,8 @@ class PickupForm(forms.ModelForm):
         self.location_id = kwargs.pop('location_id', None)
         super().__init__(*args, **kwargs)
         
-        self.fields['mpk_number'].empty_label = "--- Wybierz nr MPK ---"
-        self.fields['location'].empty_label = "--- Wybierz lokalizację ---"
+        self.fields['mpk_number'].empty_label = "Wybierz nr MPK"
+        self.fields['location'].empty_label = "Wybierz lokalizację"
 
         if self.user and not self.user.is_superuser:
             allowed_mpk_ids = Permission.objects.filter(
@@ -47,7 +47,7 @@ class PickupForm(forms.ModelForm):
         elif self.instance.pk and self.instance.mpk_number:
             self.fields['location'].queryset = self.instance.mpk_number.location_set.all()
             
-        phone_choices = [('', '--- Wybierz numer kontaktowy ---')]
+        phone_choices = [('', 'Wybierz numer kontaktowy')]
         
         if self.user and hasattr(self.user, 'profile') and self.user.profile.phone:
             phone_choices.append((self.user.profile.phone, f"Mój numer: {self.user.profile.phone}"))

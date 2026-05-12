@@ -1,134 +1,149 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Zarządzania Odpadami</title>
- 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/wasteflow.css' %}">
- 
-    {% block extra_css %}
-    {% endblock %}
-</head>
-<body>
-<div class="wf-layout">
-    <!-- Sidebar -->
-        <aside class="wf-sidebar">
-        <div class="wf-logo-area">
-                <span class="material-symbols-outlined text-success-emphasis">recycling</span>
-            <div class="wf-logo-text">
-                <span class="wf-app-name text-success-emphasis">Odpady Komunalne</span>
-                <span class="wf-app-subtitle">Zarządzanie Odpadami</span>
-            </div>
-        </div>
-
-        <nav class="wf-nav">
-            <a href="/" class="wf-nav-item {% if request.path == '/' %}active{% endif %}">
-                <span class="material-symbols-outlined">dashboard</span>
-                Start
-            </a>
-            <a href="/zgloszenia/lista/" class="wf-nav-item {% if '/zgloszenia/lista/' in request.path %}active{% endif %}">
-                <span class="material-symbols-outlined">list</span>
-                Lista zgłoszeń
-            </a>
-            <a href="/zgloszenia/dodaj/" class="wf-nav-item {% if '/zgloszenia/dodaj/' in request.path %}active{% endif %}">
-                <span class="material-symbols-outlined">add_circle</span>
-                Nowe zgłoszenie
-            </a>
-            {% if user.is_staff %}
-            <a href="{% url 'core:admin_tasks' %}" class="wf-nav-item {% if '/admin-tasks/' in request.path %}active{% endif %}">
-                <span class="material-symbols-outlined">construction</span>
-                Narzędzia
-            </a>
-            {% endif %}
-            <a href="{% url 'scheduling:calendar' %}" class="wf-nav-item {% if '/harmonogram/' in request.path %}active{% endif %}">
-                <span class="material-symbols-outlined">calendar_month</span>
-                Harmonogram
-            </a>
-            <a href="{% url 'reports:monthly_summary' %}" class="wf-nav-item {% if '/podsumowanie/' in request.path %}active{% endif %}">
-                <span class="material-symbols-outlined">free_cancellation</span>
-                Podsumowanie miesięczne
-            </a>
-        </nav>
-
-        {% if user.is_authenticated %}
-        <div class="wf-user-section">
-            <div class="wf-avatar">
-                {{ user.first_name|first|default:user.username|first|upper }}
-            </div>
-            <div class="wf-user-info">
-                <span class="wf-username">{{ user.get_full_name|default:user.username }}</span>
-                <span class="wf-user-email">{{ user.email|default:"" }}</span>
-            </div>
-        </div>
-        {% endif %}
-    </aside>
-
-    <!-- Main Content -->
-    <div class="wf-main">
-        <!-- Topbar -->
-                <header class="wf-topbar">
-            <div class="wf-breadcrumb">
-                {% block breadcrumb %}
-                <span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>
-                {% endblock %}
-            </div>
-            <div class="wf-topbar-actions">
-                {% if user.is_authenticated %}
-                <a href="/" title="Powiadomienia" style="text-decoration:none; color:inherit; position:relative;">
-                    <i class="bi bi-bell wf-bell-icon"></i>
-                    {% if unread_notifications_count %}
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;padding:2px 4px;">
-                        {{ unread_notifications_count }}
-                    </span>
-                    {% endif %}
-                </a>
-                <a href="/konto/profil/" style="text-decoration:none; color:inherit;">
-                    <div class="wf-avatar wf-topbar-avatar">
-                        {{ user.first_name|first|default:user.username|first|upper }}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="System Zarządzania Odpadami - aplikacja do zarządzania zgłoszeniami, harmonogramami i kosztami gospodarowania odpadami komunalnymi.">
+        <meta name="keywords" content="odpady komunalne, zarządzanie odpadami, harmonogram, zgłoszenia, system odpadów, podsumowanie kosztów">
+        <title>System Zarządzania Odpadami</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+              rel="stylesheet">
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+              rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+              rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+              rel="stylesheet" />
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'css/wasteflow.css' %}">
+        {% block extra_css %}{% endblock %}
+    </head>
+    <body>
+        <div class="wf-layout">
+            <!-- Sidebar -->
+            <aside class="wf-sidebar">
+                <div class="wf-logo-area">
+                    <span class="material-symbols-outlined text-success-emphasis">recycling</span>
+                    <div class="wf-logo-text">
+                        <span class="wf-app-name text-success-emphasis">Odpady Komunalne</span>
+                        <span class="wf-app-subtitle">Zarządzanie Odpadami</span>
                     </div>
-                </a>
-                <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link text-muted p-0"><i class="bi bi-box-arrow-right"></i></button>
-                </form>
-                {% else %}
-                <a href="{% url 'login' %}" class="wf-btn-outline">Zaloguj się</a>
-                {% endif %}
-            </div>
-        </header>
-
-        <!-- Content Area -->
-        <main class="wf-content">
-            <div class="container-fluid px-0">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert" style="background-color: {% if message.tags == 'success' %}#F0FDF4{% elif message.tags == 'warning' %}#FFFBEB{% elif message.tags == 'error' %}#FEF2F2{% else %}#F0FDF4{% endif %}; border-left: 4px solid {% if message.tags == 'success' %}#166534{% elif message.tags == 'warning' %}#F59E0B{% elif message.tags == 'error' %}#DC2626{% else %}#166534{% endif %}; color: {% if message.tags == 'success' %}#166534{% elif message.tags == 'warning' %}#92400E{% elif message.tags == 'error' %}#991B1B{% else %}#166534{% endif %}; border-radius: 0 6px 6px 0; padding: 16px;">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+                </div>
+                <nav class="wf-nav">
+                    <a href="/"
+                       class="wf-nav-item {% if request.path == '/' %}active{% endif %}">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        Start
+                    </a>
+                    <a href="{% url 'pickups:pickup_list' %}"
+                       class="wf-nav-item {% if '/zgloszenia/lista/' in request.path %}active{% endif %}">
+                        <span class="material-symbols-outlined">list</span>
+                        Lista zgłoszeń
+                    </a>
+                    <a href="{% url 'pickups:pickup_create' %}"
+                       class="wf-nav-item {% if '/zgloszenia/dodaj/' in request.path %}active{% endif %}">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        Nowe zgłoszenie
+                    </a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'core:admin_tasks' %}"
+                           class="wf-nav-item {% if '/admin-tasks/' in request.path %}active{% endif %}">
+                            <span class="material-symbols-outlined">construction</span>
+                            Narzędzia
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'scheduling:calendar' %}"
+                       class="wf-nav-item {% if '/harmonogram/' in request.path %}active{% endif %}">
+                        <span class="material-symbols-outlined">calendar_month</span>
+                        Harmonogram
+                    </a>
+                    <a href="{% url 'reports:monthly_summary' %}"
+                       class="wf-nav-item {% if '/podsumowanie/' in request.path %}active{% endif %}">
+                        <span class="material-symbols-outlined">free_cancellation</span>
+                        Podsumowanie miesięczne
+                    </a>
+                    <a href="{% url 'reports:cost_summary' %}"
+                       class="wf-nav-item {% if '/koszty/' in request.path %}active{% endif %}">
+                        <span class="material-symbols-outlined">payments</span>
+                        Zestawienie Kosztowe
+                    </a>
+                </nav>
+                {% if user.is_authenticated %}
+                    <div class="wf-user-section">
+                        <div class="wf-avatar">{{ user.first_name|first|default:user.username|first|upper }}</div>
+                        <div class="wf-user-info">
+                            <span class="wf-username">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="wf-user-email">{{ user.email|default:"" }}</span>
                         </div>
-                    {% endfor %}
+                    </div>
                 {% endif %}
+            </aside>
+            <!-- Main Content -->
+            <div class="wf-main">
+                <!-- Topbar -->
+                <header class="wf-topbar">
+                    <div class="wf-breadcrumb">
+                        {% block breadcrumb %}<span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>{% endblock %}
+                    </div>
+                    <div class="wf-topbar-actions">
+                        {% if user.is_authenticated %}
+                            <a href="/"
+                               title="Powiadomienia"
+                               style="text-decoration:none;
+                                      color:inherit;
+                                      position:relative">
+                                <i class="bi bi-bell wf-bell-icon"></i>
+                                {% if unread_notifications_count %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                          style="font-size:0.6rem;
+                                                 padding:2px 4px">{{ unread_notifications_count }}</span>
+                                {% endif %}
+                            </a>
+                            <a href="/konto/profil/" style="text-decoration:none; color:inherit;">
+                                <div class="wf-avatar wf-topbar-avatar">{{ user.first_name|first|default:user.username|first|upper }}</div>
+                            </a>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link text-muted p-0">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                </button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="wf-btn-outline">Zaloguj się</a>
+                        {% endif %}
+                    </div>
+                </header>
+                <!-- Content Area -->
+                <main class="wf-content">
+                    <div class="container-fluid px-0">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm"
+                                     role="alert"
+                                     style="background-color: {% if message.tags == 'success' %}#F0FDF4{% elif message.tags == 'warning' %}#FFFBEB{% elif message.tags == 'error' %}#FEF2F2{% else %}#F0FDF4{% endif %};
+                                            border-left: 4px solid {% if message.tags == 'success' %}#166534{% elif message.tags == 'warning' %}#F59E0B{% elif message.tags == 'error' %}#DC2626{% else %}#166534{% endif %};
+                                            color: {% if message.tags == 'success' %}#166534{% elif message.tags == 'warning' %}#92400E{% elif message.tags == 'error' %}#991B1B{% else %}#166534{% endif %};
+                                            border-radius: 0 6px 6px 0;
+                                            padding: 16px">
+                                    {{ message }}
+                                    <button type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="alert"
+                                            aria-label="Zamknij"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    {% block content %}{% endblock %}
+                </main>
             </div>
-
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-
-    {% block extra_js %}
-    {% endblock %}
-
-</body>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% block extra_js %}
+        {% endblock %}
+    </body>
 </html>
