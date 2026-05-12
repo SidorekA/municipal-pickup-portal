@@ -112,11 +112,11 @@ def monthly_summary_view(request):
     filter_status = request.GET.get('filter_status')
 
     form = ReportFilterForm(request.GET or None, user=request.user)
-    
+
     selected_month = None
     selected_year = None
     selected_mpk = None
-    
+
     if form.is_valid():
         selected_month = form.cleaned_data.get("month") or None
         selected_year = form.cleaned_data.get("year") or None
@@ -127,7 +127,7 @@ def monthly_summary_view(request):
     if selected_year: query_filters["year"] = int(selected_year)
     if selected_month: query_filters["month"] = int(selected_month)
     if selected_mpk: query_filters["mpk_number_id"] = selected_mpk
-    
+
     if not request.user.is_superuser:
         allowed_ids = Permission.objects.filter(
             user=request.user, active=True
@@ -142,7 +142,7 @@ def monthly_summary_view(request):
     conf_filters = {}
     if selected_year: conf_filters["month__year"] = int(selected_year)
     if selected_month: conf_filters["month__month"] = int(selected_month)
-    
+
     confirmations = MonthlyConfirmation.objects.filter(**conf_filters).values(
         "mpk_number_id", "month", "status"
     )
@@ -152,11 +152,11 @@ def monthly_summary_view(request):
     grouped_data = {}
     for record in records:
         group_id = f"{record.mpk_number_id}_{record.year}_{record.month}"
-        
+
         if group_id not in grouped_data:
             rec_date_obj = datetime.date(record.year, record.month, 1)
             current_status = status_map.get((record.mpk_number_id, rec_date_obj), "OCZEKUJE")
-            
+
             # FILTRY (Pills)
             if filter_status == 'confirmed' and current_status not in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
             if filter_status == 'action_required' and current_status in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
@@ -175,12 +175,12 @@ def monthly_summary_view(request):
                 "status": current_status,
                 "fractions": {},
             }
-        
+
         wf = record.waste_fraction
         name = wf.fraction_type.name if wf.fraction_type else "Inne"
         capacity = getattr(wf, "capacity", "")
         capacity_str = f"{capacity}L" if capacity else ""
-        
+
         # Unikalny klucz grupujący pojemniki tego samego typu w jednym boxie MPK
         group_key = f"{name}_{capacity}"
 
@@ -201,7 +201,7 @@ def monthly_summary_view(request):
                 "icon": icon,
                 "color": color,
             }
-        
+
         # Zsumuj ilość zgłoszeń do wybranego kafelka
         grouped_data[group_id]["fractions"][group_key]["qty"] += record.quantity
 
@@ -345,16 +345,6 @@ def verification_view(request):
     if not mpk_id:
         return render(request, "reports/verification_form.html", {"no_mpk": True})
 
-    if not request.user.is_superuser:
-        has_perm = Permission.objects.filter(
-            user=request.user,
-            mpk_number_id=mpk_id,
-            active=True
-        ).exists()
-        if not has_perm:
-            messages.error(request, "Brak uprawnień do tego MPK.")
-            return redirect('reports:monthly_summary')
-
     confirmation, created = MonthlyConfirmation.objects.get_or_create(
         mpk_number_id=mpk_id, month=first_day
     )
@@ -364,7 +354,7 @@ def verification_view(request):
         pickup__reported_at__month=month,
         pickup__reported_at__year=year
     ).values('waste_fraction_id').annotate(total=Sum('quantity'))
-    
+
     imports = SummaryCollectionSchedule.objects.filter(
         mpk_number_id=mpk_id,
         month=month,
@@ -380,7 +370,7 @@ def verification_view(request):
         reported = next((p['total'] for p in pickups if p['waste_fraction_id'] == f.id), 0)
         collected = next((i['total'] for i in imports if i['waste_fraction_id'] == f.id), 0)
         saved = saved_bins.get(f.id)
-        
+
         comparison_data.append({
             'fraction': f,
             'reported_qty': int(reported),
@@ -401,20 +391,20 @@ def verification_view(request):
 
             _reported_in_system = next((p['total'] for p in pickups if p['waste_fraction_id'] == f.id), 0)
             collected_from_excel = next((i['total'] for i in imports if i['waste_fraction_id'] == f.id), 0)
-            
+
             qty_input = request.POST.get(f'qty_{f.id}')
             note_input = request.POST.get(f'note_{f.id}', "").strip()
 
             if qty_input is not None:
                 qty_confirmed = int(qty_input)
-                
+
                 # Sprawdzamy czy użytkownik zmienił wartość względem tego co podał dostawca w Excelu
                 if qty_confirmed != int(collected_from_excel):
                     diff_found = True
                     if not note_input:
                         messages.error(request, f"Dla frakcji {f} wymagana jest uwaga przy rozbieżności!")
                         has_error = True
-                
+
                 temp_data.append({
                     'fraction': f,
                     'qty': qty_confirmed,
@@ -463,7 +453,7 @@ def verification_view(request):
             confirmation.approved_by = request.user
             confirmation.approved_at = timezone.now()
             confirmation.save()
-            
+
             messages.success(request, "Weryfikacja została zapisana pomyślnie.")
             return redirect('reports:monthly_summary')
 
@@ -481,7 +471,7 @@ def edit_summaries_view(request):
     month_param = request.GET.get('month')
     mpk = request.GET.get('mpk')
     status_filter = request.GET.get('status')
-    
+
     if not request.GET:
         year = str(timezone.now().year)
         month = str(timezone.now().month)
@@ -506,7 +496,7 @@ def edit_summaries_view(request):
             pass
     if mpk:
         queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
-        
+
     conf_qs = MonthlyConfirmation.objects.prefetch_related('bins')
     if year:
         conf_qs = conf_qs.filter(month__year=int(year))
@@ -516,9 +506,9 @@ def edit_summaries_view(request):
     confirmations_prefetch = Prefetch(
         'mpk_number__confirmations',
         queryset=conf_qs,
-        to_attr='all_confirmations' 
+        to_attr='all_confirmations'
     )
-    
+
     queryset = queryset.prefetch_related(confirmations_prefetch)
 
     records = list(queryset)
@@ -526,13 +516,13 @@ def edit_summaries_view(request):
     for record in records:
         record.confirmation_status = None
         record.confirmation_note = None
-        
+
         if hasattr(record.mpk_number, 'all_confirmations') and record.mpk_number.all_confirmations:
             conf = next((c for c in record.mpk_number.all_confirmations if c.month.year == record.year and c.month.month == record.month), None)
-            
+
             if conf:
                 record.confirmation_status = conf.status
-                
+
                 for bin in conf.bins.all():
                     if bin.waste_fraction_id == record.waste_fraction_id:
                         record.confirmation_note = bin.note
@@ -587,19 +577,19 @@ def export_summaries_xlsx(request):
     if year is None and month is None:
         year = str(timezone.now().year)
         month = str(timezone.now().month)
-        
+
     if year and year.isdigit():
         queryset = queryset.filter(year=int(year))
 
     if month and month.isdigit():
         queryset = queryset.filter(month=int(month))
-    
+
     if mpk:
         queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
 
     y = int(year) if year and str(year).isdigit() else timezone.now().year
     m = int(month) if month and str(month).isdigit() else timezone.now().month
-    
+
     confirmations_prefetch = Prefetch(
         'mpk_number__confirmations',
         queryset=MonthlyConfirmation.objects.filter(
@@ -764,52 +754,52 @@ MONTH_NAMES = {
 }
 
 MONTH_CHOICES = [(i, MONTH_NAMES[i]) for i in range(1, 13)]
- 
- 
+
+
 @login_required
 def cost_summary_view(request):
     """
     Zestawienie kosztowe: SummaryCollectionSchedule × WasteCost.
     """
     today = timezone.now().date()
- 
+
     # ── Odczyt filtrów z GET ─────────────────────────────────────────
     year_str  = request.GET.get('year', '').strip()
     month_str = request.GET.get('month', '').strip()
     mpk_str   = request.GET.get('mpk_number_id', '').strip()
- 
+
     selected_year     = int(year_str)  if year_str.isdigit()  else None
     selected_month    = int(month_str) if month_str.isdigit() else None
     selected_mpk_id   = int(mpk_str)   if mpk_str.isdigit()   else None
- 
+
     # Domyślnie: bieżący rok
     if selected_year is None:
         selected_year = today.year
- 
+
     # ── Filtracja zestawień odbioru ──────────────────────────────────
     qs = SummaryCollectionSchedule.objects.select_related(
         'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
     )
- 
+
     if selected_year:
         qs = qs.filter(year=selected_year)
     if selected_month:
         qs = qs.filter(month=selected_month)
     if selected_mpk_id:
         qs = qs.filter(mpk_number_id=selected_mpk_id)
- 
+
     # Ogranicz do MPK, do których użytkownik ma dostęp
     if not request.user.is_superuser:
         allowed_ids = Permission.objects.filter(
             user=request.user, active=True
         ).values_list('mpk_number_id', flat=True)
         qs = qs.filter(mpk_number_id__in=allowed_ids)
- 
+
     summaries = list(qs)
- 
+
     # ── Pobranie wszystkich stawek do pamięci ────────────────────────
     all_costs = list(WasteCost.objects.all().order_by('-date_from'))
- 
+
     def get_unit_cost(fraction_id, target_date):
         for cost in all_costs:
             if cost.waste_fraction_id == fraction_id:
@@ -818,27 +808,27 @@ def cost_summary_view(request):
                 ):
                     return cost.cost
         return None
- 
+
     # ── Budowanie wierszy tabeli ─────────────────────────────────────
     rows = []
     grand_total = 0
     missing_costs = []
- 
+
     # Struktury do wykresu i sidebara
     chart_values   = defaultdict(lambda: defaultdict(float))  # mpk -> fraction -> koszt
     mpk_totals     = defaultdict(float)                        # mpk -> łączny koszt
     fraction_totals_map = defaultdict(float)                   # fraction_name -> łączny koszt
- 
+
     for s in summaries:
         target_date = s.date_summary
         unit_cost   = get_unit_cost(s.waste_fraction_id, target_date)
         total_cost  = (unit_cost * s.quantity) if unit_cost is not None else None
- 
+
         fraction_name = s.waste_fraction.fraction_type.name
         capacity      = s.waste_fraction.capacity
         unit          = s.waste_fraction.unit or 'szt'
         fraction_label = f"{fraction_name} ({capacity} {unit})"
-        
+
         row = {
             'year':          s.year,
             'month':         s.month,
@@ -854,7 +844,7 @@ def cost_summary_view(request):
             'total_cost':    total_cost,
         }
         rows.append(row)
- 
+
         if unit_cost is None:
             missing_costs.append(row)
         else:
@@ -862,11 +852,11 @@ def cost_summary_view(request):
             chart_values[s.mpk_number.mpk_number][fraction_name] += float(total_cost)
             mpk_totals[s.mpk_number.mpk_number] += float(total_cost)
             fraction_totals_map[fraction_name] += float(total_cost)
- 
+
     # ── Dane dla Chart.js ────────────────────────────────────────────
     all_mpks      = sorted(chart_values.keys())
     all_fractions = sorted({fn for mpk_data in chart_values.values() for fn in mpk_data})
- 
+
     chart_data_json = json.dumps({
         'mpks':      all_mpks,
         'fractions': all_fractions,
@@ -875,14 +865,14 @@ def cost_summary_view(request):
             for mpk in all_mpks
         },
     })
- 
+
     # ── Top MPK ──────────────────────────────────────────────────────
     top_mpks = sorted(
         [{'mpk_number': k, 'total': v} for k, v in mpk_totals.items()],
         key=lambda x: x['total'],
         reverse=True,
     )[:5]
- 
+
     # ── Koszty wg frakcji (sidebar) ──────────────────────────────────
     fraction_totals = sorted(
         [
@@ -892,7 +882,7 @@ def cost_summary_view(request):
         key=lambda x: x['total'],
         reverse=True,
     )
- 
+
     # ── Dane pomocnicze do filtrów ───────────────────────────────────
     if request.user.is_superuser:
         mpk_numbers = MPKNumber.objects.filter(active=True).order_by('mpk_number')
@@ -901,29 +891,29 @@ def cost_summary_view(request):
             user=request.user, active=True
         ).values_list('mpk_number_id', flat=True)
         mpk_numbers = MPKNumber.objects.filter(id__in=allowed_ids, active=True).order_by('mpk_number')
- 
+
     available_years = (
         SummaryCollectionSchedule.objects
         .values_list('year', flat=True)
         .distinct()
         .order_by('-year')
     )
- 
+
     context = {
         # Dane tabeli
         'rows':           rows,
         'missing_costs':  missing_costs,
         'grand_total':    grand_total,
- 
+
         # Wykres
         'chart_data_json': chart_data_json,
- 
+
         # Sidebar
         'top_mpks':         top_mpks,
         'fraction_totals':  fraction_totals,
         'active_mpk_count': len(mpk_totals),
         'fraction_count':   len(fraction_totals_map),
- 
+
         # Filtry
         'available_years':   available_years,
         'months':            MONTH_CHOICES,
@@ -933,5 +923,5 @@ def cost_summary_view(request):
         'selected_mpk_id':   selected_mpk_id,
         'selected_month_name': MONTH_NAMES.get(selected_month, '') if selected_month else '',
     }
- 
+
     return render(request, 'reports/cost_summary.html', context)

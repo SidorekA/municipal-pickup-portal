@@ -1,0 +1,4 @@
+## 2026-05-12 - [IDOR in verification_view]
+**Vulnerability:** The `verification_view` in `reports/views.py` accepted an `mpk` GET parameter to access the report verification form for a specific MPK, but it did not check if the current user had access to that MPK.
+**Learning:** Even if the UI (e.g. `monthly_summary_view`) filters the list of MPKs the user can see, direct object access via URL parameters in views handling sensitive operations (like `verification_view` or API endpoints) still need explicit authorization checks against the `Permission` model.
+**Prevention:** Always verify user permissions against associated MPK models (e.g. using `Permission.objects.filter(user=request.user, mpk_number_id=mpk_id, active=True).exists()`) in views that accept direct object IDs, unless `request.user.is_superuser` is True.
