@@ -464,16 +464,17 @@ def verification_view(request):
 
 @staff_member_required
 def edit_summaries_view(request):
-    year = request.GET.get('year')
-    month = request.GET.get('month')
+    year_param = request.GET.get('year')
+    month_param = request.GET.get('month')
     mpk = request.GET.get('mpk')
     status_filter = request.GET.get('status')
-
-    # Defaults
-    if not year:
+    
+    if not request.GET:
         year = str(timezone.now().year)
-    if not month:
         month = str(timezone.now().month)
+    else:
+        year = year_param
+        month = month_param
 
     queryset = SummaryCollectionSchedule.objects.select_related(
         'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
@@ -492,37 +493,41 @@ def edit_summaries_view(request):
             pass
     if mpk:
         queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
+        
+    conf_qs = MonthlyConfirmation.objects.prefetch_related('bins')
+    if year:
+        conf_qs = conf_qs.filter(month__year=int(year))
+    if month:
+        conf_qs = conf_qs.filter(month__month=int(month))
 
-    # Prefetch corresponding monthly confirmation and bins
     confirmations_prefetch = Prefetch(
         'mpk_number__confirmations',
-        queryset=MonthlyConfirmation.objects.filter(
-            month__year=int(year) if year else timezone.now().year,
-            month__month=int(month) if month else timezone.now().month
-        ).prefetch_related('bins'),
-        to_attr='current_confirmation'
+        queryset=conf_qs,
+        to_attr='all_confirmations' 
     )
+    
     queryset = queryset.prefetch_related(confirmations_prefetch)
 
     records = list(queryset)
 
-    # Attach confirmation data
     for record in records:
         record.confirmation_status = None
         record.confirmation_note = None
-        if hasattr(record.mpk_number, 'current_confirmation') and record.mpk_number.current_confirmation:
-            conf = record.mpk_number.current_confirmation[0]
-            record.confirmation_status = conf.status
-            # Find the bin for this fraction
-            for bin in conf.bins.all():
-                if bin.waste_fraction_id == record.waste_fraction_id:
-                    record.confirmation_note = bin.note
-                    break
+        
+        if hasattr(record.mpk_number, 'all_confirmations') and record.mpk_number.all_confirmations:
+            conf = next((c for c in record.mpk_number.all_confirmations if c.month.year == record.year and c.month.month == record.month), None)
+            
+            if conf:
+                record.confirmation_status = conf.status
+                
+                for bin in conf.bins.all():
+                    if bin.waste_fraction_id == record.waste_fraction_id:
+                        record.confirmation_note = bin.note
+                        break
 
     if status_filter:
         records = [r for r in records if r.confirmation_status == status_filter or (status_filter == 'BRAK' and r.confirmation_status is None)]
 
-    # Gather unique years and months for filter dropdowns
     available_years = SummaryCollectionSchedule.objects.values_list('year', flat=True).distinct().order_by('-year')
     available_months = range(1, 13)
     available_statuses = MonthlyConfirmation.STATUS_CHOICES
@@ -566,22 +571,22 @@ def export_summaries_xlsx(request):
         'mpk_number', 'waste_fraction', 'waste_fraction__fraction_type'
     )
 
-    if year:
-        try:
-            queryset = queryset.filter(year=int(year))
-        except ValueError:
-            pass
+    if year is None and month is None:
+        year = str(timezone.now().year)
+        month = str(timezone.now().month)
+        
+    if year and year.isdigit():
+        queryset = queryset.filter(year=int(year))
 
-    if month:
-        try:
-            queryset = queryset.filter(month=int(month))
-        except ValueError:
-            pass
+    if month and month.isdigit():
+        queryset = queryset.filter(month=int(month))
+    
     if mpk:
         queryset = queryset.filter(mpk_number__mpk_number__icontains=mpk)
 
-    y = int(year) if year else timezone.now().year
-    m = int(month) if month else timezone.now().month
+    y = int(year) if year and str(year).isdigit() else timezone.now().year
+    m = int(month) if month and str(month).isdigit() else timezone.now().month
+    
     confirmations_prefetch = Prefetch(
         'mpk_number__confirmations',
         queryset=MonthlyConfirmation.objects.filter(
