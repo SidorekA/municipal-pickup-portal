@@ -74,7 +74,7 @@ def admin_tasks_view(request):
     ]
 
     # Global announcements
-    active_announcement = Notification.objects.filter(is_global=True, is_active=True).first()
+    active_announcements = Notification.objects.filter(is_global=True, is_active=True).order_by('-created_at')
     form_announcement = GlobalAnnouncementForm()
 
     context = {
@@ -85,7 +85,7 @@ def admin_tasks_view(request):
         'mpk_numbers': mpk_numbers,
         'years': years,
         'months': months,
-        'active_announcement': active_announcement,
+        'active_announcements': active_announcements,
         'form_announcement': form_announcement,
     }
     return render(request, 'core/admin_tasks.html', context)
@@ -408,11 +408,23 @@ def home_view(request):
 
     # 2. OSTATNIE ZGŁOSZENIA (Dla nowej karty "Historia")
     if request.user.is_superuser:
-        recent_pickups = Pickup.objects.all().order_by('-created_at')[:5]
+        recent_pickups_qs = Pickup.objects.all()
     else:
-        recent_pickups = Pickup.objects.filter(
-            mpk_number_id__in=allowed_mpk_ids
-        ).order_by('-created_at')[:5]
+        recent_pickups_qs = Pickup.objects.filter(mpk_number_id__in=allowed_mpk_ids)
+        
+    recent_pickups = list(recent_pickups_qs.select_related(
+        'mpk_number', 'location', 'reporter'
+    ).prefetch_related(
+        'waste_bins__waste_fraction__fraction_type'
+    ).order_by('-created_at')[:5])
+        
+    for pickup in recent_pickups:
+        for bin in pickup.waste_bins.all():
+            bin.planned_date = get_next_pickup_date(
+                fraction_type=bin.waste_fraction.fraction_type,
+                submitted_at=pickup.reported_at
+            )
+    context['object_list'] = recent_pickups 
     context['recent_pickups'] = recent_pickups
 
     # 3. POWIADOMIENIA
@@ -610,14 +622,10 @@ def create_global_announcement_view(request):
     if request.method == 'POST':
         form = GlobalAnnouncementForm(request.POST)
         if form.is_valid():
-            # Deactivate all previous global announcements
-            Notification.objects.filter(is_global=True, is_active=True).update(is_active=False)
-
-            # Create the new one
+            # Usunięto: deaktywację poprzednich — wiele może być aktywnych jednocześnie
             announcement = form.save(commit=False)
             announcement.is_global = True
             announcement.is_active = True
-            # Notification requires a user, but global might not. We could assign the admin
             announcement.user = request.user
             announcement.save()
             messages.success(request, "Ogłoszenie globalne zostało opublikowane.")
@@ -625,9 +633,16 @@ def create_global_announcement_view(request):
             messages.error(request, "Błąd w formularzu ogłoszenia.")
     return redirect('core:admin_tasks')
 
+
 @staff_member_required
 def disable_global_announcement_view(request):
     if request.method == 'POST':
-        Notification.objects.filter(is_global=True, is_active=True).update(is_active=False)
-        messages.success(request, "Ogłoszenie globalne zostało wyłączone.")
+        pk = request.POST.get('pk')  # przekazujemy pk konkretnego ogłoszenia
+        if pk:
+            Notification.objects.filter(pk=pk, is_global=True).update(is_active=False)
+            messages.success(request, "Ogłoszenie zostało wyłączone.")
+        else:
+            # fallback: wyłącz wszystkie aktywne
+            Notification.objects.filter(is_global=True, is_active=True).update(is_active=False)
+            messages.success(request, "Wszystkie ogłoszenia zostały wyłączone.")
     return redirect('core:admin_tasks')

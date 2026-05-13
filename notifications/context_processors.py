@@ -1,18 +1,16 @@
-# notifications/context_processors.py
 from .models import Notification
 
-
 def unread_notifications_count(request):
-    """
-    Wstrzykuje liczbę nieprzeczytanych powiadomień do każdego szablonu.
-    Wymagane: zarejestrowanie w TEMPLATES context_processors w settings.
-    """
     if not request.user.is_authenticated:
-        return {'unread_notifications_count': 0}
+        return {'unread_notifications_count': 0, 'recent_notifications': []}
 
-    count = Notification.objects.filter(
+    qs = Notification.objects.filter(
         user=request.user,
-        is_read=False
-    ).count()
+        is_read=False,
+        is_active=True
+    ).order_by('-created_at')
 
-    return {'unread_notifications_count': count}
+    return {
+        'unread_notifications_count': qs.count(),
+        'recent_notifications': qs[:10],
+    }

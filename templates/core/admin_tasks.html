@@ -1,343 +1,372 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 {% load static %}
-
 {% block title %}Narzędzia Administracyjne | System Zarządzania Odpadami{% endblock %}
-
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-tools me-2"></i>Narzędzia Administracyjne</h2>
-    </div>
-
-    <div class="row">
-        
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-excel me-2"></i>Import Danych (Zestawienia Miesięczne)</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Zaimportuj dane z raportu dostawcy (.xlsx lub .csv).</p>
-                    <form method="post" action="{% url 'core:import_collection_data' %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <input class="form-control" type="file" id="excel_file" name="excel_file" accept=".xlsx,.csv" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-upload me-2"></i>Zaimportuj plik
-                        </button>
-                    </form>
-                </div>
-            </div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-tools me-2"></i>Narzędzia Administracyjne
+            </h2>
         </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0"><i class="bi bi-table me-2"></i>Edycja Zestawień Dostawcy</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Przeglądaj, filtruj i edytuj na żywo zaimportowane zestawienia od dostawcy.</p>
-                    <a href="{% url 'reports:edit_summaries' %}" class="btn btn-dark w-100">
-                        <i class="bi bi-pencil-square me-2"></i>Przejdź do edycji
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-download me-2"></i>Eksport Danych z Tabeli</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Wybierz tabelę i pobierz pełne dane w formacie CSV lub XLSX.</p>
-                    <form method="post" action="{% url 'core:export_table_data' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="export_model_name" class="form-label">Tabela bazy danych</label>
-                            <select class="form-select" id="export_model_name" name="model_name" required>
-                                <option value="" selected disabled>Wybierz tabelę...</option>
-                                {% for model_name, verbose_name in models_list %}
-                                    <option value="{{ model_name }}">{{ verbose_name }} ({{ model_name }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="export_format" class="form-label">Format pliku</label>
-                            <select class="form-select" id="export_format" name="export_format" required>
-                                <option value="xlsx">Excel (.xlsx)</option>
-                                <option value="csv">CSV (.csv)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-info w-100 text-white">
-                            <i class="bi bi-cloud-download me-2"></i>Eksportuj
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Import Danych do Tabeli</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Hurtowy import lub aktualizacja danych w wybranej tabeli.</p>
-                    <form method="post" action="{% url 'core:import_table_data' %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="import_model_name" class="form-label">Tabela docelowa</label>
-                            <select class="form-select" id="import_model_name" name="model_name" required>
-                                <option value="" selected disabled>Wybierz tabelę...</option>
-                                {% for model_name, verbose_name in models_list %}
-                                    <option value="{{ model_name }}">{{ verbose_name }} ({{ model_name }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="data_file" class="form-label">Plik z danymi (.csv lub .xlsx)</label>
-                            <input class="form-control" type="file" id="data_file" name="data_file" accept=".xlsx,.csv" required>
-                        </div>
-                        <button type="submit" class="btn btn-warning w-100">
-                            <i class="bi bi-cloud-upload me-2"></i>Importuj
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header text-white" style="background-color: #6f42c1;">
-                    <h5 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Generowanie Raportu Kosztowego</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Wygeneruj raport kosztowy z zestawień z podziałem na MPK.</p>
-                    <form method="GET" action="{% url 'core:admin_task_cost_report' %}">
-                        <div class="mb-3">
-                            <label for="report_year" class="form-label">Rok (opcjonalnie)</label>
-                            <select class="form-select" id="report_year" name="year">
-                                <option value="" selected>--- Wszystkie lata ---</option>
-                                {% for year in years %}
-                                    <option value="{{ year }}">{{ year }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="report_month" class="form-label">Miesiąc (opcjonalnie)</label>
-                            <select class="form-select" id="report_month" name="month">
-                                <option value="" selected>--- Wszystkie miesiące ---</option>
-                                {% for month_num, month_name in months %}
-                                    <option value="{{ month_num }}">{{ month_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="report_mpk" class="form-label">Numer MPK (opcjonalnie)</label>
-                            <select class="form-select" id="report_mpk" name="mpk_number_id">
-                                <option value="" selected>--- Wszystkie MPK ---</option>
-                                {% for mpk in mpk_numbers %}
-                                    <option value="{{ mpk.id }}">{{ mpk.mpk_number }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="report_format" class="form-label">Format pliku</label>
-                            <select class="form-select" id="report_format" name="format">
-                                <option value="xlsx" selected>Excel (.xlsx)</option>
-                                <option value="csv">CSV (.csv)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn text-white w-100" style="background-color: #6f42c1;">
-                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generuj Raport
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Eksport Historii Zmian (Auditlog)</h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">Wygeneruj plik zawierający logi audytowe dla wybranych parametrów (wszystkie opcjonalne).</p>
-                    <form method="GET" action="{% url 'core:admin_task_auditlog_export' %}">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="auditlog_date_from" class="form-label">Data od</label>
-                                <input type="date" class="form-control" id="auditlog_date_from" name="date_from">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="auditlog_date_to" class="form-label">Data do</label>
-                                <input type="date" class="form-control" id="auditlog_date_to" name="date_to">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="auditlog_user" class="form-label">Użytkownik</label>
-                            <select class="form-select" id="auditlog_user" name="user_id">
-                                <option value="" selected>--- Wszyscy użytkownicy ---</option>
-                                {% for u in users %}
-                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="auditlog_content_type" class="form-label">Model/Tabela</label>
-                            <select class="form-select" id="auditlog_content_type" name="content_type_id">
-                                <option value="" selected>--- Wszystkie tabele ---</option>
-                                {% for ct in log_content_types %}
-                                    <option value="{{ ct.id }}">{{ ct.name|title }} ({{ ct.app_label }}.{{ ct.model }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-secondary w-100">
-                            <i class="bi bi-cloud-download me-2"></i>Pobierz historię
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Komunikacja e-mail</h5>
-                </div>
-                <div class="card-body d-flex flex-column gap-3">
-                    <a href="{% url 'core:draft_email_unconfirmed' %}" class="btn btn-outline-success text-start">
-                        <i class="bi bi-envelope-exclamation me-2"></i>Wygeneruj draft: brak potwierdzeń
-                    </a>
-                    <a href="{% url 'core:draft_email_all_users' %}" class="btn btn-outline-success text-start">
-                        <i class="bi bi-envelope-paper me-2"></i>Wygeneruj draft: wszyscy użytkownicy
-                    </a>
-                    <a href="{% url 'core:draft_email_coordinators' %}" class="btn btn-outline-success text-start">
-                        <i class="bi bi-envelope-at me-2"></i>Wygeneruj draft: Koordynatorzy MPK
-                    </a>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Ogłoszenia Globalne -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="bi bi-megaphone me-2"></i>Ogłoszenia Globalne (Dashboard)</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{% url 'core:create_global_announcement' %}">
-                        {% csrf_token %}
-
-                        <div class="mb-3">
-                            <label for="{{ form_announcement.message.id_for_label }}" class="form-label">Treść ogłoszenia</label>
-                            {% render_field form_announcement.message class="form-control mb-3" rows="3" placeholder="Wpisz treść komunikatu dla wszystkich..." %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="{{ form_announcement.alert_type.id_for_label }}" class="form-label">Typ alertu</label>
-                            {% render_field form_announcement.alert_type class="form-select" %}
-                        </div>
-
-                        <button type="submit" class="btn btn-danger w-100"><i class="bi bi-send-fill me-2"></i>Opublikuj ogłoszenie</button>
-                    </form>
-
-                    {% if active_announcement %}
-                    <hr>
-                    <div class="mt-3">
-                        <h6 class="text-muted mb-2">Aktywne ogłoszenie:</h6>
-                        <div class="alert alert-{{ active_announcement.alert_type }} py-2 mb-2">
-                            {{ active_announcement.message|truncatechars:50 }}
-                        </div>
-                        <form method="POST" action="{% url 'core:disable_global_announcement' %}">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Import Danych (Zestawienia Miesięczne)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted">Zaimportuj dane z raportu dostawcy (.xlsx lub .csv).</p>
+                        <form method="post"
+                              action="{% url 'core:import_collection_data' %}"
+                              enctype="multipart/form-data">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
-                                <i class="bi bi-x-circle me-1"></i>Zakończ wyświetlanie
+                            <div class="mb-3">
+                                <input class="form-control"
+                                       type="file"
+                                       id="excel_file"
+                                       name="excel_file"
+                                       accept=".xlsx,.csv"
+                                       required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-upload me-2"></i>Zaimportuj plik
                             </button>
                         </form>
                     </div>
-                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table me-2"></i>Edycja Zestawień Dostawcy
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted">Przeglądaj, filtruj i edytuj na żywo zaimportowane zestawienia od dostawcy.</p>
+                        <a href="{% url 'reports:edit_summaries' %}" class="btn btn-dark w-100">
+                            <i class="bi bi-pencil-square me-2"></i>Przejdź do edycji
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-download me-2"></i>Eksport Danych z Tabeli
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted">Wybierz tabelę i pobierz pełne dane w formacie CSV lub XLSX.</p>
+                        <form method="post" action="{% url 'core:export_table_data' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="export_model_name" class="form-label">Tabela bazy danych</label>
+                                <select class="form-select" id="export_model_name" name="model_name" required>
+                                    <option value="" selected disabled>Wybierz tabelę...</option>
+                                    {% for model_name, verbose_name in models_list %}
+                                        <option value="{{ model_name }}">{{ verbose_name }} ({{ model_name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="export_format" class="form-label">Format pliku</label>
+                                <select class="form-select" id="export_format" name="export_format" required>
+                                    <option value="xlsx">Excel (.xlsx)</option>
+                                    <option value="csv">CSV (.csv)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-info w-100 text-white">
+                                <i class="bi bi-cloud-download me-2"></i>Eksportuj
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-upload me-2"></i>Import Danych do Tabeli
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted">Hurtowy import lub aktualizacja danych w wybranej tabeli.</p>
+                        <form method="post"
+                              action="{% url 'core:import_table_data' %}"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="import_model_name" class="form-label">Tabela docelowa</label>
+                                <select class="form-select" id="import_model_name" name="model_name" required>
+                                    <option value="" selected disabled>Wybierz tabelę...</option>
+                                    {% for model_name, verbose_name in models_list %}
+                                        <option value="{{ model_name }}">{{ verbose_name }} ({{ model_name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="data_file" class="form-label">Plik z danymi (.csv lub .xlsx)</label>
+                                <input class="form-control"
+                                       type="file"
+                                       id="data_file"
+                                       name="data_file"
+                                       accept=".xlsx,.csv"
+                                       required>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="bi bi-cloud-upload me-2"></i>Importuj
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header text-white" style="background-color: #6f42c1;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cash-coin me-2"></i>Generowanie Raportu Kosztowego
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted">Wygeneruj raport kosztowy z zestawień z podziałem na MPK.</p>
+                        <form method="GET" action="{% url 'core:admin_task_cost_report' %}">
+                            <div class="mb-3">
+                                <label for="report_year" class="form-label">Rok (opcjonalnie)</label>
+                                <select class="form-select" id="report_year" name="year">
+                                    <option value="" selected>--- Wszystkie lata ---</option>
+                                    {% for year in years %}<option value="{{ year }}">{{ year }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="report_month" class="form-label">Miesiąc (opcjonalnie)</label>
+                                <select class="form-select" id="report_month" name="month">
+                                    <option value="" selected>--- Wszystkie miesiące ---</option>
+                                    {% for month_num, month_name in months %}<option value="{{ month_num }}">{{ month_name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="report_mpk" class="form-label">Numer MPK (opcjonalnie)</label>
+                                <select class="form-select" id="report_mpk" name="mpk_number_id">
+                                    <option value="" selected>--- Wszystkie MPK ---</option>
+                                    {% for mpk in mpk_numbers %}<option value="{{ mpk.id }}">{{ mpk.mpk_number }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="report_format" class="form-label">Format pliku</label>
+                                <select class="form-select" id="report_format" name="format">
+                                    <option value="xlsx" selected>Excel (.xlsx)</option>
+                                    <option value="csv">CSV (.csv)</option>
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    class="btn text-white w-100"
+                                    style="background-color: #6f42c1">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generuj Raport
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Eksport Historii Zmian (Auditlog)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted">
+                            Wygeneruj plik zawierający logi audytowe dla wybranych parametrów (wszystkie opcjonalne).
+                        </p>
+                        <form method="GET" action="{% url 'core:admin_task_auditlog_export' %}">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="auditlog_date_from" class="form-label">Data od</label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="auditlog_date_from"
+                                           name="date_from">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="auditlog_date_to" class="form-label">Data do</label>
+                                    <input type="date" class="form-control" id="auditlog_date_to" name="date_to">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="auditlog_user" class="form-label">Użytkownik</label>
+                                <select class="form-select" id="auditlog_user" name="user_id">
+                                    <option value="" selected>--- Wszyscy użytkownicy ---</option>
+                                    {% for u in users %}
+                                        <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="auditlog_content_type" class="form-label">Model/Tabela</label>
+                                <select class="form-select" id="auditlog_content_type" name="content_type_id">
+                                    <option value="" selected>--- Wszystkie tabele ---</option>
+                                    {% for ct in log_content_types %}
+                                        <option value="{{ ct.id }}">{{ ct.name|title }} ({{ ct.app_label }}.{{ ct.model }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-secondary w-100">
+                                <i class="bi bi-cloud-download me-2"></i>Pobierz historię
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-envelope me-2"></i>Komunikacja e-mail
+                        </h5>
+                    </div>
+                    <div class="card-body d-flex flex-column gap-3">
+                        <a href="{% url 'core:draft_email_unconfirmed' %}"
+                           class="btn btn-outline-success text-start">
+                            <i class="bi bi-envelope-exclamation me-2"></i>Wygeneruj draft: brak potwierdzeń
+                        </a>
+                        <a href="{% url 'core:draft_email_all_users' %}"
+                           class="btn btn-outline-success text-start">
+                            <i class="bi bi-envelope-paper me-2"></i>Wygeneruj draft: wszyscy użytkownicy
+                        </a>
+                        <a href="{% url 'core:draft_email_coordinators' %}"
+                           class="btn btn-outline-success text-start">
+                            <i class="bi bi-envelope-at me-2"></i>Wygeneruj draft: Koordynatorzy MPK
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Ogłoszenia Globalne -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-megaphone me-2"></i>Ogłoszenia Globalne (Dashboard)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{% url 'core:create_global_announcement' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="{{ form_announcement.message.id_for_label }}" class="form-label">Treść ogłoszenia</label>
+                                {% render_field form_announcement.message class="form-control mb-3" rows="3" placeholder="Wpisz treść komunikatu dla wszystkich..." %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form_announcement.alert_type.id_for_label }}"
+                                       class="form-label">Typ alertu</label>
+                                {% render_field form_announcement.alert_type class="form-select" %}
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="bi bi-send-fill me-2"></i>Opublikuj ogłoszenie
+                            </button>
+                        </form>
+                        {% if active_announcements %}
+                            <hr>
+                            <div class="mt-3">
+                                <h6 class="text-muted mb-2">Aktywne ogłoszenia:</h6>
+                                {% for ann in active_announcements %}
+                                    <div class="alert alert-{{ ann.alert_type }} py-2 mb-2 d-flex justify-content-between align-items-center">
+                                        <span>{{ ann.message|truncatechars:60 }}</span>
+                                        <form method="POST"
+                                              action="{% url 'core:disable_global_announcement' %}"
+                                              class="ms-2">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="pk" value="{{ ann.pk }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-dark">
+                                                <i class="bi bi-x-circle me-1"></i>Wyłącz
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-
-    </div>
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Rejestr Pobrań i Importów</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Data</th>
-                            <th>Akcja</th>
-                            <th>Tabela</th>
-                            <th>Plik</th>
-                            <th>Rekordy</th>
-                            <th>Status</th>
-                            <th>Szczegóły</th>
-                            <th>Użytkownik</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in transfer_logs %}
-                        <tr>
-                            <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
-                            <td>
-                                {% if log.action == 'EXPORT' %}
-                                    <span class="badge bg-info text-dark">Eksport</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Import</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ log.table_name }}</td>
-                            <td>{{ log.file_name }}</td>
-                            <td>{{ log.records_count }}</td>
-                            <td>
-                                {% if log.status == 'SUCCESS' %}
-                                    <span class="badge bg-success">Sukces</span>
-                                {% elif log.status == 'PARTIAL' %}
-                                    <span class="badge bg-warning text-dark">Częściowy</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Błąd</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if log.details %}
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="popover" title="Szczegóły" data-bs-content="{{ log.details }}">
-                                        Pokaż
-                                    </button>
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>{{ log.created_by.get_full_name|default:log.created_by.username|default:"-" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="8" class="text-center py-3 text-muted">Brak zapisów w rejestrze.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-text me-2"></i>Rejestr Pobrań i Importów
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Akcja</th>
+                                <th>Tabela</th>
+                                <th>Plik</th>
+                                <th>Rekordy</th>
+                                <th>Status</th>
+                                <th>Szczegóły</th>
+                                <th>Użytkownik</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in transfer_logs %}
+                                <tr>
+                                    <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        {% if log.action == 'EXPORT' %}
+                                            <span class="badge bg-info text-dark">Eksport</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Import</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.table_name }}</td>
+                                    <td>{{ log.file_name }}</td>
+                                    <td>{{ log.records_count }}</td>
+                                    <td>
+                                        {% if log.status == 'SUCCESS' %}
+                                            <span class="badge bg-success">Sukces</span>
+                                        {% elif log.status == 'PARTIAL' %}
+                                            <span class="badge bg-warning text-dark">Częściowy</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Błąd</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.details %}
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    data-bs-toggle="popover"
+                                                    title="Szczegóły"
+                                                    data-bs-content="{{ log.details }}">Pokaż</button>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.created_by.get_full_name|default:log.created_by.username|default:"-" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-3 text-muted">Brak zapisów w rejestrze.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-
-</div>
-
-<script>
+    <script>
     document.addEventListener("DOMContentLoaded", function(){
         var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
         var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
             return new bootstrap.Popover(popoverTriggerEl)
         })
     });
-</script>
+    </script>
 {% endblock %}

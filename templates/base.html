@@ -4,25 +4,178 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="System Zarządzania Odpadami - aplikacja do zarządzania zgłoszeniami, harmonogramami i kosztami gospodarowania odpadami komunalnymi.">
-        <meta name="keywords" content="odpady komunalne, zarządzanie odpadami, harmonogram, zgłoszenia, system odpadów, podsumowanie kosztów">
-        <title>System Zarządzania Odpadami</title>
+        <meta name="description"
+              content="System Zarządzania Odpadami - aplikacja do zarządzania zgłoszeniami, harmonogramami i kosztami gospodarowania odpadami komunalnymi.">
+        <meta name="keywords"
+              content="odpady komunalne, zarządzanie odpadami, harmonogram, zgłoszenia, system odpadów, podsumowanie kosztów">
+        <title>
+            {% block title %}System Zarządzania Odpadami{% endblock %}
+        </title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
               rel="stylesheet">
         <link rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
               rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-              rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
               rel="stylesheet" />
         <link rel="stylesheet" href="{% static 'css/style.css' %}">
         <link rel="stylesheet" href="{% static 'css/wasteflow.css' %}">
         {% block extra_css %}{% endblock %}
+        <style>
+            /* Sidebar toggle */
+            .wf-sidebar {
+                transition: transform 0.25s ease, width 0.25s ease;
+            }
+            .wf-layout.sidebar-collapsed .wf-sidebar {
+                transform: translateX(-100%);
+                width: 0;
+                overflow: hidden;
+            }
+            .wf-layout.sidebar-collapsed .wf-main {
+                margin-left: 0;
+            }
+            .btn-sidebar-toggle {
+                background: none;
+                border: none;
+                padding: 4px 8px;
+                cursor: pointer;
+                color: inherit;
+                border-radius: 6px;
+                transition: background 0.15s;
+            }
+            .btn-sidebar-toggle:hover {
+                background: rgba(0,0,0,0.07);
+            }
+
+            /* Topbar alignment z logo */
+            .wf-topbar {
+                display: flex;
+                align-items: center;
+                height: var(--wf-logo-height, 64px); /* dopasuj do wysokości wf-logo-area */
+            }
+            .wf-logo-area {
+                height: var(--wf-logo-height, 64px);
+                display: flex;
+                align-items: center;
+            }
+
+            /* Notification dropdown */
+            .wf-notif-btn {
+                background: none;
+                border: none;
+                padding: 4px 6px;
+                cursor: pointer;
+                color: inherit;
+                position: relative;
+                border-radius: 6px;
+                transition: background 0.15s;
+                font-size: 1.25rem;
+                line-height: 1;
+            }
+            .wf-notif-btn:hover { background: rgba(0,0,0,0.07); }
+
+            .wf-notif-badge {
+                position: absolute;
+                bottom: 1px;
+                right: 1px;
+                background: #a30a0a;       /* zielony zamiast czerwonego */
+                width: 7px;
+                height: 7px;
+                min-width: unset;
+                padding: 0;
+                border-radius: 50%;
+                border: 1.5px solid #fff;  /* biała obwódka oddziela od ikony */
+                font-size: 0;              /* ukryj liczbę — sama kropka */
+            }
+
+            .wf-notif-panel {
+                width: 360px;
+                max-height: 480px;
+                overflow-y: auto;
+                padding: 0;
+                border: 1px solid #e5e7eb;
+                border-radius: 10px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            }
+            .wf-notif-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 16px;
+                border-bottom: 1px solid #f3f4f6;
+                position: sticky;
+                top: 0;
+                background: #fff;
+                z-index: 1;
+            }
+            .wf-notif-header span {
+                font-weight: 600;
+                font-size: 0.9rem;
+                color: #111;
+            }
+            .wf-notif-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 12px 16px;
+                border-bottom: 1px solid #f9fafb;
+                transition: background 0.12s;
+            }
+            .wf-notif-item:last-child { border-bottom: none; }
+            .wf-notif-item:hover { background: #f9fafb; }
+            .wf-notif-item.unread { background: #f0fdf4; }
+            .wf-notif-item.unread:hover { background: #dcfce7; }
+            .wf-notif-dot {
+                width: 8px; height: 8px;
+                border-radius: 50%;
+                margin-top: 5px;
+                flex-shrink: 0;
+            }
+            .wf-notif-dot.info    { background: #3b82f6; }
+            .wf-notif-dot.warning { background: #f59e0b; }
+            .wf-notif-dot.danger  { background: #dc2626; }
+            .wf-notif-dot.success { background: #16a34a; }
+            .wf-notif-msg {
+                font-size: 0.82rem;
+                color: #374151;
+                line-height: 1.4;
+                flex: 1;
+            }
+            .wf-notif-time {
+                font-size: 0.72rem;
+                color: #9ca3af;
+                margin-top: 3px;
+            }
+            .wf-notif-mark-btn {
+                background: none;
+                border: none;
+                padding: 2px 4px;
+                border-radius: 4px;
+                color: #9ca3af;
+                cursor: pointer;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+            }
+            .wf-notif-mark-btn:hover { color: #16a34a; background: #f0fdf4; }
+            .wf-notif-empty {
+                padding: 32px 16px;
+                text-align: center;
+                color: #9ca3af;
+                font-size: 0.85rem;
+            }
+            .wf-notif-footer {
+                padding: 10px 16px;
+                border-top: 1px solid #f3f4f6;
+                text-align: center;
+                position: sticky;
+                bottom: 0;
+                background: #fff;
+            }
+        </style>
     </head>
     <body>
-        <div class="wf-layout">
+        <div class="wf-layout" id="wfLayout">
             <!-- Sidebar -->
             <aside class="wf-sidebar">
                 <div class="wf-logo-area">
@@ -35,40 +188,33 @@
                 <nav class="wf-nav">
                     <a href="/"
                        class="wf-nav-item {% if request.path == '/' %}active{% endif %}">
-                        <span class="material-symbols-outlined">dashboard</span>
-                        Start
+                        <span class="material-symbols-outlined">dashboard</span>Start
                     </a>
                     <a href="{% url 'pickups:pickup_list' %}"
                        class="wf-nav-item {% if '/zgloszenia/lista/' in request.path %}active{% endif %}">
-                        <span class="material-symbols-outlined">list</span>
-                        Lista zgłoszeń
+                        <span class="material-symbols-outlined">list</span>Lista zgłoszeń
                     </a>
                     <a href="{% url 'pickups:pickup_create' %}"
                        class="wf-nav-item {% if '/zgloszenia/dodaj/' in request.path %}active{% endif %}">
-                        <span class="material-symbols-outlined">add_circle</span>
-                        Nowe zgłoszenie
+                        <span class="material-symbols-outlined">add_circle</span>Nowe zgłoszenie
                     </a>
                     {% if user.is_staff %}
                         <a href="{% url 'core:admin_tasks' %}"
                            class="wf-nav-item {% if '/admin-tasks/' in request.path %}active{% endif %}">
-                            <span class="material-symbols-outlined">construction</span>
-                            Narzędzia
+                            <span class="material-symbols-outlined">construction</span>Narzędzia
                         </a>
                     {% endif %}
                     <a href="{% url 'scheduling:calendar' %}"
                        class="wf-nav-item {% if '/harmonogram/' in request.path %}active{% endif %}">
-                        <span class="material-symbols-outlined">calendar_month</span>
-                        Harmonogram
+                        <span class="material-symbols-outlined">calendar_month</span>Harmonogram
                     </a>
                     <a href="{% url 'reports:monthly_summary' %}"
                        class="wf-nav-item {% if '/podsumowanie/' in request.path %}active{% endif %}">
-                        <span class="material-symbols-outlined">free_cancellation</span>
-                        Podsumowanie miesięczne
+                        <span class="material-symbols-outlined">free_cancellation</span>Podsumowanie miesięczne
                     </a>
                     <a href="{% url 'reports:cost_summary' %}"
                        class="wf-nav-item {% if '/koszty/' in request.path %}active{% endif %}">
-                        <span class="material-symbols-outlined">payments</span>
-                        Zestawienie Kosztowe
+                        <span class="material-symbols-outlined">payments</span>Zestawienie Kosztowe
                     </a>
                 </nav>
                 {% if user.is_authenticated %}
@@ -85,23 +231,93 @@
             <div class="wf-main">
                 <!-- Topbar -->
                 <header class="wf-topbar">
-                    <div class="wf-breadcrumb">
-                        {% block breadcrumb %}<span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>{% endblock %}
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Przycisk chowania sidebara -->
+                        <button class="btn-sidebar-toggle"
+                                id="sidebarToggle"
+                                title="Zwiń / rozwiń menu">
+                            <i class="bi bi-layout-sidebar"></i>
+                        </button>
+                        <div class="wf-breadcrumb">
+                            {% block breadcrumb %}<span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>{% endblock %}
+                        </div>
                     </div>
                     <div class="wf-topbar-actions">
                         {% if user.is_authenticated %}
-                            <a href="/"
-                               title="Powiadomienia"
-                               style="text-decoration:none;
-                                      color:inherit;
-                                      position:relative">
-                                <i class="bi bi-bell wf-bell-icon"></i>
-                                {% if unread_notifications_count %}
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                          style="font-size:0.6rem;
-                                                 padding:2px 4px">{{ unread_notifications_count }}</span>
-                                {% endif %}
-                            </a>
+                            <!-- Powiadomienia -->
+                            <div class="dropdown">
+                                <button class="wf-notif-btn"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        data-bs-auto-close="outside"
+                                        title="Powiadomienia">
+                                    {% if unread_notifications_count %}
+                                        <i class="bi bi-mailbox-flag"></i>
+                                        <span class="wf-notif-badge"></span>
+                                    {% else %}
+                                        <i class="bi bi-mailbox"></i>
+                                    {% endif %}
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end wf-notif-panel">
+                                    <div class="wf-notif-header">
+                                        <span>
+                                            Powiadomienia
+                                            {% if unread_notifications_count %}
+                                                <span class="badge bg-success ms-1" style="font-size:0.65rem;">{{ unread_notifications_count }}</span>
+                                            {% endif %}
+                                        </span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            {% if unread_notifications_count %}
+                                                <button class="btn btn-link btn-sm p-0 text-success"
+                                                        style="font-size:0.78rem"
+                                                        id="markAllReadBtn"
+                                                        data-url="{% url 'notifications:mark_all_as_read' %}">
+                                                    <i class="bi bi-check2-all me-1"></i>Oznacz wszystkie
+                                                </button>
+                                            {% endif %}
+                                            <a href="{% url 'notifications:notification_list' %}"
+                                               class="btn btn-link btn-sm p-0 text-muted"
+                                               style="font-size:0.78rem"
+                                               title="Wszystkie powiadomienia">
+                                                <i class="bi bi-arrow-right-circle"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div id="notifList">
+                                        {% if recent_notifications %}
+                                            {% for notif in recent_notifications %}
+                                                <div class="wf-notif-item unread" id="notif-{{ notif.pk }}">
+                                                    <div class="wf-notif-dot {{ notif.alert_type }}"></div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="wf-notif-msg">{{ notif.message }}</div>
+                                                        <div class="wf-notif-time">
+                                                            <i class="bi bi-clock me-1"></i>{{ notif.created_at|timesince }} temu
+                                                        </div>
+                                                    </div>
+                                                    <button type="button"
+                                                            class="wf-notif-mark-btn"
+                                                            title="Oznacz jako przeczytane"
+                                                            onclick="markAsRead({{ notif.pk }}, '{% url 'notifications:mark_as_read' notif.pk %}', this, event)">
+                                                        <i class="bi bi-check2"></i>
+                                                    </button>
+                                                </div>
+                                            {% endfor %}
+                                            <div class="wf-notif-footer">
+                                                <a href="{% url 'notifications:notification_list' %}"
+                                                   class="text-success text-decoration-none"
+                                                   style="font-size:0.8rem">
+                                                    <i class="bi bi-list-ul me-1"></i>Zobacz wszystkie powiadomienia
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <div class="wf-notif-empty">
+                                                <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted"></i>
+                                                Brak nowych powiadomień
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                             <a href="/konto/profil/" style="text-decoration:none; color:inherit;">
                                 <div class="wf-avatar wf-topbar-avatar">{{ user.first_name|first|default:user.username|first|upper }}</div>
                             </a>
@@ -143,6 +359,118 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Niezawodne pobranie tokena CSRF z formularza wylogowania
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const CSRF_TOKEN = csrfInput ? csrfInput.value : '';
+
+    // 2. Funkcja dla pojedynczego powiadomienia
+    window.markAsRead = function(pk, url, btn, event) {
+        // Blokujemy domyślną akcję i nie pozwalamy, by kliknięcie zamknęło menu
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN,
+                'Content-Type': 'application/json', // Informuje Django, że to AJAX
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+        }).then(res => {
+            if (res.ok || res.redirected) {
+                const item = document.getElementById('notif-' + pk);
+                if (item) {
+                    item.style.transition = 'opacity 0.3s, max-height 0.3s';
+                    item.style.opacity = '0';
+                    item.style.maxHeight = item.offsetHeight + 'px';
+                    setTimeout(() => {
+                        item.style.maxHeight = '0';
+                        item.style.padding = '0';
+                        item.style.overflow = 'hidden';
+                    }, 300);
+                    setTimeout(() => item.remove(), 600);
+                }
+                updateNotifBadge(-1);
+            } else {
+                console.error("Błąd zapisu! Status serwera:", res.status);
+            }
+        }).catch(console.error);
+    };
+
+    function updateNotifBadge(delta) {
+        const badge = document.querySelector('.wf-notif-badge');
+        const btn = document.querySelector('.wf-notif-btn i');
+        if (!badge) return;
+        
+        // Zliczamy ile elementów zostało na liście
+        const remaining = document.querySelectorAll('.wf-notif-item').length - 1;
+        if (remaining <= 0) {
+            badge.remove();
+            if (btn) btn.className = 'bi bi-mailbox';
+            
+            const list = document.getElementById('notifList');
+            if (list) list.innerHTML = `
+                <div class="wf-notif-empty">
+                    <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted"></i>
+                    Brak nowych powiadomień
+                </div>`;
+        }
+    }
+
+    // 3. Obsługa przycisku "Oznacz wszystkie"
+    const markAllBtn = document.getElementById('markAllReadBtn');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            fetch(markAllBtn.dataset.url, {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': CSRF_TOKEN,
+                    'Content-Type': 'application/json', // Tego wcześniej brakowało!
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            }).then(res => {
+                if (res.ok || res.redirected) {
+                    document.querySelectorAll('.wf-notif-item').forEach(el => el.remove());
+                    
+                    const badge = document.querySelector('.wf-notif-badge');
+                    if (badge) badge.remove();
+                    
+                    const btn = document.querySelector('.wf-notif-btn i');
+                    if (btn) btn.className = 'bi bi-mailbox';
+                    
+                    const list = document.getElementById('notifList');
+                    if (list) list.innerHTML = `
+                        <div class="wf-notif-empty">
+                            <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted"></i>
+                            Brak nowych powiadomień
+                        </div>`;
+                    
+                    markAllBtn.closest('div')?.remove();
+                } else {
+                    console.error("Błąd zapisu! Status serwera:", res.status);
+                }
+            }).catch(console.error);
+        });
+    }
+
+    // 4. Obsługa zamykania sidebara
+    const sidebarToggleBtn = document.getElementById('sidebarToggle');
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            const layout = document.getElementById('wfLayout');
+            layout.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebar-collapsed', layout.classList.contains('sidebar-collapsed') ? '1' : '0');
+        });
+    }
+});
+        </script>
         {% block extra_js %}
         {% endblock %}
     </body>
