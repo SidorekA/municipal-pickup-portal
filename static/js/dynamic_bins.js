@@ -9,13 +9,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // === INICJALIZACJA TOM SELECT ===
     let mpkTs = new TomSelect(mpkSelect, {
-        placeholder: "--- Wybierz nr MPK ---",
+        placeholder: "Wybierz nr MPK",
         hideSelected: true,
         searchField: ["text"]
     });
 
     let locTs = new TomSelect(locationSelect, {
-        placeholder: "--- Wybierz lokalizację ---",
+        placeholder: "Wybierz lokalizację",
         hideSelected: true,
         searchField: ["text"]
     });
@@ -228,16 +228,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 fetch(`/zgloszenia/api/lokalizacja/${locationId}/daty-odbioru/`)
                     .then(r => r.json())
                     .then(datesData => {
-                        datesData.dates.forEach(item => {
-                            const card = binsContainer.querySelector(`[data-fraction-id="${item.fraction_id}"]`);
-                            if (!card || !item.planned_date) return;
+                        datesData.dates.forEach(bin => {
+                            const card = binsContainer.querySelector(`[data-fraction-id="${bin.fraction_id}"]`);
+                            if (!card || !bin.planned_date) return;
                             const maxInfo = card.querySelector('.stepper-max-info');
                             if (!maxInfo) return;
 
                             const dateEl = document.createElement('p');
                             dateEl.className = 'text-success text-center mb-0 mt-1';
                             dateEl.style.cssText = 'font-size:0.7rem;font-weight:600';
-                            dateEl.innerHTML = `<i class="bi bi-calendar-check me-1" aria-hidden="true"></i>${item.planned_date}`;
+                            dateEl.innerHTML = `<i class="bi bi-calendar-check me-1" aria-hidden="true"></i>${bin.planned_date}`;
                             maxInfo.insertAdjacentElement('afterend', dateEl);
                         });
                     }).catch(() => {});
