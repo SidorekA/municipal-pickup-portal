@@ -108,7 +108,6 @@ def approve_confirmation(request, pk):
 
 @login_required
 def monthly_summary_view(request):
-    today = timezone.now().date()
     filter_status = request.GET.get('filter_status')
 
     form = ReportFilterForm(request.GET or None, user=request.user)
@@ -799,14 +798,18 @@ def cost_summary_view(request):
  
     # ── Pobranie wszystkich stawek do pamięci ────────────────────────
     all_costs = list(WasteCost.objects.all().order_by('-date_from'))
+
+    # Optymalizacja O(n^2) do O(n) przez grupowanie stawek według frakcji
+    costs_by_fraction = defaultdict(list)
+    for cost in all_costs:
+        costs_by_fraction[cost.waste_fraction_id].append(cost)
  
     def get_unit_cost(fraction_id, target_date):
-        for cost in all_costs:
-            if cost.waste_fraction_id == fraction_id:
-                if cost.date_from <= target_date and (
-                    cost.date_to is None or cost.date_to >= target_date
-                ):
-                    return cost.cost
+        for cost in costs_by_fraction.get(fraction_id, []):
+            if cost.date_from <= target_date and (
+                cost.date_to is None or cost.date_to >= target_date
+            ):
+                return cost.cost
         return None
  
     # ── Budowanie wierszy tabeli ─────────────────────────────────────
