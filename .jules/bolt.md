@@ -1,0 +1,3 @@
+## 2024-05-18 - Optimize nested loops for database cost mapping with `defaultdict`
+**Learning:** Found an O(N^2) bottleneck in `reports/views.py` and `reports/services.py` where a pre-fetched list of `WasteCost` rows (`all_costs`) was iteratively searched for each target date and fraction during dataset processing. In Python, searching a list is O(M), making the entire dataset operation O(N * M).
+**Action:** When mapping temporal or related data in memory, always group the pre-fetched objects into a `collections.defaultdict(list)` indexed by the join key (e.g. `waste_fraction_id`). This converts the O(M) list scan into an O(1) dictionary lookup (followed by an iteration only over a small subset of relevant entries), reducing the overall time complexity to O(N).
