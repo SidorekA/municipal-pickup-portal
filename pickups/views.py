@@ -5,12 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
 from users.models import Permission
-from .tasks import wyslij_zgloszenie_email
+# from .tasks import wyslij_zgloszenie_email
+from .tasks import wyslij_email_sync
+
 from pickups.models import Pickup, PickupWasteBin
 from .forms import PickupForm, PickupFilterForm
 from django.http import JsonResponse
 from locations.models import Location, LocationContact, LocationWasteBin
 from scheduling.services import get_next_pickup_date
+import logging
+logger = logging.getLogger(__name__)
 
 @login_required
 def create_pickup(request):
@@ -48,7 +52,11 @@ def create_pickup(request):
                 messages.error(request, "Musisz wybrać ilość przynajmniej jednego pojemnika do odbioru!")
                 return render(request, 'pickups/pickup_form.html', {'form': form})
 
-            wyslij_zgloszenie_email.delay(pickup.id)
+            # wyslij_zgloszenie_email.delay(pickup.id)
+            try:
+                wyslij_email_sync(pickup.id)
+            except Exception as e:
+                logger.warning(f"Email nie został wysłany: {e}")
             messages.success(request, f"Zgłoszenie {pickup.pickup_number} zostało utworzone!")
             return redirect('pickups:pickup_success')
         else:

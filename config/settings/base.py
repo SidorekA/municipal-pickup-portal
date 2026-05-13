@@ -7,7 +7,11 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = False
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", cast=lambda v: [s.strip() for s in v.split(",") if s.strip()])
+ALLOWED_HOSTS = [
+    "frog03-20514.wykr.es",
+    "127.0.0.1",
+    "localhost",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -135,6 +139,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1",
+    "https://frog03-20514.wykr.es",
+    "http://frog03-20514.wykr.es",
 ]
 
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")

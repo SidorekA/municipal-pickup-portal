@@ -1,0 +1,280 @@
+/* static/css/forms.css */
+
+/* --- Soft UI Cards --- */
+.soft-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    background-color: #ffffff;
+}
+
+/* --- Input Groups & Form Controls --- */
+.input-group {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 2px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.input-group:focus-within {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.15);
+    border-color: #28a745;
+}
+
+.input-group-text {
+    background-color: transparent !important;
+    color: #adb5bd;
+}
+
+.custom-input {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding-left: 0;
+}
+
+.custom-input:focus {
+    box-shadow: none !important;
+    background-color: transparent !important;
+}
+
+/* --- Empty State --- */
+.empty-state {
+    border: 2px dashed #dee2e6;
+    border-radius: 16px;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: #adb5bd;
+    opacity: 0.6;
+}
+
+/* --- Submit Button --- */
+.btn-submit {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(40, 167, 69, 0.3) !important;
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+}
+
+/* --- Kafelki pojemników (Bin Cards) --- */
+.bin-card { 
+    transition: all 0.2s ease-in-out; 
+    border-radius: 16px;
+    border: none !important;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.bin-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+    background-color: #ffffff; 
+}
+
+.bin-icon { 
+    font-size: 3rem; 
+    transition: transform 0.2s ease-in-out;
+}
+
+.bin-card:hover .bin-icon {
+    transform: scale(1.1); 
+}
+
+.bin-card input[type="number"] {
+    font-size: 1.25rem;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+}
+
+.bin-card input[type="number"]:focus {
+    background-color: #fff;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
+}
+
+#pickup-form .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* --- Validation Error Styles --- */
+.input-group.border-danger {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8;
+}
+
+.input-group.border-danger .input-group-text {
+    color: #dc3545 !important;
+}
+
+.bins-error {
+    border: 2px solid #dc3545 !important;
+    border-radius: 16px;
+    padding: 10px;
+    background-color: #fff8f8;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+}
+
+.text-muted {
+    color: #adb5bd !important;
+}
+
+/* ── Stepper +/- dla pojemników ─────────────────────────────────────── */
+
+.btn-stepper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid #dee2e6;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #495057;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+                transform 0.1s ease;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.btn-stepper:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.btn-stepper:active:not(:disabled) {
+    transform: scale(0.92);
+    background: #e9ecef;
+}
+
+.btn-stepper:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.stepper-value {
+    font-size: 1.4rem;
+    min-width: 2rem;
+    text-align: center;
+    line-height: 1;
+    display: block;
+    transition: transform 0.1s ease;
+}
+
+.stepper-max-info {
+    transition: opacity 0.2s ease;
+}
+
+/* Aktywna karta — pojemnik wybrany (ilość > 0) */
+.bin-card--active {
+    background-color: rgba(25, 135, 84, 0.04) !important;
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12) !important;
+}
+
+.bin-card--active .stepper-value {
+    transform: scale(1.1);
+}
+
+/* Lepsze dotykowe cele na urządzeniach mobilnych */
+@media (max-width: 576px) {
+    .btn-stepper {
+        width: 42px;
+        height: 42px;
+        font-size: 1.25rem;
+    }
+
+    .stepper-value {
+        font-size: 1.5rem;
+        min-width: 2.5rem;
+    }
+
+    .bin-card .card-body {
+        padding: 1rem !important;
+    }
+}
+
+/* ── Kafelki telefonów kontaktowych ─────────────────────────────── */
+
+.contact-tiles-wrap {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.contact-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 14px;
+    border: 1.5px solid #dee2e6;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    flex: 1;
+    min-width: 90px;
+    transition: border-color 0.15s ease, background-color 0.15s ease,
+                transform 0.1s ease;
+    text-align: center;
+}
+
+.contact-tile:hover {
+    border-color: #adb5bd;
+    background: #f8f9fa;
+}
+
+.contact-tile:active {
+    transform: scale(0.97);
+}
+
+.contact-tile--selected {
+    border-color: #198754;
+    background: rgba(25, 135, 84, 0.06);
+}
+
+.contact-tile--selected .contact-tile__name,
+.contact-tile--selected .contact-tile__icon {
+    color: #198754;
+}
+
+.contact-tile__icon {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+.contact-tile__name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #495057;
+    line-height: 1.2;
+}
+
+.contact-tile__phone {
+    font-size: 0.65rem;
+    color: #6c757d;
+    line-height: 1.2;
+}
+
+@media (max-width: 400px) {
+    .contact-tile {
+        min-width: 70px;
+        padding: 8px 10px;
+    }
+}

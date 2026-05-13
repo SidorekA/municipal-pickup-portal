@@ -1,0 +1,27 @@
+[2026-05-12 22:25:53 +0200] [304251] [INFO] Starting gunicorn 25.3.0
+[2026-05-12 22:25:53 +0200] [304251] [INFO] Listening at: http://127.0.0.1:8001 (304251)
+[2026-05-12 22:25:53 +0200] [304251] [INFO] Using worker: sync
+[2026-05-12 22:25:53 +0200] [304252] [INFO] Booting worker with pid: 304252
+[2026-05-12 22:25:53 +0200] [304251] [INFO] Control socket listening at /home/frog/.gunicorn/gunicorn.ctl
+[2026-05-12 22:26:10 +0200] [304251] [INFO] Handling signal: int
+[2026-05-12 22:26:10 +0200] [304251] [INFO] Shutting down: Master
+[2026-05-12 23:04:29 +0200] [304526] [INFO] Starting gunicorn 25.3.0
+[2026-05-12 23:04:29 +0200] [304526] [INFO] Listening at: http://127.0.0.1:8001 (304526)
+[2026-05-12 23:04:29 +0200] [304526] [INFO] Using worker: sync
+[2026-05-12 23:04:29 +0200] [304527] [INFO] Booting worker with pid: 304527
+[2026-05-12 23:04:29 +0200] [304526] [INFO] Control socket listening at /home/frog/.gunicorn/gunicorn.ctl
+Invalid HTTP_HOST header: 'frog03-20514.wykr.es'. You may need to add 'frog03-20514.wykr.es' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/frog/odpady-komunalne/municipal-pickup-portal/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/frog/odpady-komunalne/municipal-pickup-portal/.venv/lib/python3.13/site-packages/django/utils/deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+  File "/home/frog/odpady-komunalne/municipal-pickup-portal/.venv/lib/python3.13/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+  File "/home/frog/odpady-komunalne/municipal-pickup-portal/.venv/lib/python3.13/site-packages/django/http/request.py", line 186, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'frog03-20514.wykr.es'. You may need to add 'frog03-20514.wykr.es' to ALLOWED_HOSTS.
+Bad Request: /
+[2026-05-12 23:10:06 +0200] [304526] [INFO] Handling signal: term
+[2026-05-12 23:10:06 +0200] [304527] [INFO] Worker exiting (pid: 304527)
+[2026-05-12 23:10:07 +0200] [304526] [INFO] Shutting down: Master
