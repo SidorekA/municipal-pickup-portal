@@ -2,7 +2,7 @@
 
 from celery import shared_task
 import logging
-from pickups.excel_generator import generate_mpk_history_excel, generate_pickup_excel
+from pickups.excel_generator import generate_pickup_excel
 from pickups.models import Pickup
 from django.core.mail import EmailMessage
 from decouple import config

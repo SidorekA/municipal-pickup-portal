@@ -77,7 +77,6 @@ def api_get_pickup_dates(request, location_id):
     do danej lokalizacji, obliczone na podstawie harmonogramu.
     Używane przez dynamic_bins.js do wyświetlenia daty przed submitem.
     """
-    from django.utils import timezone
     from scheduling.services import get_next_pickup_date
 
     bins = LocationWasteBin.objects.filter(
