@@ -13,16 +13,14 @@ from .models import DataTransferLog
 from django.db import transaction
 from .services import generate_auditlog_export
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from pickups.models import Pickup
-from django.db.models import Count
 from notifications.models import Notification
 from core.forms import GlobalAnnouncementForm
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.shortcuts import redirect
 from django.utils import timezone, formats
 import datetime
 from django.contrib.auth import get_user_model
