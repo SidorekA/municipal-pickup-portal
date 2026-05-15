@@ -1,0 +1,3 @@
+## 2023-10-27 - [Django ORM N+1 nested loop elimination]
+**Learning:** Performing a nested lookup in a view on `QuerySet` objects inside a loop leads to disastrous performance (O(N*M)) on large datasets (like `SummaryCollectionSchedule`). If `.all()` is used, iterating over it repeatedly is highly inefficient.
+**Action:** When dealing with multiple related objects where pre-computation isn't possible (e.g. date overlap logic), group the pre-fetched `.all()` list manually in Python using `collections.defaultdict(list)` *before* the main iteration. This reduces the time complexity from O(N*M) to nearly O(N) by drastically cutting down the inner loop size.

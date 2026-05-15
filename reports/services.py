@@ -255,7 +255,12 @@ def generate_mpk_cost_report(year=None, month=None, mpk_number_id=None, report_f
     summaries = list(qs)
 
     # Pre-fetch all costs to memory
-    all_costs = list(WasteCost.objects.all())
+    all_costs = list(WasteCost.objects.all().order_by('-date_from'))
+
+    # ⚡ Bolt: Grupowanie kosztów wg frakcji eliminuje pętlę O(N^2)
+    costs_by_fraction = defaultdict(list)
+    for cost in all_costs:
+        costs_by_fraction[cost.waste_fraction_id].append(cost)
 
     # Pre-fetch locations to memory
     # We want obj_name from Location for the given MPK.
@@ -272,10 +277,9 @@ def generate_mpk_cost_report(year=None, month=None, mpk_number_id=None, report_f
         return "Brak lokalizacji"
 
     def get_cost_for_fraction_and_date(fraction_id, target_date):
-        for cost in all_costs:
-            if cost.waste_fraction_id == fraction_id:
-                if cost.date_from <= target_date and (cost.date_to is None or cost.date_to >= target_date):
-                    return cost.cost
+        for cost in costs_by_fraction.get(fraction_id, []):
+            if cost.date_from <= target_date and (cost.date_to is None or cost.date_to >= target_date):
+                return cost.cost
         return None
 
     data = []
