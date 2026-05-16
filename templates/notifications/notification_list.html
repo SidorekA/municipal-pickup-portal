@@ -80,9 +80,10 @@
                         {% csrf_token %}
                         <button type="submit"
                                 class="btn btn-sm btn-outline-success"
+                                aria-label="Oznacz jako przeczytane"
                                 title="Oznacz jako przeczytane"
                                 style="white-space: nowrap;">
-                            <i class="bi bi-check2"></i>
+                            <i class="bi bi-check2" aria-hidden="true"></i>
                         </button>
                     </form>
                 {% endif %}
