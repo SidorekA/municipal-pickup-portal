@@ -1,0 +1,3 @@
+## 2024-05-19 - Added ARIA labels to topbar icon-only buttons
+**Learning:** Found several icon-only buttons in `templates/base.html` (sidebar toggle, notification bell, mark as read, and logout) that lacked descriptive labels, making them invisible or confusing for screen reader users. Redundant reading of Bootstrap Icon classes is also common if the nested `<i>` tag lacks `aria-hidden="true"`.
+**Action:** When adding icon-only buttons using Bootstrap Icons, always ensure the outer `<button>` or `<a>` tag has an explicit `aria-label` or `title` acting as an accessible name, and explicitly mark the inner `<i class="bi ...">` with `aria-hidden="true"`.
