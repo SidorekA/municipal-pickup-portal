@@ -1,0 +1,3 @@
+## 2026-05-18 - Avoid calling .first() on prefetched managers
+**Learning:** Calling `.filter()`, `.values_list()`, or `.first()` on a related manager (like `mpk_number.locations.first()`) breaks the `prefetch_related` cache and forces an N+1 SQL query, which can be disastrous for performance in views processing many records.
+**Action:** When a queryset is retrieved using `prefetch_related` (e.g., `prefetch_related("mpk_number__locations")`), always perform in-memory evaluation in Python using `.all()` (e.g., use `locations = record.mpk_number.locations.all()` and then `locations[0] if locations else None`).
