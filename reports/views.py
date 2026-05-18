@@ -162,7 +162,9 @@ def monthly_summary_view(request):
             if filter_status == 'action_required' and current_status in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
 
             # Pobranie lokalizacji
-            first_location = record.mpk_number.locations.first()
+            # ⚡ Bolt: Use .all() to leverage prefetch_related cache instead of .first() which triggers N+1 query
+            locations = record.mpk_number.locations.all()
+            first_location = locations[0] if locations else None
             loc_name = first_location.obj_name if first_location else "Brak nazwy"
 
             grouped_data[group_id] = {
