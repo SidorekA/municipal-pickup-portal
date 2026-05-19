@@ -323,8 +323,8 @@
                             </a>
                             <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link text-muted p-0">
-                                    <i class="bi bi-box-arrow-right"></i>
+                                <button type="submit" class="btn btn-link text-muted p-0" title="Wyloguj się" aria-label="Wyloguj się">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </form>
                         {% else %}
