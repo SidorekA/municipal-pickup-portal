@@ -1,0 +1,4 @@
+## 2024-03-24 - Secure JSON API Endpoints Against IDOR and 302 Redirects
+**Vulnerability:** The `api_get_pickup_dates` endpoint returned sensitive location data without authorization checks (IDOR) and used `@login_required`, which triggers a 302 redirect breaking frontend JSON parsing.
+**Learning:** Django's `@login_required` is unsuitable for JSON APIs because it returns HTML login pages instead of 403 errors. Additionally, relying solely on authentication is insufficient for endpoints taking identifiers (like `location_id`), as they must also verify user authorization against related models (e.g., MPK permissions).
+**Prevention:** For JSON endpoints, manually check `request.user.is_authenticated` and explicitly return a `JsonResponse(..., status=403)`. Always enforce object-level permissions (`Permission.objects.filter(...)`) when fetching data based on user-supplied IDs.

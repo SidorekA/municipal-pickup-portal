@@ -62,4 +62,4 @@ class ApiGetMpkLocationsTestCase(TestCase):
         self.assertEqual(response.status_code, 403)
         data = json.loads(response.content)
         self.assertEqual(data['locations'], [])
-        self.assertEqual(data['error'], 'Brak uprawnień do tego MPK')
+        self.assertEqual(data['error'], 'Wymagane logowanie')

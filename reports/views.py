@@ -547,8 +547,11 @@ def edit_summaries_view(request):
     }
     return render(request, 'reports/edit_summaries.html', context)
 
-@staff_member_required
 def update_summary_quantity(request):
+    # 🛡️ SECURITY: Manual auth check instead of @staff_member_required to prevent 302 redirect breaking JSON clients
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return JsonResponse({'status': 'error', 'message': 'Brak uprawnień'}, status=403)
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)

@@ -70,15 +70,32 @@ def pickup_success(request):
     """Wyświetla stronę z podziękowaniem po dodaniu zgłoszenia."""
     return render(request, 'pickups/pickup_success.html')
 
-@login_required
 def api_get_pickup_dates(request, location_id):
     """
     Zwraca przewidywane daty odbioru dla frakcji przypisanych
     do danej lokalizacji, obliczone na podstawie harmonogramu.
     Używane przez dynamic_bins.js do wyświetlenia daty przed submitem.
     """
-    from django.utils import timezone
     from scheduling.services import get_next_pickup_date
+
+    # 🛡️ SECURITY: Manual auth check instead of @login_required to prevent 302 redirect breaking JSON clients
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Wymagane logowanie'}, status=403)
+
+    try:
+        location = Location.objects.get(id=location_id)
+    except Location.DoesNotExist:
+        return JsonResponse({'error': 'Lokalizacja nie istnieje'}, status=404)
+
+    # 🛡️ SECURITY: Prevent IDOR by verifying user has permissions for this location's MPK
+    has_permission = request.user.is_superuser or Permission.objects.filter(
+        user=request.user,
+        mpk_number=location.mpk_number,
+        active=True
+    ).exists()
+
+    if not has_permission:
+        return JsonResponse({'error': 'Brak uprawnień do tej lokalizacji'}, status=403)
 
     bins = LocationWasteBin.objects.filter(
         location_id=location_id
@@ -104,18 +121,20 @@ def api_get_pickup_dates(request, location_id):
 
 def api_get_location_bins(request, location_id):
     """Zwraca listę przypisanych pojemników dla danej lokalizacji w formacie JSON."""
+    # 🛡️ SECURITY: Manual auth check instead of @login_required to prevent 302 redirect breaking JSON clients
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Wymagane logowanie'}, status=403)
+
     try:
         location = Location.objects.get(id=location_id)
     except Location.DoesNotExist:
         return JsonResponse({'error': 'Lokalizacja nie istnieje'}, status=404)
 
-    has_permission = False
-    if request.user.is_authenticated:
-        has_permission = request.user.is_superuser or Permission.objects.filter(
-            user=request.user,
-            mpk_number=location.mpk_number,
-            active=True
-        ).exists()
+    has_permission = request.user.is_superuser or Permission.objects.filter(
+        user=request.user,
+        mpk_number=location.mpk_number,
+        active=True
+    ).exists()
 
     if not has_permission:
         return JsonResponse({'error': 'Brak uprawnień do tej lokalizacji'}, status=403)
@@ -143,14 +162,15 @@ def api_get_location_bins(request, location_id):
 
 def api_get_mpk_locations(request, mpk_id):
     """Zwraca listę lokalizacji przypisanych do konkretnego MPK."""
+    # 🛡️ SECURITY: Manual auth check instead of @login_required to prevent 302 redirect breaking JSON clients
+    if not request.user.is_authenticated:
+        return JsonResponse({'locations': [], 'error': 'Wymagane logowanie'}, status=403)
     
-    has_permission = False
-    if request.user.is_authenticated:
-        has_permission = request.user.is_superuser or Permission.objects.filter(
-            user=request.user,
-            mpk_number_id=mpk_id,
-            active=True
-        ).exists()
+    has_permission = request.user.is_superuser or Permission.objects.filter(
+        user=request.user,
+        mpk_number_id=mpk_id,
+        active=True
+    ).exists()
     
     if not has_permission:
         # Jeśli nie ma dostępu, zwracamy pustą listę lub błąd 403
