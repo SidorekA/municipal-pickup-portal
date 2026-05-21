@@ -235,8 +235,9 @@
                         <!-- Przycisk chowania sidebara -->
                         <button class="btn-sidebar-toggle"
                                 id="sidebarToggle"
-                                title="Zwiń / rozwiń menu">
-                            <i class="bi bi-layout-sidebar"></i>
+                                title="Zwiń / rozwiń menu"
+                                aria-label="Zwiń / rozwiń menu">
+                            <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
                         </button>
                         <div class="wf-breadcrumb">
                             {% block breadcrumb %}<span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>{% endblock %}
@@ -250,12 +251,13 @@
                                         data-bs-toggle="dropdown"
                                         aria-expanded="false"
                                         data-bs-auto-close="outside"
-                                        title="Powiadomienia">
+                                        title="Powiadomienia"
+                                        aria-label="Powiadomienia">
                                     {% if unread_notifications_count %}
-                                        <i class="bi bi-mailbox-flag"></i>
+                                        <i class="bi bi-mailbox-flag" aria-hidden="true"></i>
                                         <span class="wf-notif-badge"></span>
                                     {% else %}
-                                        <i class="bi bi-mailbox"></i>
+                                        <i class="bi bi-mailbox" aria-hidden="true"></i>
                                     {% endif %}
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-end wf-notif-panel">
@@ -272,14 +274,15 @@
                                                         style="font-size:0.78rem"
                                                         id="markAllReadBtn"
                                                         data-url="{% url 'notifications:mark_all_as_read' %}">
-                                                    <i class="bi bi-check2-all me-1"></i>Oznacz wszystkie
+                                                    <i class="bi bi-check2-all me-1" aria-hidden="true"></i>Oznacz wszystkie
                                                 </button>
                                             {% endif %}
                                             <a href="{% url 'notifications:notification_list' %}"
                                                class="btn btn-link btn-sm p-0 text-muted"
                                                style="font-size:0.78rem"
-                                               title="Wszystkie powiadomienia">
-                                                <i class="bi bi-arrow-right-circle"></i>
+                                               title="Wszystkie powiadomienia"
+                                               aria-label="Wszystkie powiadomienia">
+                                                <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -297,8 +300,9 @@
                                                     <button type="button"
                                                             class="wf-notif-mark-btn"
                                                             title="Oznacz jako przeczytane"
+                                                            aria-label="Oznacz jako przeczytane"
                                                             onclick="markAsRead({{ notif.pk }}, '{% url 'notifications:mark_as_read' notif.pk %}', this, event)">
-                                                        <i class="bi bi-check2"></i>
+                                                        <i class="bi bi-check2" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             {% endfor %}
@@ -311,7 +315,7 @@
                                             </div>
                                         {% else %}
                                             <div class="wf-notif-empty">
-                                                <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted"></i>
+                                                <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted" aria-hidden="true"></i>
                                                 Brak nowych powiadomień
                                             </div>
                                         {% endif %}
@@ -323,8 +327,8 @@
                             </a>
                             <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link text-muted p-0">
-                                    <i class="bi bi-box-arrow-right"></i>
+                                <button type="submit" class="btn btn-link text-muted p-0" title="Wyloguj się" aria-label="Wyloguj się">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </form>
                         {% else %}
@@ -415,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const list = document.getElementById('notifList');
             if (list) list.innerHTML = `
                 <div class="wf-notif-empty">
-                    <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted"></i>
+                    <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted" aria-hidden="true"></i>
                     Brak nowych powiadomień
                 </div>`;
         }
@@ -448,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const list = document.getElementById('notifList');
                     if (list) list.innerHTML = `
                         <div class="wf-notif-empty">
-                            <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted"></i>
+                            <i class="bi bi-mailbox fs-3 d-block mb-2 text-muted" aria-hidden="true"></i>
                             Brak nowych powiadomień
                         </div>`;
                     
