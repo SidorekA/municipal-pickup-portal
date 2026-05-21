@@ -24,7 +24,7 @@
                             </td>
                             <td class="data-table__td">{{ pickup.location.obj_name }}</td>
                             <td class="data-table__td">
-                                <i class="bi bi-person me-1"></i>{{ pickup.reporter.username }}
+                                <i class="bi bi-person me-1" aria-hidden="true"></i>{{ pickup.reporter.username }}
                             </td>
                             <td class="data-table__td">{{ pickup.contact_phone }}</td>
                             <td class="data-table__td text-end pe-4">
@@ -32,7 +32,7 @@
                                         class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-medium shadow-sm"
                                         data-bs-toggle="modal"
                                         data-bs-target="#pickupModal{{ pickup.id }}">
-                                    <i class="bi bi-eye me-1"></i> Podgląd
+                                    <i class="bi bi-eye me-1" aria-hidden="true"></i> Podgląd
                                 </button>
                             </td>
                         </tr>
@@ -57,7 +57,7 @@
                 <div class="modal-header detail-modal__header">
                     <h5 class="modal-title detail-modal__title"
                         id="pickupModalLabel{{ pickup.id }}">
-                        <i class="bi bi-info-circle me-2 text-primary"></i>Szczegóły zgłoszenia {{ pickup.pickup_number }}
+                        <i class="bi bi-info-circle me-2 text-primary" aria-hidden="true"></i>Szczegóły zgłoszenia {{ pickup.pickup_number }}
                     </h5>
                     <button type="button"
                             class="btn-close"
@@ -73,7 +73,7 @@
                         <div class="detail-grid__item">
                             <span class="detail-grid__label">Telefon kontaktowy</span>
                             <span class="detail-grid__value">
-                                <i class="bi bi-telephone-fill me-1 text-secondary"></i> {{ pickup.contact_phone }}
+                                <i class="bi bi-telephone-fill me-1 text-secondary" aria-hidden="true"></i> {{ pickup.contact_phone }}
                             </span>
                         </div>
                     </div>
@@ -82,18 +82,18 @@
                         {% for bin in pickup.waste_bins.all %}
                             <li class="bin-list__item">
                                 <div class="bin-list__info">
-                                    <i class="bi bi-trash3 me-2"></i>
+                                    <i class="bi bi-trash3 me-2" aria-hidden="true"></i>
                                     {{ bin.waste_fraction.fraction_type.name }}
                                     <span class="bin-list__cap">({{ bin.waste_fraction.capacity }}L)</span>
                                     <div class="mt-1">
                                         {% if bin.planned_date %}
                                             <small class="text-muted">
-                                                <i class="bi bi-calendar-check me-1 text-success"></i>
+                                                <i class="bi bi-calendar-check me-1 text-success" aria-hidden="true"></i>
                                                 Planowany odbiór: <strong>{{ bin.planned_date|date:"d.m.Y" }}</strong>
                                             </small>
                                         {% else %}
                                             <small class="text-danger">
-                                                <i class="bi bi-calendar-x me-1"></i>Brak harmonogramu
+                                                <i class="bi bi-calendar-x me-1" aria-hidden="true"></i>Brak harmonogramu
                                             </small>
                                         {% endif %}
                                     </div>
