@@ -2,7 +2,7 @@
 
 from celery import shared_task
 import logging
-from pickups.excel_generator import generate_mpk_history_excel, generate_pickup_excel
+from pickups.excel_generator import generate_pickup_excel
 from pickups.models import Pickup
 from django.core.mail import EmailMessage
 from decouple import config
@@ -14,7 +14,7 @@ def wyslij_email_sync(pickup_id: int) -> str:
     pickup = (
         Pickup.objects
         .select_related('location', 'mpk_number', 'reporter')
-        .prefetch_related('waste_bins__waste_fraction__fraction_type')
+        .prefetch_related('waste_bins__waste_fraction__fraction_type__schedules')
         .get(id=pickup_id)
     )
 
