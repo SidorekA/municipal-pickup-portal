@@ -235,8 +235,9 @@
                         <!-- Przycisk chowania sidebara -->
                         <button class="btn-sidebar-toggle"
                                 id="sidebarToggle"
-                                title="Zwiń / rozwiń menu">
-                            <i class="bi bi-layout-sidebar"></i>
+                                title="Zwiń / rozwiń menu"
+                                aria-label="Zwiń / rozwiń menu">
+                            <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
                         </button>
                         <div class="wf-breadcrumb">
                             {% block breadcrumb %}<span class="wf-breadcrumb-active">System Zarządzania Odpadami</span>{% endblock %}
@@ -250,12 +251,13 @@
                                         data-bs-toggle="dropdown"
                                         aria-expanded="false"
                                         data-bs-auto-close="outside"
-                                        title="Powiadomienia">
+                                        title="Powiadomienia"
+                                        aria-label="Powiadomienia">
                                     {% if unread_notifications_count %}
-                                        <i class="bi bi-mailbox-flag"></i>
+                                        <i class="bi bi-mailbox-flag" aria-hidden="true"></i>
                                         <span class="wf-notif-badge"></span>
                                     {% else %}
-                                        <i class="bi bi-mailbox"></i>
+                                        <i class="bi bi-mailbox" aria-hidden="true"></i>
                                     {% endif %}
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-end wf-notif-panel">
@@ -297,8 +299,9 @@
                                                     <button type="button"
                                                             class="wf-notif-mark-btn"
                                                             title="Oznacz jako przeczytane"
+                                                            aria-label="Oznacz jako przeczytane"
                                                             onclick="markAsRead({{ notif.pk }}, '{% url 'notifications:mark_as_read' notif.pk %}', this, event)">
-                                                        <i class="bi bi-check2"></i>
+                                                        <i class="bi bi-check2" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             {% endfor %}
@@ -323,8 +326,8 @@
                             </a>
                             <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-link text-muted p-0">
-                                    <i class="bi bi-box-arrow-right"></i>
+                                <button type="submit" class="btn btn-link text-muted p-0" title="Wyloguj się" aria-label="Wyloguj się">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </form>
                         {% else %}
