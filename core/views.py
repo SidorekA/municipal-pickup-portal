@@ -415,7 +415,7 @@ def home_view(request):
     recent_pickups = list(recent_pickups_qs.select_related(
         'mpk_number', 'location', 'reporter'
     ).prefetch_related(
-        'waste_bins__waste_fraction__fraction_type'
+        'waste_bins__waste_fraction__fraction_type__schedules'
     ).order_by('-created_at')[:5])
         
     for pickup in recent_pickups:
@@ -442,7 +442,7 @@ def home_view(request):
         pickups_qs = Pickup.objects.filter(reported_at__gte=first_day_month)
         active_pickups_for_date = Pickup.objects.filter(
             status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
-        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type')
+        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type__schedules')
         pickups_prev_qs = Pickup.objects.filter(
             reported_at__gte=first_day_prev_month, 
             reported_at__lt=first_day_month
@@ -460,7 +460,7 @@ def home_view(request):
         active_pickups_for_date = Pickup.objects.filter(
             mpk_number_id__in=allowed_mpk_ids,
             status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
-        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type')
+        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type__schedules')
 
 # Obliczanie trendu procentowego
     current_count = pickups_qs.count()
