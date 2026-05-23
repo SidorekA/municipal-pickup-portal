@@ -70,7 +70,6 @@ def pickup_success(request):
     """Wyświetla stronę z podziękowaniem po dodaniu zgłoszenia."""
     return render(request, 'pickups/pickup_success.html')
 
-@login_required
 def api_get_pickup_dates(request, location_id):
     """
     Zwraca przewidywane daty odbioru dla frakcji przypisanych
@@ -79,6 +78,25 @@ def api_get_pickup_dates(request, location_id):
     """
     from django.utils import timezone
     from scheduling.services import get_next_pickup_date
+
+    # Authentication check
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Wymagane logowanie'}, status=403)
+
+    # Authorization check (IDOR protection)
+    try:
+        location = Location.objects.get(id=location_id)
+    except Location.DoesNotExist:
+        return JsonResponse({'error': 'Lokalizacja nie istnieje'}, status=404)
+
+    has_permission = request.user.is_superuser or Permission.objects.filter(
+        user=request.user,
+        mpk_number=location.mpk_number,
+        active=True
+    ).exists()
+
+    if not has_permission:
+        return JsonResponse({'error': 'Brak uprawnień do tej lokalizacji'}, status=403)
 
     bins = LocationWasteBin.objects.filter(
         location_id=location_id
