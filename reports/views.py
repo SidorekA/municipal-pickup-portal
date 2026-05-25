@@ -161,8 +161,9 @@ def monthly_summary_view(request):
             if filter_status == 'confirmed' and current_status not in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
             if filter_status == 'action_required' and current_status in ['ZATWIERDZONE', 'POTWIERDZONE']: continue
 
-            # Pobranie lokalizacji
-            first_location = record.mpk_number.locations.first()
+            # Pobranie lokalizacji - use .all() to avoid breaking prefetch_related cache (N+1 query issue)
+            locations = record.mpk_number.locations.all()
+            first_location = locations[0] if locations else None
             loc_name = first_location.obj_name if first_location else "Brak nazwy"
 
             grouped_data[group_id] = {
