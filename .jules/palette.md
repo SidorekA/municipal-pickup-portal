@@ -1,0 +1,3 @@
+## 2024-11-22 - Context-Specific ARIA Labels for Dynamic Components
+**Learning:** When using JavaScript template literals to dynamically generate repetitive interactive components (like multiple stepper inputs for different waste fractions), static ARIA labels like `aria-label="Zwiększ"` are insufficient because screen reader users won't know *which* item they are modifying.
+**Action:** Always inject dynamic, context-specific variables into the `aria-label` string (e.g., `aria-label="Zwiększ ilość ${bin.name}"`) when generating UI components programmatically to ensure complete accessibility context.

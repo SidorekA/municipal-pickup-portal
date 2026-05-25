@@ -9,13 +9,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // === INICJALIZACJA TOM SELECT ===
     let mpkTs = new TomSelect(mpkSelect, {
-        placeholder: "--- Wybierz nr MPK ---",
+        placeholder: "Wybierz nr MPK",
         hideSelected: true,
         searchField: ["text"]
     });
 
     let locTs = new TomSelect(locationSelect, {
-        placeholder: "--- Wybierz lokalizację ---",
+        placeholder: "Wybierz lokalizację",
         hideSelected: true,
         searchField: ["text"]
     });
@@ -203,15 +203,15 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="col-6 col-md-4 col-lg-3">
                             <div class="bin-card card h-100 border border-${color} shadow-sm" data-fraction-id="${bin.fraction_id}" data-max="${bin.max_quantity}">
                                 <div class="card-body d-flex flex-column align-items-center p-3">
-                                    <i class="bi ${icon} bin-icon text-${color} mb-2"></i>
+                                    <i class="bi ${icon} bin-icon text-${color} mb-2" aria-hidden="true"></i>
                                     <h6 class="card-title fw-bold mb-0 text-center" style="font-size:0.85rem">${bin.name}</h6>
                                     <p class="text-muted mb-3" style="font-size:0.75rem">${bin.capacity} L</p>
                                     <div class="mt-auto w-100">
                                         <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                                            <button type="button" class="btn-stepper btn-stepper-minus" data-fraction-id="${bin.fraction_id}"><i class="bi bi-dash"></i></button>
+                                            <button type="button" class="btn-stepper btn-stepper-minus" data-fraction-id="${bin.fraction_id}" aria-label="Zmniejsz ilość ${bin.name}"><i class="bi bi-dash" aria-hidden="true"></i></button>
                                             <span class="stepper-value fw-bold text-${color}" id="stepper-val-${bin.fraction_id}">0</span>
                                             <input type="hidden" name="bin_${bin.fraction_id}" id="bin-input-${bin.fraction_id}" value="0">
-                                            <button type="button" class="btn-stepper btn-stepper-plus" data-fraction-id="${bin.fraction_id}" data-max="${bin.max_quantity}"><i class="bi bi-plus"></i></button>
+                                            <button type="button" class="btn-stepper btn-stepper-plus" data-fraction-id="${bin.fraction_id}" data-max="${bin.max_quantity}" aria-label="Zwiększ ilość ${bin.name}"><i class="bi bi-plus" aria-hidden="true"></i></button>
                                         </div>
                                         <p class="text-muted text-center mb-0 stepper-max-info" style="font-size:0.7rem">Dostępne: <strong>${bin.max_quantity}</strong> szt.</p>
                                     </div>
@@ -228,16 +228,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 fetch(`/zgloszenia/api/lokalizacja/${locationId}/daty-odbioru/`)
                     .then(r => r.json())
                     .then(datesData => {
-                        datesData.dates.forEach(item => {
-                            const card = binsContainer.querySelector(`[data-fraction-id="${item.fraction_id}"]`);
-                            if (!card || !item.planned_date) return;
+                        datesData.dates.forEach(bin => {
+                            const card = binsContainer.querySelector(`[data-fraction-id="${bin.fraction_id}"]`);
+                            if (!card || !bin.planned_date) return;
                             const maxInfo = card.querySelector('.stepper-max-info');
                             if (!maxInfo) return;
 
                             const dateEl = document.createElement('p');
                             dateEl.className = 'text-success text-center mb-0 mt-1';
                             dateEl.style.cssText = 'font-size:0.7rem;font-weight:600';
-                            dateEl.innerHTML = `<i class="bi bi-calendar-check me-1" aria-hidden="true"></i>${item.planned_date}`;
+                            dateEl.innerHTML = `<i class="bi bi-calendar-check me-1" aria-hidden="true"></i>${bin.planned_date}`;
                             maxInfo.insertAdjacentElement('afterend', dateEl);
                         });
                     }).catch(() => {});
