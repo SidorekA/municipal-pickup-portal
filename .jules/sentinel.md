@@ -1,0 +1,4 @@
+## 2025-02-14 - Fix IDOR and 302 Redirects in JSON API Endpoints
+**Vulnerability:** API endpoints returning JSON data used standard decorators like `@login_required` or `@staff_member_required`. This led to unauthenticated API clients receiving 302 redirects to HTML login pages, which breaks frontend applications. Additionally, `api_get_pickup_dates` was missing MPK permission checks, causing an IDOR vulnerability where any user could view pickup dates for any location.
+**Learning:** Django's default authentication decorators are not suitable for `JsonResponse` endpoints. They fail insecurely (from an API perspective) and don't natively enforce model-level authorization (like MPK ownership).
+**Prevention:** Always verify `request.user.is_authenticated` manually inside JSON views and return a 403 `JsonResponse`. Furthermore, enforce strict ownership authorization checks (like `Permission.objects.filter(...)`) for IDOR-sensitive parameters such as `location_id`.
