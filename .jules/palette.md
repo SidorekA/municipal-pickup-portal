@@ -1,0 +1,3 @@
+## 2024-05-18 - Context-specific ARIA labels for dynamic JS components
+**Learning:** When dynamically generating repetitive UI components (like bin selection cards) via JS template literals, generic `aria-label`s like "Dodaj" or "Usuń" are insufficient for screen readers because they lack context. Providing specific details (e.g., `Zwiększ ilość ${bin.name} ${bin.capacity}L`) directly inside the generated template literal ensures complete accessibility context is maintained without needing extra ID linking.
+**Action:** Always inject specific data variables into `aria-label` strings when rendering lists or grids of interactive components via JavaScript.
