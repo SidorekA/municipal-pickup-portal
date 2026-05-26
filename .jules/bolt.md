@@ -1,0 +1,3 @@
+## 2024-05-26 - [Avoid N+1 Queries when caching schedules on home view]
+ **Learning:** When calling related lookups inside a loop (e.g., `fraction_type.schedules.all()`) in `get_next_pickup_date`, the initial `prefetch_related` must be deep enough to cover nested relations. In `core.views.home_view`, the query for `active_pickups_for_date` prefetched up to `waste_bins__waste_fraction__fraction_type` but missing `__schedules` caused an N+1 performance bottleneck when iterating through `active_pickups_for_date`.
+ **Action:** Make sure the `prefetch_related` argument includes all the nested dependencies (e.g., `waste_bins__waste_fraction__fraction_type__schedules`), saving significant SQL queries (from O(N) to O(1)).
