@@ -547,8 +547,10 @@ def edit_summaries_view(request):
     }
     return render(request, 'reports/edit_summaries.html', context)
 
-@staff_member_required
 def update_summary_quantity(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
