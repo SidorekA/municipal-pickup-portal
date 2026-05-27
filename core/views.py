@@ -13,16 +13,14 @@ from .models import DataTransferLog
 from django.db import transaction
 from .services import generate_auditlog_export
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from pickups.models import Pickup
-from django.db.models import Count
 from notifications.models import Notification
 from core.forms import GlobalAnnouncementForm
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.shortcuts import redirect
 from django.utils import timezone, formats
 import datetime
 from django.contrib.auth import get_user_model
@@ -415,7 +413,7 @@ def home_view(request):
     recent_pickups = list(recent_pickups_qs.select_related(
         'mpk_number', 'location', 'reporter'
     ).prefetch_related(
-        'waste_bins__waste_fraction__fraction_type'
+        'waste_bins__waste_fraction__fraction_type__schedules'
     ).order_by('-created_at')[:5])
         
     for pickup in recent_pickups:
@@ -442,7 +440,7 @@ def home_view(request):
         pickups_qs = Pickup.objects.filter(reported_at__gte=first_day_month)
         active_pickups_for_date = Pickup.objects.filter(
             status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
-        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type')
+        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type__schedules')
         pickups_prev_qs = Pickup.objects.filter(
             reported_at__gte=first_day_prev_month, 
             reported_at__lt=first_day_month
@@ -460,7 +458,7 @@ def home_view(request):
         active_pickups_for_date = Pickup.objects.filter(
             mpk_number_id__in=allowed_mpk_ids,
             status__in=['NOWE', 'WYSŁANE', 'POTWIERDZONE']
-        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type')
+        ).select_related('mpk_number').prefetch_related('waste_bins__waste_fraction__fraction_type__schedules')
 
 # Obliczanie trendu procentowego
     current_count = pickups_qs.count()

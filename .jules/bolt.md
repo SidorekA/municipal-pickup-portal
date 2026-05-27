@@ -1,0 +1,3 @@
+## 2024-05-27 - Fix N+1 query in core/views.py next pickup date calculation
+**Learning:** When calling related lookups inside a loop (e.g., `fraction_type.schedules.all()`), ensure the initial `prefetch_related` string is deep enough to cover all nested relations (e.g., `__fraction_type__schedules`). Otherwise, Django breaks the prefetch and executes a new query for each iteration, causing an N+1 performance bottleneck. This was missing in `core/views.py`.
+**Action:** Always verify `prefetch_related` depth matches the depth of attributes accessed in loops, particularly when passing objects to helper functions like `get_next_pickup_date`.
