@@ -1,0 +1,5 @@
+## 2025-02-24 - API endpoints lacking manual authorization returning 302 redirects instead of 403
+
+**Vulnerability:** Several API endpoints (like `api_get_pickup_dates` and `update_summary_quantity`) were returning 302 redirects for unauthenticated requests, and lacking IDOR checks for location-based permissions.
+**Learning:** Using `@login_required` or `@staff_member_required` on AJAX/JSON views causes them to redirect to HTML login pages upon failure, which breaks frontend applications expecting JSON responses. Furthermore, endpoints accessing localized data must implement object-level authorization (IDOR protection) checking whether the user actually has `Permission` for the related `MPKNumber`.
+**Prevention:** For JSON-returning endpoints, remove standard `@login_required` decorators and use manual logic: `if not request.user.is_authenticated: return JsonResponse(..., status=403)`. When accessing model instances (like Location), manually enforce object-level permissions against `Permission.objects.filter(user=request.user, mpk_number=...).exists()`.
