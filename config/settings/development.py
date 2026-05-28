@@ -1,7 +1,7 @@
 from .base import *
 
 DEBUG = True
-ALLOWED_HOSTS = [
+ALLOWED_HOSTS = ["testserver",
     "frog03-20514.wykr.es",
     "127.0.0.1",
     "localhost",
