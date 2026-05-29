@@ -2,7 +2,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
 
 from users.models import Permission
 # from .tasks import wyslij_zgloszenie_email
@@ -77,6 +76,22 @@ def api_get_pickup_dates(request, location_id):
     do danej lokalizacji, obliczone na podstawie harmonogramu.
     Używane przez dynamic_bins.js do wyświetlenia daty przed submitem.
     """
+    try:
+        location = Location.objects.get(id=location_id)
+    except Location.DoesNotExist:
+        return JsonResponse({'error': 'Lokalizacja nie istnieje'}, status=404)
+
+    has_permission = False
+    if request.user.is_authenticated:
+        has_permission = request.user.is_superuser or Permission.objects.filter(
+            user=request.user,
+            mpk_number=location.mpk_number,
+            active=True
+        ).exists()
+
+    if not has_permission:
+        return JsonResponse({'error': 'Brak uprawnień do tej lokalizacji'}, status=403)
+
     from django.utils import timezone
     from scheduling.services import get_next_pickup_date
 
