@@ -208,10 +208,10 @@ document.addEventListener("DOMContentLoaded", function() {
                                     <p class="text-muted mb-3" style="font-size:0.75rem">${bin.capacity} L</p>
                                     <div class="mt-auto w-100">
                                         <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                                            <button type="button" class="btn-stepper btn-stepper-minus" data-fraction-id="${bin.fraction_id}"><i class="bi bi-dash"></i></button>
+                                            <button type="button" class="btn-stepper btn-stepper-minus" data-fraction-id="${bin.fraction_id}" aria-label="Zmniejsz ilość ${bin.name} ${bin.capacity} L"><i class="bi bi-dash" aria-hidden="true"></i></button>
                                             <span class="stepper-value fw-bold text-${color}" id="stepper-val-${bin.fraction_id}">0</span>
                                             <input type="hidden" name="bin_${bin.fraction_id}" id="bin-input-${bin.fraction_id}" value="0">
-                                            <button type="button" class="btn-stepper btn-stepper-plus" data-fraction-id="${bin.fraction_id}" data-max="${bin.max_quantity}"><i class="bi bi-plus"></i></button>
+                                            <button type="button" class="btn-stepper btn-stepper-plus" data-fraction-id="${bin.fraction_id}" data-max="${bin.max_quantity}" aria-label="Zwiększ ilość ${bin.name} ${bin.capacity} L"><i class="bi bi-plus" aria-hidden="true"></i></button>
                                         </div>
                                         <p class="text-muted text-center mb-0 stepper-max-info" style="font-size:0.7rem">Dostępne: <strong>${bin.max_quantity}</strong> szt.</p>
                                     </div>

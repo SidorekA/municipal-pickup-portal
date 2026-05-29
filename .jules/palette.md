@@ -1,0 +1,3 @@
+## 2024-05-24 - Dynamic Context in Template String ARIA Labels
+**Learning:** When dynamically generating repetitive interactive UI components in JavaScript (like bin steppers), standard static `aria-label`s fail to distinguish between multiple instances. Screen reader users need specific context to know exactly which item they are interacting with.
+**Action:** When using template strings for components like lists or grids, inject dynamic, context-specific variables into the `aria-label` string (e.g., `aria-label="Zwiększ ilość ${bin.name} ${bin.capacity} L"`) to ensure complete accessibility context. Also, add `aria-hidden="true"` to pure icon `<i>` tags inside such buttons to prevent screen readers from reading redundant class names or symbols.
